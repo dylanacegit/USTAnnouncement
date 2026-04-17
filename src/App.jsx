@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
+import AiChat from "./AiChat.jsx";
 
 function formatDateRange(event) {
   if (event.startDate === event.endDate) return event.startDate;
@@ -226,6 +227,8 @@ function App() {
           )}
         </section>
       </main>
+
+          <AiChat />
 
       {selectedEvent && (
         <div className="modal-overlay" onClick={() => setSelectedEvent(null)}>

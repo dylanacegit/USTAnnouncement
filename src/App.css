@@ -504,3 +504,37 @@ button {
     font-size: 1.6rem;
   }
 }
+
+.ai-box {
+  margin-top: 30px;
+  padding: 20px;
+  border-radius: 16px;
+  background: #181818;
+  border: 1px solid #2e2e2e;
+  color: white;
+}
+
+.ai-box textarea {
+  width: 100%;
+  min-height: 100px;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: #101010;
+  color: white;
+}
+
+.ai-box button {
+  background: #f4c430;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.ai-answer {
+  margin-top: 15px;
+  padding: 15px;
+  background: #222;
+  border-left: 4px solid #f4c430;
+}
