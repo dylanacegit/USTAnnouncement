@@ -2,13 +2,26 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const rateLimit = require("express-rate-limit");
 const connectDB = require("./db");
 const askOpenRouter = require("./openrouter");
 
 const app = express();
 
+const questionCache = new Map();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 20,
+  message: {
+    message: "Too many AI requests. Please try again in a minute.",
+  },
+});
+
 app.use(cors());
 app.use(express.json());
+app.use("/api/ai", aiLimiter);
 
 app.get("/", (req, res) => {
   res.send("Backend is running");
@@ -78,6 +91,16 @@ app.post("/api/ai/ask", async (req, res) => {
       return res.status(400).json({ message: "Question is required." });
     }
 
+    const normalizedCacheKey = question.trim().toLowerCase();
+
+    const cached = questionCache.get(normalizedCacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return res.json({
+        answer: cached.answer,
+        cached: true,
+      });
+    }
+
     const db = await connectDB();
 
     const cleanedQuestion = question
@@ -122,13 +145,10 @@ app.post("/api/ai/ask", async (req, res) => {
     ]);
 
     const words = cleanedQuestion.split(/\s+/).filter(Boolean);
-
     const phraseWords = words.filter((word) => !fillerWords.has(word));
     const phrase = phraseWords.join(" ");
-
     const keywords = phraseWords.filter((word) => word.length > 2);
 
-    // 1. Try phrase-first search (best for titles)
     let events = [];
     let announcements = [];
 
@@ -161,7 +181,6 @@ app.post("/api/ai/ask", async (req, res) => {
         .toArray();
     }
 
-    // 2. If phrase search finds nothing, fall back to keyword search
     if (events.length === 0 && announcements.length === 0) {
       const searchTerms = keywords.length > 0 ? keywords : [cleanedQuestion];
 
@@ -186,7 +205,6 @@ app.post("/api/ai/ask", async (req, res) => {
       };
 
       events = await db.collection("events").find(eventQuery).limit(5).toArray();
-
       announcements = await db
         .collection("announcements")
         .find(announcementQuery)
@@ -197,6 +215,7 @@ app.post("/api/ai/ask", async (req, res) => {
     if (events.length === 0 && announcements.length === 0) {
       return res.json({
         answer: "No matching information was found.",
+        cached: false,
       });
     }
 
@@ -210,8 +229,14 @@ ${JSON.stringify(announcements, null, 2)}
 
     const answer = await askOpenRouter(question, contextText);
 
+    questionCache.set(normalizedCacheKey, {
+      answer,
+      timestamp: Date.now(),
+    });
+
     res.json({
       answer,
+      cached: false,
     });
   } catch (error) {
     console.error("POST /api/ai/ask error:", error);

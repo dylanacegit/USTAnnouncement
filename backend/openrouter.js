@@ -6,7 +6,11 @@ const client = new OpenAI({
 });
 
 async function askOpenRouter(question, contextText) {
-  const response = await client.chat.completions.create({
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("OpenRouter request timed out")), 15000)
+  );
+
+  const requestPromise = client.chat.completions.create({
     model: process.env.OPENROUTER_MODEL || "openrouter/free",
     messages: [
       {
@@ -31,7 +35,12 @@ Rules:
     temperature: 0.2,
   });
 
-  return response.choices[0]?.message?.content || "No matching information was found.";
+  const response = await Promise.race([requestPromise, timeoutPromise]);
+
+  return (
+    response.choices?.[0]?.message?.content ||
+    "No matching information was found."
+  );
 }
 
 module.exports = askOpenRouter;
