@@ -85,161 +85,158 @@ app.get("/api/announcements/event/:eventTitle", async (req, res) => {
 // OPENROUTER AI ROUTE
 app.post("/api/ai/ask", async (req, res) => {
   try {
-    const { question } = req.body;
+    const { question, history = [] } = req.body;
 
     if (!question || !question.trim()) {
-      return res.status(400).json({ message: "Question is required." });
-    }
-
-    const normalizedCacheKey = question.trim().toLowerCase();
-
-    const cached = questionCache.get(normalizedCacheKey);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-      return res.json({
-        answer: cached.answer,
-        cached: true,
+      return res.status(400).json({
+        message: "Question is required.",
       });
     }
 
-    const db = await connectDB();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    const cleanedQuestion = question
-      .toLowerCase()
+    const upcomingEvents = events
+      .filter((event) => {
+        const eventEnd = new Date(event.endDate || event.startDate);
+        eventEnd.setHours(23, 59, 59, 999);
+
+        return eventEnd >= today;
+      })
+  .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+    const rawEvents = await db
+      .collection("events")
+      .find({ status: "published" })
+      .sort({ startDate: 1 })
+      .toArray();
+
+    const events = rawEvents.map((event) => {
+      const eventStart = new Date(event.startDate);
+      const eventEnd = event.endDate
+        ? new Date(event.endDate)
+        : new Date(event.startDate);
+
+      eventStart.setHours(0, 0, 0, 0);
+      eventEnd.setHours(23, 59, 59, 999);
+
+      let eventProgressStatus = "upcoming";
+
+      if (today > eventEnd) {
+        eventProgressStatus = "done";
+      } else if (today >= eventStart && today <= eventEnd) {
+        eventProgressStatus = "ongoing";
+      }
+
+      return {
+        ...event,
+        eventProgressStatus,
+      };
+    });
+    
+    const lowerQuestion = question.toLowerCase();
+
+    const events = await db
+      .collection("events")
+      .find({ status: "published" })
+      .sort({ startDate: 1 })
+      .toArray();
+
+    const announcements = await db
+      .collection("announcements")
+      .find({ status: "published" })
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    const upcomingEvents = events.filter((event) => {
+    new Date(event.endDate || event.startDate) >= today
+    });
+
+    const isUpcomingQuery =
+      lowerQuestion.includes("upcoming") ||
+      lowerQuestion.includes("next event") ||
+      lowerQuestion.includes("future event");
+
+    const isTodayQuery = lowerQuestion.includes("today");
+
+    const isTomorrowQuery = lowerQuestion.includes("tomorrow");
+
+    const isThisWeekQuery =
+      lowerQuestion.includes("this week") || lowerQuestion.includes("week");
+
+    const keywords = lowerQuestion
       .replace(/[^\w\s]/g, "")
-      .trim();
+      .split(" ")
+      .filter((word) => word.length > 2);
 
-    const fillerWords = new Set([
-      "what",
-      "when",
-      "where",
-      "who",
-      "which",
-      "is",
-      "are",
-      "the",
-      "a",
-      "an",
-      "about",
-      "there",
-      "any",
-      "during",
-      "for",
-      "of",
-      "to",
-      "in",
-      "on",
-      "at",
-      "do",
-      "does",
-      "did",
-      "with",
-      "tell",
-      "me",
-      "happening",
-      "happen",
-      "details",
-      "information",
-      "update",
-      "updates",
-      "news",
-    ]);
+    const matchesQuestion = (item) => {
+      const searchableText = `
+        ${item.title || ""}
+        ${item.description || ""}
+        ${item.content || ""}
+        ${item.category || ""}
+        ${item.location || ""}
+        ${item.organizer || ""}
+        ${item.createdBy || ""}
+        ${item.eventTitle || ""}
+      `.toLowerCase();
 
-    const words = cleanedQuestion.split(/\s+/).filter(Boolean);
-    const phraseWords = words.filter((word) => !fillerWords.has(word));
-    const phrase = phraseWords.join(" ");
-    const keywords = phraseWords.filter((word) => word.length > 2);
+      return keywords.some((word) => searchableText.includes(word));
+    };
 
-    let events = [];
-    let announcements = [];
+    let selectedEvents = [];
+    let selectedAnnouncements = [];
 
-    if (phrase) {
-      events = await db
-        .collection("events")
-        .find({
-          $or: [
-            { title: { $regex: phrase, $options: "i" } },
-            { description: { $regex: phrase, $options: "i" } },
-            { location: { $regex: phrase, $options: "i" } },
-            { organizer: { $regex: phrase, $options: "i" } },
-            { "schedule.title": { $regex: phrase, $options: "i" } },
-            { "schedule.description": { $regex: phrase, $options: "i" } },
-          ],
-        })
-        .limit(5)
-        .toArray();
-
-      announcements = await db
-        .collection("announcements")
-        .find({
-          $or: [
-            { title: { $regex: phrase, $options: "i" } },
-            { content: { $regex: phrase, $options: "i" } },
-            { eventTitle: { $regex: phrase, $options: "i" } },
-          ],
-        })
-        .limit(5)
-        .toArray();
-    }
-
-    if (events.length === 0 && announcements.length === 0) {
-      const searchTerms = keywords.length > 0 ? keywords : [cleanedQuestion];
-
-      const eventQuery = {
-        $or: searchTerms.flatMap((word) => [
-          { title: { $regex: word, $options: "i" } },
-          { description: { $regex: word, $options: "i" } },
-          { location: { $regex: word, $options: "i" } },
-          { organizer: { $regex: word, $options: "i" } },
-          { "schedule.title": { $regex: word, $options: "i" } },
-          { "schedule.description": { $regex: word, $options: "i" } },
-          { "schedule.date": { $regex: word, $options: "i" } },
-        ]),
-      };
-
-      const announcementQuery = {
-        $or: searchTerms.flatMap((word) => [
-          { title: { $regex: word, $options: "i" } },
-          { content: { $regex: word, $options: "i" } },
-          { eventTitle: { $regex: word, $options: "i" } },
-        ]),
-      };
-
-      events = await db.collection("events").find(eventQuery).limit(5).toArray();
-      announcements = await db
-        .collection("announcements")
-        .find(announcementQuery)
-        .limit(5)
-        .toArray();
-    }
-
-    if (events.length === 0 && announcements.length === 0) {
-      return res.json({
-        answer: "No matching information was found.",
-        cached: false,
+    if (isUpcomingQuery) {
+      selectedEvents = upcomingEvents.slice(0, 8);
+    } else if (isTodayQuery) {
+      selectedEvents = events.filter((event) => {
+        const eventDate = new Date(event.startDate);
+        return eventDate.toDateString() === today.toDateString();
       });
+    } else if (isTomorrowQuery) {
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      selectedEvents = events.filter((event) => {
+        const eventDate = new Date(event.startDate);
+        return eventDate.toDateString() === tomorrow.toDateString();
+      });
+    } else if (isThisWeekQuery) {
+      const endOfWeek = new Date(today);
+      endOfWeek.setDate(endOfWeek.getDate() + 7);
+
+      selectedEvents = events.filter((event) => {
+        const eventDate = new Date(event.startDate);
+        return eventDate >= today && eventDate <= endOfWeek;
+      });
+    } else {
+      selectedEvents = events.filter(matchesQuestion).slice(0, 8);
+      selectedAnnouncements = announcements.filter(matchesQuestion).slice(0, 8);
+    }
+
+    if (selectedEvents.length === 0 && selectedAnnouncements.length === 0) {
+      selectedEvents = upcomingEvents.slice(0, 5);
+      selectedAnnouncements = announcements.slice(0, 5);
     }
 
     const contextText = `
-MATCHED EVENTS:
-${JSON.stringify(events, null, 2)}
+EVENTS:
+${JSON.stringify(selectedEvents, null, 2)}
 
-MATCHED ANNOUNCEMENTS:
-${JSON.stringify(announcements, null, 2)}
-    `;
+ANNOUNCEMENTS:
+${JSON.stringify(selectedAnnouncements, null, 2)}
 
-    const answer = await askOpenRouter(question, contextText);
+TODAY:
+${today.toDateString()}
+    `.trim();
 
-    questionCache.set(normalizedCacheKey, {
-      answer,
-      timestamp: Date.now(),
-    });
+    const answer = await askOpenRouter(question, contextText, history);
 
-    res.json({
-      answer,
-      cached: false,
-    });
+    res.json({ answer });
   } catch (error) {
-    console.error("POST /api/ai/ask error:", error);
+    console.error("AI ask error:", error);
+
     res.status(500).json({
       message: "Failed to get AI response.",
     });
