@@ -1,5 +1,9 @@
 @import "tailwindcss";
-
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+@theme {
+  --font-playfair: "Playfair Display", serif;
+  --font-inter: "Inter", sans-serif;
+}
 * {
   box-sizing: border-box;
 }
@@ -24,3 +28,4 @@ body {
 #root {
   min-height: 100vh;
 }
+

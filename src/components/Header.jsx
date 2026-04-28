@@ -10,19 +10,19 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#070707]">
-      <div className="grid h-20 w-full grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-6 lg:px-12">
+      <div className="grid h-13 w-full grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-6 lg:px-12">
         <NavLink to="/" className="flex min-w-fit items-center gap-3 justify-self-start">
           <img
             src="/images/logo.png"
             alt="Golden Gatherings Logo"
-            className="h-11 w-11 object-contain sm:h-12 sm:w-12"
+            className="h-11 w-11 object-contain sm:h-8 sm:w-8"
           />
 
           <div className="hidden leading-tight sm:block">
-            <h1 className="font-serif text-base font-bold text-white lg:text-lg">
+            <h1 className="font-playfair text-base font-bold text-white lg:text-lg">
               Golden Gatherings
             </h1>
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#f6c744]">
+            <p className="text-[9px] uppercase tracking-[0.18em] text-[#f6c744]">
               Official Events Page of UST
             </p>
           </div>
@@ -34,7 +34,7 @@ export default function Header() {
               key={path}
               to={path}
               className={({ isActive }) =>
-                `text-sm font-bold transition ${
+                `text-sm transition font-inter ${
                   isActive ? "text-[#f6c744]" : "text-white hover:text-[#f6c744]"
                 }`
               }
@@ -52,7 +52,7 @@ export default function Header() {
             key={path}
             to={path}
             className={({ isActive }) =>
-                `whitespace-nowrap font-semibold ${
+                `whitespace-nowrap font-bold ${
                 isActive ? "text-[#f6c744]" : "text-white"
                 }`
             }

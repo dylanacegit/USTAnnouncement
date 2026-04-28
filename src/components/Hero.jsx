@@ -1,52 +1,69 @@
 export default function Hero() {
   return (
-    <section className="relative min-h-[calc(100svh-64px)] w-full overflow-hidden bg-[#f6c744] sm:min-h-[620px]">
+    <section className="relative h-[60vh] w-full overflow-hidden bg-[#f6c744] min-h-[450px]">
+      {/* Background Image */}
       <img
         src="/images/ust-main-building.png"
         alt="UST Main Building"
-        className="absolute inset-0 h-full w-full object-cover lg:w-[84%]"
+        className="absolute inset-0 h-full w-full object-cover lg:w-[85%]"
       />
 
-      <div className="absolute inset-0 bg-black/60 lg:w-[84%]" />
-      <div className="absolute inset-y-0 right-0 hidden w-[18%] bg-[#f6c744] lg:block" />
+      {/* Black Overlay with Angled Cut */}
+      <div 
+        className="absolute inset-0 bg-black/50 lg:w-[100%]" 
+        // style={{ clipPath: "polygon(0 0, 100% 0, 80% 100%, 0% 100%)" }}
+      />
 
-      <div className="relative z-10 flex min-h-[calc(100svh-64px)] flex-col justify-center px-5 py-10 sm:min-h-[620px] sm:px-10 sm:py-12 lg:w-[58%] lg:px-20">
-        <p className="mb-4 text-[10px] font-black uppercase tracking-[0.34em] text-[#f6c744] sm:mb-5 sm:text-xs sm:tracking-[0.42em] md:text-sm">
+      {/* Yellow Angled Section */}
+      <div 
+        className="absolute inset-y-0 right-0 hidden bg-[#f6c744] lg:block lg:w-[25%]" 
+        style={{ clipPath: "polygon(33% 0, 100% 0, 100% 100%, 0% 100%)" }}
+      />
+
+      {/* Content Container - Reduced padding from px-20 to lg:px-12 */}
+      <div className="relative z-10 flex h-full flex-col justify-center px-4 py-8 sm:px-8 lg:w-[50%] lg:px-12">
+        
+        {/* 1. Label: Now 7px/8px */}
+        <p className="mb-2 text-[7px] font-black font-inter uppercase tracking-[0.4em] text-[#f6c744] sm:text-[8px]">
           Academic Year 2025 - 2026
         </p>
 
-        <h2 className="font-serif text-[2.75rem] font-bold leading-[0.95] text-white min-[420px]:text-5xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl">
+        {/* 2. Main Title: Scaled down again */}
+        <h2 className="font-serif text-2xl font-bold leading-[1.1] text-white min-[420px]:text-3xl md:text-4xl lg:text-4xl xl:text-5xl">
           Where Thomasians <br />
           <span className="text-[#f6c744]">Come Together.</span>
         </h2>
 
-        <p className="mt-5 max-w-xl text-sm font-medium leading-7 text-white/90 sm:mt-6 sm:text-base">
-          Discover academic forums, cultural celebrations, sporting events, and
+        {/* 3. Description: text-xs is now the standard */}
+        <p className="mt-3 max-w-sm text-[11px] font-medium leading-relaxed text-white/80 sm:text-xs">
+          Discover academic forums, cultural celebrations, and
           everything happening across the Royal Pontifical University.
         </p>
 
-        <div className="mt-7 flex w-full max-w-xl overflow-hidden bg-white shadow-lg">
+        {/* 4. Search Bar: More compact height (h-9) */}
+        <div className="mt-5 flex w-full max-w-sm overflow-hidden bg-white shadow-md">
           <input
-            className="h-12 min-w-0 flex-1 px-4 text-sm outline-none sm:px-5"
-            placeholder="Search events, colleges, dates..."
+            className="h-9 min-w-0 flex-1 px-3 text-[11px] outline-none"
+            placeholder="Search events..."
           />
-          <button className="w-24 bg-[#f6c744] text-sm font-black text-black hover:bg-[#e3b832] sm:w-28">
+          <button className="w-20 bg-[#f6c744] text-[10px] font-black text-black hover:bg-[#e3b832]">
             Search
           </button>
         </div>
 
-        <div className="mt-9 grid max-w-xl grid-cols-2 gap-x-8 gap-y-6 sm:mt-10 sm:grid-cols-4 sm:gap-6">
+        {/* 5. Stats Grid: Tighter spacing and smaller text */}
+        <div className="mt-6 grid max-w-sm grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
           {[
-            ["24", "Events This Month"],
-            ["8", "Colleges Represented"],
-            ["412", "Years of Excellence"],
-            ["1,840", "Students Attending"],
+            ["24", "Events"],
+            ["8", "Colleges"],
+            ["412", "Years"],
+            ["1,840", "Students"],
           ].map(([num, label]) => (
             <div key={label}>
-              <strong className="block font-serif text-3xl font-black text-[#f6c744] sm:text-3xl">
+              <strong className="block font-serif text-lg font-black text-[#f6c744] sm:text-xl">
                 {num}
               </strong>
-              <span className="mt-1 block max-w-[100px] text-xs font-semibold leading-5 text-white">
+              <span className="mt-0 block text-[8px] font-bold uppercase tracking-wider text-white/60">
                 {label}
               </span>
             </div>
@@ -54,10 +71,11 @@ export default function Hero() {
         </div>
       </div>
 
+      {/* Tiger Mascot */}
       <img
         src="/images/tiger-mascot.png"
         alt="UST Tiger Mascot"
-        className="pointer-events-none absolute bottom-0 right-[-70px] z-20 hidden h-[72%] object-contain md:block lg:right-3 lg:h-[76%] xl:h-[80%]"
+        className="pointer-events-none absolute bottom-0 right-[-20px] z-20 hidden md:block object-contain h-[85%] lg:right-5 lg:h-[90%] xl:h-[105%]"
       />
     </section>
   );
