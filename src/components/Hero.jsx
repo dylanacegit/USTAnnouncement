@@ -44,7 +44,7 @@ export default function Hero() {
         <div className="mt-5 flex w-full max-w-sm overflow-hidden bg-white shadow-md">
           <input
             className="h-9 min-w-0 flex-1 px-3 text-[11px] outline-none"
-            placeholder="Search events..."
+            placeholder="Search events, colleges,..."
           />
           <button className="w-20 bg-[#f6c744] text-[10px] font-black text-black hover:bg-[#e3b832]">
             Search
