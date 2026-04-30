@@ -8,11 +8,8 @@ const askOpenRouter = require("./openrouter");
 
 const app = express();
 
-const questionCache = new Map();
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-
 const aiLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 * 1000,
   max: 20,
   message: {
     message: "Too many AI requests. Please try again in a minute.",
@@ -41,7 +38,10 @@ app.get("/api/events", async (req, res) => {
     res.json(events);
   } catch (error) {
     console.error("GET /api/events FULL ERROR:", error);
-    res.status(500).json({ message: "Failed to fetch events", error: error.message });
+    res.status(500).json({
+      message: "Failed to fetch events",
+      error: error.message,
+    });
   }
 });
 
@@ -59,7 +59,10 @@ app.get("/api/announcements", async (req, res) => {
     res.json(announcements);
   } catch (error) {
     console.error("GET /api/announcements FULL ERROR:", error);
-    res.status(500).json({ message: "Failed to fetch announcements", error: error.message });
+    res.status(500).json({
+      message: "Failed to fetch announcements",
+      error: error.message,
+    });
   }
 });
 
@@ -77,14 +80,18 @@ app.get("/api/announcements/event/:eventTitle", async (req, res) => {
 
     res.json(announcements);
   } catch (error) {
-    console.error("GET /api/announcements/event/:eventTitle error:", error);
-    res.status(500).json({ message: "Failed to fetch event announcements" });
+    console.error("GET /api/announcements/event error:", error);
+    res.status(500).json({
+      message: "Failed to fetch event announcements",
+    });
   }
 });
 
 // OPENROUTER AI ROUTE
 app.post("/api/ai/ask", async (req, res) => {
   try {
+    const db = await connectDB(); // ✅ FIX
+
     const { question, history = [] } = req.body;
 
     if (!question || !question.trim()) {
@@ -96,46 +103,7 @@ app.post("/api/ai/ask", async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const upcomingEvents = events
-      .filter((event) => {
-        const eventEnd = new Date(event.endDate || event.startDate);
-        eventEnd.setHours(23, 59, 59, 999);
-
-        return eventEnd >= today;
-      })
-  .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-
-    const rawEvents = await db
-      .collection("events")
-      .find({ status: "published" })
-      .sort({ startDate: 1 })
-      .toArray();
-
-    const events = rawEvents.map((event) => {
-      const eventStart = new Date(event.startDate);
-      const eventEnd = event.endDate
-        ? new Date(event.endDate)
-        : new Date(event.startDate);
-
-      eventStart.setHours(0, 0, 0, 0);
-      eventEnd.setHours(23, 59, 59, 999);
-
-      let eventProgressStatus = "upcoming";
-
-      if (today > eventEnd) {
-        eventProgressStatus = "done";
-      } else if (today >= eventStart && today <= eventEnd) {
-        eventProgressStatus = "ongoing";
-      }
-
-      return {
-        ...event,
-        eventProgressStatus,
-      };
-    });
-    
-    const lowerQuestion = question.toLowerCase();
-
+    // ✅ Fetch once
     const events = await db
       .collection("events")
       .find({ status: "published" })
@@ -148,9 +116,31 @@ app.post("/api/ai/ask", async (req, res) => {
       .sort({ createdAt: -1 })
       .toArray();
 
-    const upcomingEvents = events.filter((event) => {
-    new Date(event.endDate || event.startDate) >= today
+    // ✅ Process events
+    const processedEvents = events.map((event) => {
+      const start = new Date(event.startDate);
+      const end = event.endDate
+        ? new Date(event.endDate)
+        : new Date(event.startDate);
+
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+
+      let status = "upcoming";
+
+      if (today > end) status = "done";
+      else if (today >= start && today <= end) status = "ongoing";
+
+      return { ...event, eventProgressStatus: status };
     });
+
+    // ✅ Define once
+    const upcomingEvents = processedEvents.filter((event) => {
+      const end = new Date(event.endDate || event.startDate);
+      return end >= today;
+    });
+
+    const lowerQuestion = question.toLowerCase();
 
     const isUpcomingQuery =
       lowerQuestion.includes("upcoming") ||
@@ -158,11 +148,11 @@ app.post("/api/ai/ask", async (req, res) => {
       lowerQuestion.includes("future event");
 
     const isTodayQuery = lowerQuestion.includes("today");
-
     const isTomorrowQuery = lowerQuestion.includes("tomorrow");
 
     const isThisWeekQuery =
-      lowerQuestion.includes("this week") || lowerQuestion.includes("week");
+      lowerQuestion.includes("this week") ||
+      lowerQuestion.includes("week");
 
     const keywords = lowerQuestion
       .replace(/[^\w\s]/g, "")
@@ -170,7 +160,7 @@ app.post("/api/ai/ask", async (req, res) => {
       .filter((word) => word.length > 2);
 
     const matchesQuestion = (item) => {
-      const searchableText = `
+      const text = `
         ${item.title || ""}
         ${item.description || ""}
         ${item.content || ""}
@@ -181,7 +171,7 @@ app.post("/api/ai/ask", async (req, res) => {
         ${item.eventTitle || ""}
       `.toLowerCase();
 
-      return keywords.some((word) => searchableText.includes(word));
+      return keywords.some((word) => text.includes(word));
     };
 
     let selectedEvents = [];
@@ -190,28 +180,26 @@ app.post("/api/ai/ask", async (req, res) => {
     if (isUpcomingQuery) {
       selectedEvents = upcomingEvents.slice(0, 8);
     } else if (isTodayQuery) {
-      selectedEvents = events.filter((event) => {
-        const eventDate = new Date(event.startDate);
-        return eventDate.toDateString() === today.toDateString();
+      selectedEvents = processedEvents.filter((e) => {
+        return new Date(e.startDate).toDateString() === today.toDateString();
       });
     } else if (isTomorrowQuery) {
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-      selectedEvents = events.filter((event) => {
-        const eventDate = new Date(event.startDate);
-        return eventDate.toDateString() === tomorrow.toDateString();
+      selectedEvents = processedEvents.filter((e) => {
+        return new Date(e.startDate).toDateString() === tomorrow.toDateString();
       });
     } else if (isThisWeekQuery) {
       const endOfWeek = new Date(today);
       endOfWeek.setDate(endOfWeek.getDate() + 7);
 
-      selectedEvents = events.filter((event) => {
-        const eventDate = new Date(event.startDate);
-        return eventDate >= today && eventDate <= endOfWeek;
+      selectedEvents = processedEvents.filter((e) => {
+        const d = new Date(e.startDate);
+        return d >= today && d <= endOfWeek;
       });
     } else {
-      selectedEvents = events.filter(matchesQuestion).slice(0, 8);
+      selectedEvents = processedEvents.filter(matchesQuestion).slice(0, 8);
       selectedAnnouncements = announcements.filter(matchesQuestion).slice(0, 8);
     }
 
