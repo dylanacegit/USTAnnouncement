@@ -29,24 +29,24 @@ export default function Hero() {
         </p>
 
         {/* 2. Main Title: Scaled down again */}
-        <h2 className="font-serif text-2xl font-bold leading-[1.1] text-white min-[420px]:text-3xl md:text-4xl lg:text-4xl xl:text-5xl">
+        <h2 className="font-playfair text-2xl font-bold leading-[1.1] text-white min-[420px]:text-3xl md:text-4xl lg:text-4xl xl:text-5xl">
           Where Thomasians <br />
           <span className="text-[#f6c744]">Come Together.</span>
         </h2>
 
         {/* 3. Description: text-xs is now the standard */}
-        <p className="mt-3 max-w-sm text-[11px] font-medium leading-relaxed text-white/80 sm:text-xs">
+        <p className="mt-3 max-w-sm text-[11px] font font-inter leading-relaxed text-white/80 sm:text-xs">
           Discover academic forums, cultural celebrations, and
           everything happening across the Royal Pontifical University.
         </p>
 
         {/* 4. Search Bar: More compact height (h-9) */}
-        <div className="mt-5 flex w-full max-w-sm overflow-hidden bg-white shadow-md">
+        <div className="mt-5 flex w-full max-w-sm overflow-hidden bg-white/50 shadow-md backdrop-blur-sm">
           <input
-            className="h-9 min-w-0 flex-1 px-3 text-[11px] outline-none"
+            className="h-9 min-w-0 flex-1 bg-transparent font-inter px-3 text-[11px] outline-none placeholder:text-neutral-500"
             placeholder="Search events, colleges,..."
           />
-          <button className="w-20 bg-[#f6c744] text-[10px] font-black text-black hover:bg-[#e3b832]">
+          <button className="w-20 bg-[#f6c744] font-inter text-[10px] font-black text-black hover:bg-[#e3b832]">
             Search
           </button>
         </div>

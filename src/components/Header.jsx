@@ -13,7 +13,7 @@ export default function Header() {
       <div className="grid h-13 w-full grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-6 lg:px-12">
         <NavLink to="/" className="flex min-w-fit items-center gap-3 justify-self-start">
           <img
-            src="/images/logo.png"
+            src="/images/Logo 2.svg"
             alt="Golden Gatherings Logo"
             className="h-11 w-11 object-contain sm:h-8 sm:w-8"
           />
@@ -28,7 +28,7 @@ export default function Header() {
           </div>
         </NavLink>
 
-        <nav className="hidden items-center justify-center gap-10 md:flex lg:gap-14">
+        <nav className="hidden items-center justify-center font-semibold gap-10 md:flex lg:gap-14">
           {links.map(([label, path]) => (
             <NavLink
               key={path}

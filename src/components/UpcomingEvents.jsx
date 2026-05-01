@@ -52,13 +52,13 @@ export default function UpcomingEvents() {
   return (
     <section className="mt-10 sm:mt-12">
       <div className="mb-4 flex items-center justify-between gap-4 sm:mb-5">
-        <h2 className="font-serif text-2xl font-bold sm:text-3xl">
+        <h2 className="font-playfair text-2xl font-bold sm:text-3xl">
           Upcoming Events
         </h2>
 
         <NavLink
           to="/events"
-          className="shrink-0 text-xs font-bold text-[#c49600] sm:text-sm"
+          className="shrink-0 text-xs font-bold font-inter text-[#c49600] sm:text-sm"
         >
           View All →
         </NavLink>
@@ -76,10 +76,10 @@ export default function UpcomingEvents() {
         ].map((tab, index) => (
           <button
             key={tab}
-            className={`shrink-0 border px-3 py-2 text-[11px] font-semibold ${
+            className={`shrink-0 border px-5 py-2 text-[13px] font-bold transition-all ${
               index === 0
-                ? "border-[#f6c744] bg-[#f6c744]"
-                : "border-neutral-300 bg-white"
+                ? "border-[#f6c744] bg-[#fffbeb] text-[#a18117]" 
+                : "border-[#e5e5e5] bg-white text-[#666666] hover:border-neutral-300"
             }`}
           >
             {tab}
@@ -97,7 +97,7 @@ export default function UpcomingEvents() {
               {event.category}
             </p>
 
-            <h3 className="mt-3 min-h-[40px] font-serif text-base font-bold sm:min-h-[44px]">
+            <h3 className="mt-3 min-h-[40px] font-playfair text-base font-bold sm:min-h-[44px]">
               {event.title}
             </h3>
 

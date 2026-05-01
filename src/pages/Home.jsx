@@ -1,10 +1,12 @@
 import Header from "../components/Header";
 import Hero from "../components/Hero";
+import HomeLayout from "../components/HomeLayout";
 import AnnouncementsSection from "../components/AnnouncementsSection";
 import UpcomingEvents from "../components/UpcomingEvents";
 import Sidebar from "../components/Sidebar";
 import AIChatWidget from "../components/AIChatWidget";
 import { NavLink } from "react-router-dom";
+import Footer from "../components/Footer"
 
 export default function Home() {
   return (
@@ -12,7 +14,10 @@ export default function Home() {
       <Header />
       <Hero />
 
-      <main className="w-full px-4 py-7 sm:px-6 sm:py-8 lg:px-10 xl:px-12">
+      <main>
+        <HomeLayout />
+      </main>
+      {/* <main className="w-full px-4 py-7 sm:px-6 sm:py-8 lg:px-10 xl:px-12">
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1.35fr)_210px]">
           <div className="min-w-0">
             <AnnouncementsSection />
@@ -27,7 +32,7 @@ export default function Home() {
 
                 <NavLink
                   to="/events"
-                  className="shrink-0 text-xs font-bold text-[#c49600] sm:text-sm"
+                  className="shrink-0 text-xs font-bold font-inter text-[#c49600] sm:text-sm"
                 >
                   View Archive →
                 </NavLink>
@@ -45,9 +50,11 @@ export default function Home() {
             <Sidebar />
           </div>
         </div>
-      </main>
+      </main> */}
 
-      <AIChatWidget />
+      {/* <AIChatWidget /> */}
+
+      <Footer />
     </div>
   );
 }
