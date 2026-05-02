@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 export default function Sidebar() {
   const [timeLeft, setTimeLeft] = useState({ days: "00", hrs: "00", min: "00", sec: "00" });
@@ -68,18 +69,26 @@ export default function Sidebar() {
         <h3 className="mb-6 border-b-2 border-[#f6c744] pb-3 font-serif text-xl font-bold text-left">
           Announcements
         </h3>
-        <div className="divide-y divide-neutral-200">
+        <div className="divide-y divide-black/10">
           {[
             ["ACADEMIC", "Summer enrollment now open via MyUSTe portal.", "March 24, 2026"],
             ["LIBRARY", "UST Central Library extends hours until 10 PM.", "March 22, 2026"],
           ].map(([cat, text, date]) => (
-            <article key={text} className="py-3 text-left first:pt-0">
-              <span className="text-[10px] font-black uppercase tracking-[0.32em] text-[#c49600]">
+            /* 1. Change article to Link */
+            <Link 
+              key={text} 
+              to="/announcements" 
+              className="block py-4 text-left transition-all hover:bg-black/5 group first:pt-0"
+            >
+              <span className="text-[10px] font-black uppercase tracking-[0.32em] text-[#f6c744]">
                 {cat}
               </span>
-              <p className="mt-1 text-sm leading-relaxed text-neutral-800">{text}</p>
-              <small className="mt-2 block text-xs text-neutral-500">{date}</small>
-            </article>
+              {/* 2. Added hover color change to the text */}
+              <p className="mt-1 text-sm leading-relaxed text-black/80 group-hover:text-black">
+                {text}
+              </p>
+              <small className="mt-2 block text-xs text-black/40">{date}</small>
+            </Link>
           ))}
         </div>
       </section>

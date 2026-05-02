@@ -9,8 +9,8 @@ export default function HomeLayout() {
       {/* The grid needs 'flex-1' to push to the bottom of the screen */}
       <div className="grid flex-1 grid-cols-1 lg:grid-cols-5">
   {/* Left Side (80%) */}
-  <div className="lg:col-span-4 p-6 sm:p-10 lg:p-12">
-    <AnnouncementsSection />
+<div className="lg:col-span-4 flex flex-col h-full overflow-hidden">
+      <AnnouncementsSection />
   </div>
 
   {/* Right Side (20%) */}
