@@ -11,7 +11,6 @@ import Footer from "../components/Footer"
 export default function Home() {
   return (
     <div className="min-h-screen w-full bg-white text-black">
-      <Header />
       <Hero />
 
       <main>
@@ -54,7 +53,6 @@ export default function Home() {
 
       {/* <AIChatWidget /> */}
 
-      <Footer />
     </div>
   );
 }
