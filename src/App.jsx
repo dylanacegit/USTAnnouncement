@@ -37,7 +37,8 @@ export default function App() {
             USER SIDE (With Header & Footer)
             ========================================= */}
         <Route path="/" element={<UserLayout />}>
-          <index element={<Home />} /> {/* Home page at "/" */}
+          {/* Use <Route index ... /> here */}
+          <Route index element={<Home />} /> 
           <Route path="events" element={<Events />} />
           <Route path="announcements" element={<Announcements />} />
           <Route path="about" element={<PlaceholderPage title="About Page" />} />
@@ -49,7 +50,6 @@ export default function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="events" element={<ManageEvents />} />
-          {/* <Route path="announcements" element={<ManageAnnouncements />} /> */}
         </Route>
       </Routes>
     </BrowserRouter>
