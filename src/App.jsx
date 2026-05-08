@@ -3,9 +3,9 @@ import Header from "./components/Header";
 import Home from "./pages/Home";
 import Events from "./pages/Events";
 import Footer from "./components/Footer";
-import AdminLayout from "./components/admin side components/AdminLayout";
-import Dashboard from "./pages/admin side pages/Dashboard";
-import ManageEvents from "./pages/admin side pages/ManageEvents";
+import AdminLayout from "./components/adminComponents/AdminLayout";
+import Dashboard from "./pages/adminPages/Dashboard";
+import ManageEvents from "./pages/adminPages/ManageEvents";
 function PlaceholderPage({ title }) {
   return (
     <div className="min-h-screen bg-[#070707] p-10">

@@ -1,11 +1,11 @@
-import StatCard from "../../components/admin side components/StatCard";
-import QuickActions from "../../components/admin side components/QuickActions";
+import StatCard from "../../components/adminComponents/StatCard";
+import QuickActions from "../../components/adminComponents/QuickActions";
 import { CiCalendar, CiBullhorn, CiUser } from "react-icons/ci";
 import { IoIosPhotos } from "react-icons/io";
 import { FaPlus } from "react-icons/fa6";
 import { LuText } from "react-icons/lu";
-import AdminTable from "../../components/admin side components/AdminTable";
-import Badge from "../../components/admin side components/Badge";
+import AdminTable from "../../components/adminComponents/AdminTable";
+import Badge from "../../components/adminComponents/Badge";
 export default function Dashboard() {
   // Sample Data (In a real app, this comes from an API/Database)
   const events = [

@@ -1,6 +1,6 @@
-import AdminTable from "../../components/admin side components/AdminTable";
-import Badge from "../../components/admin side components/Badge";
-import { FiEdit2, FiTrash2, FiEye } from "react-icons/fi";
+import AdminTable from "../../components/adminComponents/AdminTable";
+import Badge from "../../components/adminComponents/Badge";
+// import { FiEdit2, FiTrash2, FiEye } from "react-icons/fi";
 
 export default function ManageEvents() {
   // Sample Data (In a real app, this comes from an API/Database)

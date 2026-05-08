@@ -41,9 +41,7 @@ app.get("/api/events", async (req, res) => {
     res.json(events);
   } catch (error) {
     console.error("GET /api/events FULL ERROR:", error);
-    res
-      .status(500)
-      .json({ message: "Failed to fetch events", error: error.message });
+    res.status(500).json({ message: "Failed to fetch events", error: error.message });
   }
 });
 
@@ -61,9 +59,7 @@ app.get("/api/announcements", async (req, res) => {
     res.json(announcements);
   } catch (error) {
     console.error("GET /api/announcements FULL ERROR:", error);
-    res
-      .status(500)
-      .json({ message: "Failed to fetch announcements", error: error.message });
+    res.status(500).json({ message: "Failed to fetch announcements", error: error.message });
   }
 });
 
@@ -86,7 +82,6 @@ app.get("/api/announcements/event/:eventTitle", async (req, res) => {
   }
 });
 
-// OPENROUTER AI ROUTE
 // OPENROUTER AI ROUTE
 app.post("/api/ai/ask", async (req, res) => {
   try {
@@ -165,7 +160,8 @@ app.post("/api/ai/ask", async (req, res) => {
     const isTomorrowQuery = lowerQuestion.includes("tomorrow");
 
     const isThisWeekQuery =
-      lowerQuestion.includes("this week") || lowerQuestion.includes("week");
+      lowerQuestion.includes("this week") ||
+      lowerQuestion.includes("week");
 
     // KEYWORDS
     const keywords = lowerQuestion
@@ -186,7 +182,9 @@ app.post("/api/ai/ask", async (req, res) => {
         ${item.eventTitle || ""}
       `.toLowerCase();
 
-      return keywords.some((word) => searchableText.includes(word));
+      return keywords.some((word) =>
+        searchableText.includes(word)
+      );
     };
 
     let selectedEvents = [];
@@ -195,12 +193,16 @@ app.post("/api/ai/ask", async (req, res) => {
     // FILTER LOGIC
     if (isUpcomingQuery) {
       selectedEvents = upcomingEvents.slice(0, 8);
+
     } else if (isTodayQuery) {
       selectedEvents = events.filter((event) => {
         const eventDate = new Date(event.startDate);
 
-        return eventDate.toDateString() === today.toDateString();
+        return (
+          eventDate.toDateString() === today.toDateString()
+        );
       });
+
     } else if (isTomorrowQuery) {
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -208,8 +210,11 @@ app.post("/api/ai/ask", async (req, res) => {
       selectedEvents = events.filter((event) => {
         const eventDate = new Date(event.startDate);
 
-        return eventDate.toDateString() === tomorrow.toDateString();
+        return (
+          eventDate.toDateString() === tomorrow.toDateString()
+        );
       });
+
     } else if (isThisWeekQuery) {
       const endOfWeek = new Date(today);
       endOfWeek.setDate(endOfWeek.getDate() + 7);
@@ -219,14 +224,22 @@ app.post("/api/ai/ask", async (req, res) => {
 
         return eventDate >= today && eventDate <= endOfWeek;
       });
-    } else {
-      selectedEvents = events.filter(matchesQuestion).slice(0, 8);
 
-      selectedAnnouncements = announcements.filter(matchesQuestion).slice(0, 8);
+    } else {
+      selectedEvents = events
+        .filter(matchesQuestion)
+        .slice(0, 8);
+
+      selectedAnnouncements = announcements
+        .filter(matchesQuestion)
+        .slice(0, 8);
     }
 
     // FALLBACK
-    if (selectedEvents.length === 0 && selectedAnnouncements.length === 0) {
+    if (
+      selectedEvents.length === 0 &&
+      selectedAnnouncements.length === 0
+    ) {
       selectedEvents = upcomingEvents.slice(0, 5);
       selectedAnnouncements = announcements.slice(0, 5);
     }
@@ -243,9 +256,14 @@ TODAY:
 ${today.toDateString()}
     `.trim();
 
-    const answer = await askOpenRouter(question, contextText, history);
+    const answer = await askOpenRouter(
+      question,
+      contextText,
+      history
+    );
 
     res.json({ answer });
+
   } catch (error) {
     console.error("AI ask error:", error);
 
