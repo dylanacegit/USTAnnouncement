@@ -82,6 +82,26 @@ app.get("/api/announcements/event/:eventTitle", async (req, res) => {
   }
 });
 
+app.get("/api/accounts", async (req, res) => {
+  try {
+    const db = await connectDB();
+
+    const accounts = await db
+      .collection("accounts")
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    res.json(accounts);
+  } catch (error) {
+    console.error("GET /api/accounts FULL ERROR:", error);
+    res.status(500).json({
+      message: "Failed to fetch accounts",
+      error: error.message,
+    });
+  }
+});
+
 // OPENROUTER AI ROUTE
 app.post("/api/ai/ask", async (req, res) => {
   try {

@@ -42,19 +42,19 @@ export default function AdminLayout() {
         },
         {
           name: "Announcements",
-          path: "/announcements",
+          path: "/admin/announcements",
           icon: <TfiAnnouncement />,
           badge: 4,
         },
         {
           name: "Logs",
-          path: "/logs",
+          path: "/admin/logs",
           icon: <IoDocumentTextOutline />,
           badge: 4,
         },
         {
           name: "Accounts",
-          path: "/accounts",
+          path: "/admin/accounts",
           icon: <IoPersonOutline />,
           badge: 10,
         },
