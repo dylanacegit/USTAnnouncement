@@ -4,7 +4,8 @@ import Home from "./pages/Home";
 import Events from "./pages/Events";
 import Footer from "./components/Footer";
 import AdminLayout from "./components/admin side components/AdminLayout";
-
+import Dashboard from "./pages/admin side pages/Dashboard";
+import ManageEvents from "./pages/admin side pages/ManageEvents";
 function PlaceholderPage({ title }) {
   return (
     <div className="min-h-screen bg-[#070707] p-10">
@@ -54,8 +55,8 @@ export default function App() {
             ========================================= */}
         <Route path="/admin" element={<AdminLayout />}>
           {/* Uncomment these once the files actually exist */}
-          {/* <Route index element={<Dashboard />} /> */}
-          {/* <Route path="events" element={<ManageEvents />} /> */}
+          <Route index element={<Dashboard />} />
+          <Route path="events" element={<ManageEvents />} />
           {/* <Route path="announcements" element={<ManageAnnouncements />} /> */}
           {/* Add your other routes here (logs, accounts, settings) */}
         </Route>

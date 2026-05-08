@@ -25,7 +25,7 @@ export default function AdminLayout() {
       items: [
         {
           name: "Dashboard",
-          path: "/",
+          path: "/admin",
           icon: <AiOutlineAppstore />,
           badge: null,
         },
@@ -34,7 +34,12 @@ export default function AdminLayout() {
     {
       label: "CONTENT",
       items: [
-        { name: "Events", path: "/events", icon: <CiCalendar />, badge: 8 },
+        {
+          name: "Events",
+          path: "/admin/events",
+          icon: <CiCalendar />,
+          badge: 8,
+        },
         {
           name: "Announcements",
           path: "/announcements",
@@ -200,7 +205,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Dynamic Page Content */}
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-100">
+        <main className="flex-1 overflow-y-auto py-2 px-6 bg-gray-100">
           <Outlet />
         </main>
       </div>
