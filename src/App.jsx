@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Header"; // 1. Import your Header
 import Home from "./pages/Home";
 import Events from "./pages/Events"; 
+import Announcements from "./pages/Announcements";
 import Footer from "./components/Footer";
 
 function PlaceholderPage({ title }) {
@@ -24,7 +25,7 @@ export default function App() {
         {/* 3. Change 'element' from PlaceholderPage to Events */}
         <Route path="/events" element={<Events />} />
         
-        <Route path="/announcements" element={<PlaceholderPage title="Announcements Page" />} />
+        <Route path="/announcements" element={<Announcements />} />
         <Route path="/about" element={<PlaceholderPage title="About Page" />} />
 
       </Routes>
