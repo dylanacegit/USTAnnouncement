@@ -1,8 +1,9 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Header from "./components/Header"; // 1. Import your Header
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import Header from "./components/Header";
 import Home from "./pages/Home";
-import Events from "./pages/Events"; 
+import Events from "./pages/Events";
 import Footer from "./components/Footer";
+import AdminLayout from "./components/admin side components/AdminLayout";
 
 function PlaceholderPage({ title }) {
   return (
@@ -12,25 +13,53 @@ function PlaceholderPage({ title }) {
   );
 }
 
+// 1. Create a Layout specifically for the User side
+function UserLayout() {
+  return (
+    <>
+      <Header />
+      {/* The Outlet is where Home, Events, Announcements, etc., will be injected */}
+      <main className="min-h-screen">
+        <Outlet />
+      </main>
+      <Footer />
+    </>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      {/* 2. Put Header here so it shows on ALL pages */}
-      <Header /> 
-
       <Routes>
-        <Route path="/" element={<Home />} />
-        
-        {/* 3. Change 'element' from PlaceholderPage to Events */}
-        <Route path="/events" element={<Events />} />
-        
-        <Route path="/announcements" element={<PlaceholderPage title="Announcements Page" />} />
-        <Route path="/about" element={<PlaceholderPage title="About Page" />} />
+        {/* =========================================
+            USER SIDE (Includes Header & Footer)
+            ========================================= */}
+        <Route path="/" element={<UserLayout />}>
+          {/* 'index' means this renders at the exact "/" path */}
+          <Route index element={<Home />} />
 
+          <Route path="events" element={<Events />} />
+          <Route
+            path="announcements"
+            element={<PlaceholderPage title="Announcements Page" />}
+          />
+          <Route
+            path="about"
+            element={<PlaceholderPage title="About Page" />}
+          />
+        </Route>
+
+        {/* =========================================
+            ADMIN SIDE (Sidebar only, NO Header/Footer)
+            ========================================= */}
+        <Route path="/admin" element={<AdminLayout />}>
+          {/* Uncomment these once the files actually exist */}
+          {/* <Route index element={<Dashboard />} /> */}
+          {/* <Route path="events" element={<ManageEvents />} /> */}
+          {/* <Route path="announcements" element={<ManageAnnouncements />} /> */}
+          {/* Add your other routes here (logs, accounts, settings) */}
+        </Route>
       </Routes>
-
-      <Footer />
-
     </BrowserRouter>
   );
 }
