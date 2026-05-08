@@ -1,4 +1,4 @@
-import HomeLayout from "../components/HomeLayout";
+import HomeLayout from "../components/MainLayout";
 export default function Events() {
   const eventList = [
     { id: 1, title: "Paskuhan 2026", date: "Dec 2026", type: "University-wide" },
