@@ -11,7 +11,7 @@ export default function QuickActions({
         <div className={`p-2 bg-[#FFFBE8] rounded-lg ${color}`}>
           <Icon size={20} />
         </div>
-        <p className="text-sm font-bold text-dark uppercase tracking-widest">
+        <p className="text-xs md:text-[8px] lg:text-xs font-bold text-dark uppercase ">
           {title}
         </p>
       </div>

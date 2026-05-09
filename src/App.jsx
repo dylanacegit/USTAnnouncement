@@ -1,20 +1,14 @@
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import Header from "./components/Header";
 import Home from "./pages/Home";
-import Events from "./pages/Events"; 
+import Events from "./pages/Events";
 import Announcements from "./pages/Announcements";
 import Footer from "./components/Footer";
-<<<<<<< HEAD
 import AdminLayout from "./components/adminComponents/AdminLayout";
 import Dashboard from "./pages/adminPages/Dashboard";
 import ManageEvents from "./pages/adminPages/ManageEvents";
+import ManageAnnouncements from "./pages/adminPages/ManageAnnouncements";
 import ManageAccounts from "./pages/adminPages/ManageAccounts";
-=======
-import AdminLayout from "./components/admin side components/AdminLayout";
-import Dashboard from "./pages/admin side pages/Dashboard";
-import ManageEvents from "./pages/admin side pages/ManageEvents";
-
->>>>>>> e85459e94edc139c0c0d261a5c61d146e2542588
 function PlaceholderPage({ title }) {
   return (
     <div className="min-h-screen bg-[#070707] p-10">
@@ -45,10 +39,13 @@ export default function App() {
             ========================================= */}
         <Route path="/" element={<UserLayout />}>
           {/* Use <Route index ... /> here */}
-          <Route index element={<Home />} /> 
+          <Route index element={<Home />} />
           <Route path="events" element={<Events />} />
           <Route path="announcements" element={<Announcements />} />
-          <Route path="about" element={<PlaceholderPage title="About Page" />} />
+          <Route
+            path="about"
+            element={<PlaceholderPage title="About Page" />}
+          />
         </Route>
 
         {/* =========================================
@@ -57,12 +54,9 @@ export default function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="events" element={<ManageEvents />} />
-<<<<<<< HEAD
           <Route path="accounts" element={<ManageAccounts />} />
-          {/* <Route path="announcements" element={<ManageAnnouncements />} /> */}
+          <Route path="announcements" element={<ManageAnnouncements />} />
           {/* Add your other routes here (logs, accounts, settings) */}
-=======
->>>>>>> e85459e94edc139c0c0d261a5c61d146e2542588
         </Route>
       </Routes>
     </BrowserRouter>

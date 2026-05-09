@@ -10,45 +10,49 @@ import EventModal from "../../components/adminComponents/mngevents/EventModal";
 
 // import { FiEdit2, FiTrash2, FiEye } from "react-icons/fi";
 
-export default function ManageEvents() {
+export default function ManageAnnouncements() {
   // Sample Data (In a real app, this comes from an API/Database)
   const events = [
     {
       id: 1,
       title: "University Basketball Cup",
-      date: "Oct 24, 2024",
-      venue: "Main Bldg Aud.",
+      type: "Event",
+      etitle: "University Basketball Cup.",
       category: "Sports",
-      attending: 120,
-      //   status: "Published",
+      image: "/images/tls.png",
+      createdBy: "Dylan",
+      createdAt: "01/01/2026",
     },
     {
       id: 2,
       title: "University Basketball Cup",
-      date: "Oct 24, 2024",
-      venue: "Main Bldg Aud.",
+      type: "Event",
+      etitle: "University Basketball Cup.",
       category: "Sports",
-      attending: 120,
-      //   status: "Published",
+      image: "/images/tls.png",
+      createdBy: "Dylan",
+      createdAt: "01/01/2026",
     },
     {
       id: 3,
       title: "University Basketball Cup",
-      date: "Oct 24, 2024",
-      venue: "Main Bldg Aud.",
+      type: "Event",
+      etitle: "University Basketball Cup.",
       category: "Sports",
-      attending: 120,
-      //   status: "Published",
+      image: "/images/tls.png",
+      createdBy: "Dylan",
+      createdAt: "01/01/2026",
     },
   ];
 
   const tableHeaders = [
+    " Title",
+    "Type",
     "Event Title",
-    "Date",
-    "Venue",
     "Category",
-    "Attending",
-    "Actions",
+    "Image",
+    "Created By",
+    "Created At",
   ];
 
   const formatDate = (date) => {
@@ -63,27 +67,27 @@ export default function ManageEvents() {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleViewDetails = (event) => {
-    // Add dummy data for the details view
-    const detailedEvent = {
-      ...event,
-      venue: "Frassati Building",
-      organizer: "CICS Student Council",
-      description: "College Week is the biggest annual celebration...",
-      createdBy: "Dylan",
-      createdAt: "December 18, 2026",
-      updatedAt: "December 22, 2026",
-    };
-    setSelectedEvent(detailedEvent);
-    setIsModalOpen(true);
-  };
+  //   const handleViewDetails = (event) => {
+  //     // Add dummy data for the details view
+  //     const detailedEvent = {
+  //       ...event,
+  //       venue: "Frassati Building",
+  //       organizer: "CICS Student Council",
+  //       description: "College Week is the biggest annual celebration...",
+  //       createdBy: "Dylan",
+  //       createdAt: "December 18, 2026",
+  //       updatedAt: "December 22, 2026",
+  //     };
+  //     setSelectedEvent(detailedEvent);
+  //     setIsModalOpen(true);
+  //   };
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="font-serif text-2xl font-bold text-gray-900">
-            Manage Events
+            Manage Announcements
           </h1>
           <p className="text-sm text-gray-500">
             View and manage all organization events.
@@ -149,42 +153,27 @@ export default function ManageEvents() {
             <td className="px-6 py-4 text-sm font-medium text-gray-900">
               {event.title}
             </td>
-            <td className="px-6 py-4 text-sm text-gray-500">
-              {formatDate(event.date)}
-            </td>
-            <td className="px-6 py-4">
-              <Badge type={event.venue}>{event.venue}</Badge>
-            </td>
+            <td className="px-6 py-4 text-sm text-gray-500">{event.type}</td>
+            <td className="px-6 py-4 text-sm text-dark"> {event.etitle}</td>
 
             <td className="px-6 py-4">
               <Badge type={event.category}>{event.category}</Badge>
             </td>
-            <td className="px-6 py-4 text-sm text-dark">{event.attending}</td>
-
-            <td className="px-6 py-4 flex gap-2">
-              {/* <div className="flex gap-3 text-gray-400">
-                           <button className="hover:text-blue-600 transition-colors">
-                             <FiEye size={18} />
-                           </button>
-                           <button className="hover:text-yellow-600 transition-colors">
-                             <FiEdit2 size={18} />
-                           </button>
-                           <button className="hover:text-red-600 transition-colors">
-                             <FiTrash2 size={18} />
-                           </button>
-                         </div> */}
-              <button
-                onClick={() => handleViewDetails(event)}
-                className="hover:bg-gray-300 border  border-gray-500 text-gray-500 px-1 transition-colors"
-              >
-                view
-              </button>
-              <button className="hover:bg-gray-300 border  border-gray-500 text-gray-500 px-1 transition-colors">
-                edit
-              </button>
-              <button className="hover:bg-gray-300 border  border-red-500 text-red-500 px-1 transition-colors">
-                archive
-              </button>
+            <td className="px-6 py-4">
+              <div className=" flex items-center gap-3">
+                <img
+                  src={event.image}
+                  alt=""
+                  className="w-25 h-15  rounded object-cover border border-gray-200"
+                />
+              </div>
+            </td>
+            <td className="px-6 py-4 text-sm font-medium text-gray-900">
+              {event.createdBy}
+            </td>
+            <td className="px-6 py-4 text-sm text-dark">
+              {" "}
+              {formatDate(event.createdAt)}
             </td>
           </tr>
         ))}
