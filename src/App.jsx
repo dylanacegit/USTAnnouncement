@@ -38,7 +38,6 @@ export default function App() {
             USER SIDE (With Header & Footer)
             ========================================= */}
         <Route path="/" element={<UserLayout />}>
-          {/* Use <Route index ... /> here */}
           <Route index element={<Home />} />
           <Route path="events" element={<Events />} />
           <Route path="announcements" element={<Announcements />} />
@@ -55,8 +54,6 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="events" element={<ManageEvents />} />
           <Route path="accounts" element={<ManageAccounts />} />
-          <Route path="announcements" element={<ManageAnnouncements />} />
-          {/* Add your other routes here (logs, accounts, settings) */}
         </Route>
       </Routes>
     </BrowserRouter>
