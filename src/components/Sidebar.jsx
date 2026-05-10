@@ -99,7 +99,7 @@ export default function Sidebar() {
           Quick Access
         </h3>
         <div className="flex flex-col">
-          {["Academic Calendar", "Student Organizations", "Campus Map"].map((item) => (
+          {["Student Organizations", "Campus Map"].map((item) => (
             <a
               href="/"
               key={item}

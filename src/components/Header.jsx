@@ -13,15 +13,19 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#070707] border-b border-white/10">
-      <div className="relative flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-12">
+      {/* Using a grid to manage the 3 distinct areas: 
+          1. Logo (Left) 
+          2. Nav (Center) 
+          3. Mobile Toggle (Right)
+      */}
+      <div className="relative grid h-16 w-full grid-cols-2 items-center px-4 md:grid-cols-[1fr_auto_1fr] sm:px-6 lg:px-12">
         
         {/* --- LOGO SECTION --- 
-            Desktop: Left Aligned
-            Mobile: Centered via absolute positioning
+            Stays on the left. On mobile, we align it to the start.
         */}
         <NavLink 
           to="/" 
-          className="flex items-center gap-2 md:gap-3 z-50 md:static absolute left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0"
+          className="flex items-center gap-2 md:gap-3 z-50 justify-self-start"
         >
           <img
             src="/images/Logo 2.svg"
@@ -38,8 +42,8 @@ export default function Header() {
           </div>
         </NavLink>
 
-        {/* --- DESKTOP NAVIGATION (Center-Right) --- */}
-        <nav className="hidden items-center gap-8 md:flex lg:gap-12 ml-auto">
+        {/* --- DESKTOP NAVIGATION (Centered) --- */}
+        <nav className="hidden items-center gap-8 md:flex lg:gap-12 justify-center">
           {links.map(([label, path]) => (
             <NavLink
               key={path}
@@ -57,10 +61,10 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* --- BURGER MENU BUTTON (Mobile Only) --- */}
+        {/* --- BURGER MENU BUTTON (Mobile Only - Aligned Right) --- */}
         <button 
           onClick={() => setIsOpen(!isOpen)}
-          className="z-50 flex flex-col gap-1.5 md:hidden ml-auto"
+          className="z-50 flex flex-col gap-1.5 md:hidden justify-self-end"
         >
           <span className={`h-0.5 w-6 bg-white transition-all ${isOpen ? "rotate-45 translate-y-2" : ""}`} />
           <span className={`h-0.5 w-6 bg-white transition-all ${isOpen ? "opacity-0" : ""}`} />

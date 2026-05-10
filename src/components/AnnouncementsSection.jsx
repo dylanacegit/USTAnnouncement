@@ -10,9 +10,11 @@ const DUMMY_DATA = [
     image: "/images/fun-run.png", 
     location: "Main Building Auditorium",
     time: "8:00 AM - 6:00 PM",
-    createdBy: "CICS",
+    published: "April 20, 2026 12:31 PM",
+    updated: "April 24, 2026 2:54 PM",
     createdAt: "2026-04-12T12:10:00Z",
     updatedAt: "2026-04-14T15:45:00Z",
+    isAdminFeatured: true
   },
   {
     _id: "2",
@@ -22,7 +24,8 @@ const DUMMY_DATA = [
     image: "/images/fun-run.png", 
     location: "Central Library",
     time: "8:00 AM - 10:00 PM",
-    createdBy: "UST Library",
+    published: "May 1, 2026 8:00 AM",
+    updated: "May 1, 2026 9:00 AM",
     createdAt: "2026-04-07T08:00:00Z",
     updatedAt: "2026-04-07T08:00:00Z",
   },
@@ -34,19 +37,8 @@ const DUMMY_DATA = [
     image: "/images/fun-run.png", 
     location: "QPav",
     time: "9:00 AM - 11:30 AM",
-    createdBy: "Campus Ministry",
-    createdAt: "2026-04-07T09:00:00Z",
-    updatedAt: "2026-04-07T09:00:00Z",
-  },
-  {
-    _id: "4",
-    title: "Thomasian Welcome Mass 2026",
-    category: "RELIGIOUS",
-    content: "Join the entire community as we start the academic year with a Eucharistic celebration.",
-    image: "/images/fun-run.png", 
-    location: "QPav",
-    time: "9:00 AM - 11:30 AM",
-    createdBy: "Campus Ministry",
+    published: "May 7, 2026 9:00 AM",
+    updated: "May 7, 2026 9:00 AM",
     createdAt: "2026-04-07T09:00:00Z",
     updatedAt: "2026-04-07T09:00:00Z",
   }
@@ -71,7 +63,7 @@ export default function AnnouncementsSection() {
   };
 
   const handleViewRedirect = () => {
-    // Navigates to the main page and passes the currently selected item as state
+    // Navigates to the full page and passes the 'selected' item as state
     navigate("/announcements", { state: { featuredAnnouncement: selected } });
   };
 
@@ -137,8 +129,8 @@ export default function AnnouncementsSection() {
             </button>
 
             <div className="mt-auto pt-6 flex gap-4 text-[8px] font-bold uppercase tracking-tighter text-white/40">
-              <span>Created at: {selected.createdAt}</span>
-              <span>Last Updated at: {selected.updatedAt}</span>
+              <span>Created at: {selected.createdAt.split('T')[0]}</span>
+              <span>Updated: {selected.updatedAt.split('T')[0]}</span>
             </div>
           </div>
         </article>
