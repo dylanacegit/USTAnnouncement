@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 const DUMMY_DATA = [
   {
@@ -55,6 +55,8 @@ const DUMMY_DATA = [
 export default function AnnouncementsSection() {
   const [announcements] = useState(DUMMY_DATA);
   const [selected, setSelected] = useState(DUMMY_DATA[0]);
+  const navigate = useNavigate();
+
   const [viewedIds, setViewedIds] = useState(() => {
     return JSON.parse(localStorage.getItem("viewedAnnouncements")) || [];
   });
@@ -66,6 +68,11 @@ export default function AnnouncementsSection() {
       setViewedIds(updatedViewedIds);
       localStorage.setItem("viewedAnnouncements", JSON.stringify(updatedViewedIds));
     }
+  };
+
+  const handleViewRedirect = () => {
+    // Navigates to the main page and passes the currently selected item as state
+    navigate("/announcements", { state: { featuredAnnouncement: selected } });
   };
 
   const formatDate = (dateString) => {
@@ -81,22 +88,14 @@ export default function AnnouncementsSection() {
   const createdDate = formatDate(selected.createdAt);
 
   return (
-    /* Outer section: flex-1 to fill the column, but we control the inner content height */
     <section className="flex flex-1 flex-col p-6 sm:p-10 lg:p-12 text-black bg-white">
-      
-      {/* Header */}
       <div className="mb-4 flex flex-none items-center justify-between">
-        <h2 className="font-playfair text-2xl font-bold tracking-tight text-neutral-800">Announcements</h2>
+        <h2 className="font-playfair text-3xl font-bold tracking-tight text-neutral-800">Announcements</h2>
         <NavLink to="/announcements" className="text-[10px] font-black uppercase tracking-widest text-[#c49600] hover:underline">
           View All →
         </NavLink>
       </div>
 
-      {/* 
-         THE MAIN BOX: 
-         - Reverted height to h-[420px] to match your previous look.
-         - Background set to #F8F7F4.
-      */}
       <div className="grid w-full h-[320px] gap-3 bg-[#F8F7F4] p-3 shadow-sm lg:grid-cols-[1fr_60px_280px] overflow-hidden border border-neutral-100">
         
         {/* HERO CARD */}
@@ -130,7 +129,10 @@ export default function AnnouncementsSection() {
               {selected.content}
             </p>
 
-            <button className="mt-4 w-fit bg-[#f6c744] px-6 py-2 text-[9px] font-black uppercase tracking-widest text-black transition-colors hover:bg-[#e3b832]">
+            <button 
+              onClick={handleViewRedirect}
+              className="mt-4 w-fit bg-[#f6c744] px-6 py-2 text-[9px] font-black uppercase tracking-widest text-black transition-colors hover:bg-[#e3b832]"
+            >
               View
             </button>
 

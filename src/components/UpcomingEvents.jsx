@@ -1,118 +1,64 @@
-import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
-
 export default function UpcomingEvents() {
-  const [events, setEvents] = useState([]);
-
-  useEffect(() => {
-    fetch("http://localhost:5000/api/events")
-      .then((res) => res.json())
-      .then((data) => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const upcomingEvents = data
-          .filter((event) => event.status === "published")
-          .filter((event) => new Date(event.startDate) >= today)
-          .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
-          .slice(0, 4);
-
-        setEvents(upcomingEvents);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch upcoming events:", err);
-      });
-  }, []);
-
-  const formatEventDate = (event) => {
-    const start = new Date(event.startDate);
-    const end = event.endDate ? new Date(event.endDate) : null;
-
-    const startDate = start.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-
-    if (!end || event.startDate === event.endDate) {
-      return event.startTime && event.endTime
-        ? `${startDate} · ${event.startTime}–${event.endTime}`
-        : startDate;
-    }
-
-    const endDate = end.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-
-    return `${startDate} - ${endDate}`;
-  };
+  // Static array to visualize the row of 4 cards
+  const dummyEvents = Array(4).fill({
+    title: "Thomasian Welcome Walk 2026",
+    category: "TRADITION",
+    date: "Aug 1, 2026",
+    image: "/images/ust-main-building.png"
+  });
 
   return (
     <section className="mt-10 sm:mt-12">
-      <div className="mb-4 flex items-center justify-between gap-4 sm:mb-5">
-        <h2 className="font-playfair text-2xl font-bold sm:text-3xl">
+      {/* --- Section Header --- */}
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <h2 className="font-playfair text-2xl font-bold sm:text-3xl text-neutral-800">
           Upcoming Events
         </h2>
 
-        <NavLink
-          to="/events"
-          className="shrink-0 text-xs font-bold font-inter text-[#c49600] sm:text-sm"
-        >
+        <button className="shrink-0 text-[10px] font-black uppercase tracking-widest text-[#c49600] hover:underline">
           View All →
-        </NavLink>
+        </button>
       </div>
 
-      <div className="mb-5 flex gap-2 overflow-x-auto pb-2 sm:mb-6 sm:flex-wrap">
-        {[
-          "All Colleges",
-          "Engineering",
-          "Nursing",
-          "Tourism",
-          "Law",
-          "Arts & Letters",
-          "Commerce",
-        ].map((tab, index) => (
-          <button
-            key={tab}
-            className={`shrink-0 border px-5 py-2 text-[13px] font-bold transition-all ${
-              index === 0
-                ? "border-[#f6c744] bg-[#fffbeb] text-[#a18117]" 
-                : "border-[#e5e5e5] bg-white text-[#666666] hover:border-neutral-300"
-            }`}
+      {/* --- The Row of Cards --- */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        {dummyEvents.map((_, index) => (
+          <div
+            key={index}
+            className="flex flex-col bg-white border border-neutral-100 shadow-sm transition-all border-t-[4px] border-t-[#f6c744]"
           >
-            {tab}
-          </button>
-        ))}
-      </div>
+            {/* Image Section - 4:3 Aspect Ratio */}
+            <div className="relative aspect-[4/3] overflow-hidden">
+              <img
+                src="/images/ust-main-building.png" 
+                alt="Event"
+                className="h-full w-full object-cover"
+              />
+            </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {events.map((event) => (
-          <article
-            key={event._id}
-            className="border border-neutral-200 border-t-[#f6c744] border-t-4 p-4 transition hover:-translate-y-1 hover:shadow-md sm:p-5"
-          >
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">
-              {event.category}
-            </p>
+            {/* Content Section */}
+            <div className="p-5 flex-1 flex flex-col">
+              {/* Category Meta */}
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-neutral-400">
+                TRADITION
+              </span>
 
-            <h3 className="mt-3 min-h-[40px] font-playfair text-base font-bold sm:min-h-[44px]">
-              {event.title}
-            </h3>
+              {/* Title - Playfair Display Font */}
+              <h3 className="mt-2 font-playfair text-[15px] font-bold leading-tight text-neutral-900">
+                Thomasian Welcome Walk 2026
+              </h3>
 
-            <span className="mt-3 block text-xs text-neutral-600">
-              {event.location}
-            </span>
+              {/* Date Info */}
+              <p className="mt-4 text-[12px] text-neutral-400">
+                Aug 1, 2026
+              </p>
 
-            <small className="mt-2 block text-xs text-neutral-500">
-              {formatEventDate(event)}
-            </small>
-
-            <button className="mt-5 h-8 w-20 bg-[#f6c744] text-xs font-black text-black">
-              View
-            </button>
-          </article>
+              {/* High-Contrast View Button */}
+              <button className="mt-6 w-full bg-[#1a1a1a] py-3 text-[9px] font-black uppercase tracking-[0.2em] text-white hover:bg-[#f6c744] hover:text-black transition-colors">
+                View
+              </button>
+            </div>
+          </div>
         ))}
       </div>
     </section>
