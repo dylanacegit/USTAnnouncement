@@ -66,8 +66,8 @@ export default function Events() {
           
           {/* Header & Filters */}
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-            <h2 className="font-playfair text-xl font-bold text-neutral-900">
-              Explore Events
+            <h2 className="font-playfair text-2xl font-bold text-neutral-900">
+              Upcoming Events
             </h2>
             
             <div className="flex flex-wrap gap-1.5">
@@ -117,7 +117,7 @@ export default function Events() {
                     </p>
                   </div>
 
-                  <button className="mt-4 w-full bg-neutral-900 py-2 text-[8px] font-black uppercase tracking-widest text-white hover:bg-[#f6c744] hover:text-black transition-colors">
+                  <button className="mt-4 w-full bg-[#f6c744] py-2 text-[8px] font-black uppercase tracking-widest text-black hover:bg-[#e3b832] hover:text-black transition-colors">
                     View
                   </button>
                 </div>
