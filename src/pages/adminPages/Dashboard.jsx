@@ -46,6 +46,15 @@ export default function Dashboard() {
     "Attending",
     "Actions",
   ];
+  const formatDate = (date) => {
+    if (!date) return "N/A";
+
+    return new Date(date).toLocaleDateString("en-PH", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    });
+  };
   return (
     <div className="space-y-2">
       <div>
@@ -56,7 +65,7 @@ export default function Dashboard() {
       </div>
 
       {/* 1. Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-3  gap-2 sm:gap-6">
         <StatCard
           title="Total Events"
           value="12"
@@ -84,8 +93,8 @@ export default function Dashboard() {
       </div>
 
       {/* 2. Recent Activity Table (Placeholder for now) */}
-      <div className="grid grid-cols-6 gap-4">
-        <div className="col-span-4 bg-white rounded-xl shadow-sm border border-gray-100  px-6">
+      <div className="grid grid-cols-6  gap-4">
+        <div className="sm:col-span-4 col-span-6 bg-white rounded-xl shadow-sm border border-gray-100  px-6">
           <h2 className="font-serif text-sm tracking-widest uppercase font-bold mb-4 border-b py-3">
             Recent Activity
           </h2>
@@ -94,7 +103,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="col-span-2 bg-white rounded-xl shadow-sm border border-gray-100  px-6">
+        <div className="sm:col-span-2 col-span-6 bg-white rounded-xl shadow-sm border border-gray-100  px-6">
           <h2 className="font-serif text-sm py-3 tracking-widest uppercase font-bold mb-4 border-b">
             Quick Actions
           </h2>
@@ -121,7 +130,9 @@ export default function Dashboard() {
               <td className="px-6 py-4 text-sm font-medium text-gray-900">
                 {event.title}
               </td>
-              <td className="px-6 py-4 text-sm text-gray-500">{event.date}</td>
+              <td className="px-6 py-4 text-sm text-gray-500">
+                {formatDate(event.date)}
+              </td>
               <td className="px-6 py-4">
                 <Badge type={event.venue}>{event.venue}</Badge>
               </td>
@@ -131,7 +142,7 @@ export default function Dashboard() {
               </td>
               <td className="px-6 py-4 text-sm text-dark">{event.attending}</td>
 
-              <td className="px-6 py-4">
+              <td className="px-6 py-4 flex gap-2">
                 {/* <div className="flex gap-3 text-gray-400">
                        <button className="hover:text-blue-600 transition-colors">
                          <FiEye size={18} />
@@ -143,8 +154,14 @@ export default function Dashboard() {
                          <FiTrash2 size={18} />
                        </button>
                      </div> */}
-                <button className="hover:bg-gray-300 bg-mauve-100 px-1 transition-colors">
+                <button className="hover:bg-gray-300 border  border-gray-500 text-gray-500 px-1 transition-colors">
                   view
+                </button>
+                <button className="hover:bg-gray-300 border  border-gray-500 text-gray-500 px-1 transition-colors">
+                  edit
+                </button>
+                <button className="hover:bg-gray-300 border  border-red-500 text-red-500 px-1 transition-colors">
+                  archive
                 </button>
               </td>
             </tr>

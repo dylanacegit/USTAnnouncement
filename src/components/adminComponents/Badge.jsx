@@ -11,7 +11,7 @@ export default function Badge({ children, type }) {
 
   return (
     <span
-      className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${currentStyle}`}
+      className={`px-1 py-1 text-[8px] lg:text-[10px] font-bold uppercase  ${currentStyle}`}
     >
       {children}
     </span>

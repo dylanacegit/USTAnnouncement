@@ -8,7 +8,7 @@ import { FiLogOut } from "react-icons/fi";
 import { useState } from "react";
 
 export default function AdminLayout() {
-  const [isSideBarOpen, setIsSideBarOpen] = useState(true);
+  const [isSideBarOpen, setIsSideBarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -73,6 +73,29 @@ export default function AdminLayout() {
     },
   ];
 
+  const getTitle = () => {
+    const path = location.pathname;
+
+    // Define your titles here
+    const titles = {
+      "/admin": "Dashboard",
+      "/admin/events": "Manage Events",
+      "/admin/announcements": "Manage Announcements",
+      "/admin/logs": "System Logs",
+      "/admin/accounts": "User Accounts",
+      "/admin/settings": "Settings",
+    };
+
+    return titles[path] || "Admin Panel";
+  };
+
+  // Add this helper function inside AdminLayout
+  const handleNavClick = () => {
+    // Only close automatically if we are on a mobile screen (less than 768px)
+    if (window.innerWidth < 768) {
+      setIsSideBarOpen(false);
+    }
+  };
   return (
     <div className="flex h-screen  overflow-hidden font-sans">
       {/* SIDEBAR (Dark Theme) */}
@@ -132,6 +155,7 @@ export default function AdminLayout() {
                     <li key={item.path}>
                       <Link
                         to={item.path}
+                        onClick={handleNavClick} // <--- ADD THIS LINE
                         className={`flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
                           isActive
                             ? "text-yellow-500 bg-gray-800/50 font-medium border-l-2 border-yellow-500"
@@ -181,7 +205,7 @@ export default function AdminLayout() {
             </button>
             <h1 className="font-serif text-xl font-medium tracking-wide">
               {/* Dynamic Title based on route or fixed for now */}
-              Dashboard
+              {getTitle()}
             </h1>
           </div>
 
