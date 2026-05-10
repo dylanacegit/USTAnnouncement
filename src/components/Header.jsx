@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 
 export default function Header() {
+  const [isOpen, setIsOpen] = useState(false);
+
   const links = [
     ["Home", "/"],
     ["Events", "/events"],
@@ -10,32 +13,39 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#070707] border-b border-white/10">
-      <div className="grid h-16 w-full grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-6 lg:px-12">
-        {/* Logo Section */}
-        <NavLink to="/" className="flex min-w-fit items-center gap-3 justify-self-start">
+      <div className="relative flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-12">
+        
+        {/* --- LOGO SECTION --- 
+            Desktop: Left Aligned
+            Mobile: Centered via absolute positioning
+        */}
+        <NavLink 
+          to="/" 
+          className="flex items-center gap-2 md:gap-3 z-50 md:static absolute left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0"
+        >
           <img
             src="/images/Logo 2.svg"
-            alt="Golden Gatherings Logo"
-            className="h-10 w-10 object-contain sm:h-8 sm:w-8"
+            alt="Logo"
+            className="h-8 w-8 object-contain lg:h-10 lg:w-10"
           />
-          <div className="hidden leading-tight sm:block">
-            <h1 className="font-playfair text-base font-bold text-white lg:text-lg">
+          <div className="leading-tight">
+            <h1 className="font-playfair text-[14px] font-bold text-white sm:text-base lg:text-lg whitespace-nowrap">
               Golden Gatherings
             </h1>
-            <p className="text-[9px] uppercase tracking-[0.18em] text-[#f6c744]">
+            <p className="hidden md:block text-[9px] uppercase tracking-[0.18em] text-[#f6c744]">
               Official Events Page of UST
             </p>
           </div>
         </NavLink>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden items-center justify-center gap-10 md:flex lg:gap-14">
+        {/* --- DESKTOP NAVIGATION (Center-Right) --- */}
+        <nav className="hidden items-center gap-8 md:flex lg:gap-12 ml-auto">
           {links.map(([label, path]) => (
             <NavLink
               key={path}
               to={path}
               className={({ isActive }) =>
-                `text-sm font-inter font-semibold transition-all duration-300 border-b-2 ${
+                `text-sm font-inter font-semibold transition-all duration-300 border-b-2 py-1 ${
                   isActive 
                     ? "text-[#f6c744] border-[#f6c744]" 
                     : "text-white border-transparent hover:text-[#f6c744]"
@@ -47,26 +57,38 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* Placeholder for symmetry */}
-        <div className="hidden md:block" />
+        {/* --- BURGER MENU BUTTON (Mobile Only) --- */}
+        <button 
+          onClick={() => setIsOpen(!isOpen)}
+          className="z-50 flex flex-col gap-1.5 md:hidden ml-auto"
+        >
+          <span className={`h-0.5 w-6 bg-white transition-all ${isOpen ? "rotate-45 translate-y-2" : ""}`} />
+          <span className={`h-0.5 w-6 bg-white transition-all ${isOpen ? "opacity-0" : ""}`} />
+          <span className={`h-0.5 w-6 bg-white transition-all ${isOpen ? "-rotate-45 -translate-y-2" : ""}`} />
+        </button>
 
-        {/* Mobile Navigation */}
-        <nav className="col-span-2 flex min-w-0 items-center justify-end gap-4 text-[11px] md:hidden">
-          {links.map(([label, path]) => (
-            <NavLink
-              key={path}
-              to={path}
-              className={({ isActive }) =>
-                `whitespace-nowrap font-bold font-inter ${
-                  isActive ? "text-[#f6c744]" : "text-white"
-                }`
-              }
-            >
-              {label}
-            </NavLink>
-          ))}
-        </nav>
+        {/* --- MOBILE DROPDOWN MENU --- */}
+        <div className={`absolute top-0 left-0 w-full bg-[#070707] transition-all duration-300 ease-in-out md:hidden ${
+          isOpen ? "translate-y-16 opacity-100 visible" : "-translate-y-full opacity-0 invisible"
+        } border-b border-white/10`}>
+          <nav className="flex flex-col items-center gap-6 py-8">
+            {links.map(([label, path]) => (
+              <NavLink
+                key={path}
+                to={path}
+                onClick={() => setIsOpen(false)}
+                className={({ isActive }) =>
+                  `text-base font-bold font-inter ${
+                    isActive ? "text-[#f6c744]" : "text-white"
+                  }`
+                }
+              >
+                {label}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
       </div>
     </header>
   );
-} 
+}
