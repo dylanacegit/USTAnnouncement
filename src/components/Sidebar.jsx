@@ -2,12 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export default function Sidebar() {
-  const [timeLeft, setTimeLeft] = useState({
-    days: "00",
-    hrs: "00",
-    min: "00",
-    sec: "00",
-  });
+  const [timeLeft, setTimeLeft] = useState({ days: "00", hrs: "00", min: "00", sec: "00" });
 
   useEffect(() => {
     const targetDate = new Date("May 16, 2026 00:00:00").getTime();
@@ -20,9 +15,7 @@ export default function Sidebar() {
         setTimeLeft({ days: "00", hrs: "00", min: "00", sec: "00" });
       } else {
         const d = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const h = Math.floor(
-          (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
-        );
+        const h = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const m = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((difference % (1000 * 60)) / 1000);
 
@@ -78,21 +71,13 @@ export default function Sidebar() {
         </h3>
         <div className="divide-y divide-black/10">
           {[
-            [
-              "ACADEMIC",
-              "Summer enrollment now open via MyUSTe portal.",
-              "March 24, 2026",
-            ],
-            [
-              "LIBRARY",
-              "UST Central Library extends hours until 10 PM.",
-              "March 22, 2026",
-            ],
+            ["ACADEMIC", "Summer enrollment now open via MyUSTe portal.", "March 24, 2026"],
+            ["LIBRARY", "UST Central Library extends hours until 10 PM.", "March 22, 2026"],
           ].map(([cat, text, date]) => (
             /* 1. Change article to Link */
-            <Link
-              key={text}
-              to="/announcements"
+            <Link 
+              key={text} 
+              to="/announcements" 
               className="block py-4 text-left transition-all hover:bg-black/5 group first:pt-0"
             >
               <span className="text-[10px] font-black uppercase tracking-[0.32em] text-[#f6c744]">
@@ -121,9 +106,7 @@ export default function Sidebar() {
               className="group flex items-center justify-between border-b border-neutral-200 py-3 text-sm font-medium text-neutral-700 hover:text-[#c49600]"
             >
               {item}
-              <span className="transition-transform group-hover:translate-x-1">
-                →
-              </span>
+              <span className="transition-transform group-hover:translate-x-1">→</span>
             </a>
           ))}
         </div>
