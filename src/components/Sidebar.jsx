@@ -94,23 +94,31 @@ export default function Sidebar() {
       </section>
 
       {/* Quick Access */}
-      <section>
-        <h3 className="mb-4 border-b-2 border-[#f6c744] pb-3 font-serif text-xl font-bold text-left">
-          Quick Access
-        </h3>
-        <div className="flex flex-col">
-          {["Student Organizations", "Campus Map"].map((item) => (
-            <a
-              href="/"
-              key={item}
-              className="group flex items-center justify-between border-b border-neutral-200 py-3 text-sm font-medium text-neutral-700 hover:text-[#c49600]"
-            >
-              {item}
-              <span className="transition-transform group-hover:translate-x-1">→</span>
-            </a>
-          ))}
-        </div>
-      </section>
+        <section>
+          <h3 className="mb-4 border-b-2 border-[#f6c744] pb-3 font-serif text-xl font-bold text-left">
+            Quick Access
+          </h3>
+          <div className="flex flex-col">
+            {["Student Organizations", "MyUSTe Portal", "Campus Map"].map((item) => (
+              <a
+                key={item}
+                // Conditional href: if the item is MyUSTe Portal, use the link; otherwise, use "/"
+                href={
+                  item === "MyUSTe Portal"
+                    ? "https://myusteportal.ust.edu.ph/?msg=You%20have%20been%20signed-out%20due%20to%20inactivity&msgCode=warning"
+                    : "/"
+                }
+                // Optional: Open in a new tab for external portal links
+                target={item === "MyUSTe Portal" ? "_blank" : "_self"}
+                rel={item === "MyUSTe Portal" ? "noopener noreferrer" : ""}
+                className="group flex items-center justify-between border-b border-neutral-200 py-3 text-sm font-medium text-neutral-700 hover:text-[#c49600]"
+              >
+                {item}
+                <span className="transition-transform group-hover:translate-x-1">→</span>
+              </a>
+            ))}
+          </div>
+        </section>
     </aside>
   );
 }
