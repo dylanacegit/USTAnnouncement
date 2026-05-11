@@ -8,11 +8,8 @@ const askOpenRouter = require("./openrouter");
 
 const app = express();
 
-const questionCache = new Map();
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-
 const aiLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 * 1000,
   max: 20,
   message: {
     message: "Too many AI requests. Please try again in a minute.",
@@ -41,7 +38,10 @@ app.get("/api/events", async (req, res) => {
     res.json(events);
   } catch (error) {
     console.error("GET /api/events FULL ERROR:", error);
-    res.status(500).json({ message: "Failed to fetch events", error: error.message });
+    res.status(500).json({
+      message: "Failed to fetch events",
+      error: error.message,
+    });
   }
 });
 
@@ -59,7 +59,10 @@ app.get("/api/announcements", async (req, res) => {
     res.json(announcements);
   } catch (error) {
     console.error("GET /api/announcements FULL ERROR:", error);
-    res.status(500).json({ message: "Failed to fetch announcements", error: error.message });
+    res.status(500).json({
+      message: "Failed to fetch announcements",
+      error: error.message,
+    });
   }
 });
 
@@ -77,27 +80,9 @@ app.get("/api/announcements/event/:eventTitle", async (req, res) => {
 
     res.json(announcements);
   } catch (error) {
-    console.error("GET /api/announcements/event/:eventTitle error:", error);
-    res.status(500).json({ message: "Failed to fetch event announcements" });
-  }
-});
-
-app.get("/api/accounts", async (req, res) => {
-  try {
-    const db = await connectDB();
-
-    const accounts = await db
-      .collection("accounts")
-      .find({})
-      .sort({ createdAt: -1 })
-      .toArray();
-
-    res.json(accounts);
-  } catch (error) {
-    console.error("GET /api/accounts FULL ERROR:", error);
+    console.error("GET /api/announcements/event error:", error);
     res.status(500).json({
-      message: "Failed to fetch accounts",
-      error: error.message,
+      message: "Failed to fetch event announcements",
     });
   }
 });
@@ -105,6 +90,8 @@ app.get("/api/accounts", async (req, res) => {
 // OPENROUTER AI ROUTE
 app.post("/api/ai/ask", async (req, res) => {
   try {
+    const db = await connectDB(); // ✅ FIX
+
     const { question, history = [] } = req.body;
 
     if (!question || !question.trim()) {
@@ -113,85 +100,67 @@ app.post("/api/ai/ask", async (req, res) => {
       });
     }
 
-    const db = await connectDB();
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const lowerQuestion = question.toLowerCase();
-
-    // FETCH EVENTS
-    const rawEvents = await db
+    // ✅ Fetch once
+    const events = await db
       .collection("events")
       .find({ status: "published" })
       .sort({ startDate: 1 })
       .toArray();
 
-    // ADD STATUS
-    const events = rawEvents.map((event) => {
-      const eventStart = new Date(event.startDate);
-
-      const eventEnd = event.endDate
-        ? new Date(event.endDate)
-        : new Date(event.startDate);
-
-      eventStart.setHours(0, 0, 0, 0);
-      eventEnd.setHours(23, 59, 59, 999);
-
-      let eventProgressStatus = "upcoming";
-
-      if (today > eventEnd) {
-        eventProgressStatus = "done";
-      } else if (today >= eventStart && today <= eventEnd) {
-        eventProgressStatus = "ongoing";
-      }
-
-      return {
-        ...event,
-        eventProgressStatus,
-      };
-    });
-
-    // FETCH ANNOUNCEMENTS
     const announcements = await db
       .collection("announcements")
       .find({ status: "published" })
       .sort({ createdAt: -1 })
       .toArray();
 
-    // UPCOMING EVENTS
-    const upcomingEvents = events
-      .filter((event) => {
-        const eventEnd = new Date(event.endDate || event.startDate);
-        eventEnd.setHours(23, 59, 59, 999);
+    // ✅ Process events
+    const processedEvents = events.map((event) => {
+      const start = new Date(event.startDate);
+      const end = event.endDate
+        ? new Date(event.endDate)
+        : new Date(event.startDate);
 
-        return eventEnd >= today;
-      })
-      .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
 
-    // QUERY DETECTION
+      let status = "upcoming";
+
+      if (today > end) status = "done";
+      else if (today >= start && today <= end) status = "ongoing";
+
+      return { ...event, eventProgressStatus: status };
+    });
+
+    // ✅ Define once
+    const upcomingEvents = processedEvents.filter((event) => {
+      const end = new Date(event.endDate || event.startDate);
+      return end >= today;
+    });
+
+    const lowerQuestion = question.toLowerCase();
+
     const isUpcomingQuery =
       lowerQuestion.includes("upcoming") ||
       lowerQuestion.includes("next event") ||
       lowerQuestion.includes("future event");
 
     const isTodayQuery = lowerQuestion.includes("today");
-
     const isTomorrowQuery = lowerQuestion.includes("tomorrow");
 
     const isThisWeekQuery =
       lowerQuestion.includes("this week") ||
       lowerQuestion.includes("week");
 
-    // KEYWORDS
     const keywords = lowerQuestion
       .replace(/[^\w\s]/g, "")
       .split(" ")
       .filter((word) => word.length > 2);
 
-    // MATCHER
     const matchesQuestion = (item) => {
-      const searchableText = `
+      const text = `
         ${item.title || ""}
         ${item.description || ""}
         ${item.content || ""}
@@ -202,69 +171,43 @@ app.post("/api/ai/ask", async (req, res) => {
         ${item.eventTitle || ""}
       `.toLowerCase();
 
-      return keywords.some((word) =>
-        searchableText.includes(word)
-      );
+      return keywords.some((word) => text.includes(word));
     };
 
     let selectedEvents = [];
     let selectedAnnouncements = [];
 
-    // FILTER LOGIC
     if (isUpcomingQuery) {
       selectedEvents = upcomingEvents.slice(0, 8);
-
     } else if (isTodayQuery) {
-      selectedEvents = events.filter((event) => {
-        const eventDate = new Date(event.startDate);
-
-        return (
-          eventDate.toDateString() === today.toDateString()
-        );
+      selectedEvents = processedEvents.filter((e) => {
+        return new Date(e.startDate).toDateString() === today.toDateString();
       });
-
     } else if (isTomorrowQuery) {
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-      selectedEvents = events.filter((event) => {
-        const eventDate = new Date(event.startDate);
-
-        return (
-          eventDate.toDateString() === tomorrow.toDateString()
-        );
+      selectedEvents = processedEvents.filter((e) => {
+        return new Date(e.startDate).toDateString() === tomorrow.toDateString();
       });
-
     } else if (isThisWeekQuery) {
       const endOfWeek = new Date(today);
       endOfWeek.setDate(endOfWeek.getDate() + 7);
 
-      selectedEvents = events.filter((event) => {
-        const eventDate = new Date(event.startDate);
-
-        return eventDate >= today && eventDate <= endOfWeek;
+      selectedEvents = processedEvents.filter((e) => {
+        const d = new Date(e.startDate);
+        return d >= today && d <= endOfWeek;
       });
-
     } else {
-      selectedEvents = events
-        .filter(matchesQuestion)
-        .slice(0, 8);
-
-      selectedAnnouncements = announcements
-        .filter(matchesQuestion)
-        .slice(0, 8);
+      selectedEvents = processedEvents.filter(matchesQuestion).slice(0, 8);
+      selectedAnnouncements = announcements.filter(matchesQuestion).slice(0, 8);
     }
 
-    // FALLBACK
-    if (
-      selectedEvents.length === 0 &&
-      selectedAnnouncements.length === 0
-    ) {
+    if (selectedEvents.length === 0 && selectedAnnouncements.length === 0) {
       selectedEvents = upcomingEvents.slice(0, 5);
       selectedAnnouncements = announcements.slice(0, 5);
     }
 
-    // CONTEXT
     const contextText = `
 EVENTS:
 ${JSON.stringify(selectedEvents, null, 2)}
@@ -276,14 +219,9 @@ TODAY:
 ${today.toDateString()}
     `.trim();
 
-    const answer = await askOpenRouter(
-      question,
-      contextText,
-      history
-    );
+    const answer = await askOpenRouter(question, contextText, history);
 
     res.json({ answer });
-
   } catch (error) {
     console.error("AI ask error:", error);
 
