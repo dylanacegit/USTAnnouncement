@@ -43,7 +43,6 @@ export default function RegistrationPage({ isOpen, onClose }) {
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
           <div className="relative z-10">
-            <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#f6c744] font-black text-black text-[9px]">UST</div>
             <h2 className="font-playfair text-xl font-bold leading-tight">Create your <span className="text-[#f6c744]">Thomasian</span> account</h2>
             <p className="text-[9px] font-medium tracking-widest text-neutral-400 uppercase">AY 2025–2026</p>
           </div>
