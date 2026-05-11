@@ -4,9 +4,9 @@ import StatCard from "../../components/adminComponents/StatCard";
 import { LuText } from "react-icons/lu";
 import { IoIosPhotos } from "react-icons/io";
 import { useState } from "react";
-import FilterBar from "../../components/adminComponents/mngevents/FilterBar";
-import Pagination from "../../components/adminComponents/mngevents/Pagination";
-import EventModal from "../../components/adminComponents/mngevents/EventModal";
+import FilterBar from "../../components/adminComponents/events/FilterBar";
+import Pagination from "../../components/adminComponents/events/Pagination";
+import EventModal from "../../components/adminComponents/events/EventModal";
 
 // import { FiEdit2, FiTrash2, FiEye } from "react-icons/fi";
 
