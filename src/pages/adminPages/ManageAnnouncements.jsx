@@ -44,6 +44,8 @@ export default function ManageAnnouncements() {
   const [activeTab, setActiveTab] = useState("published");
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("az");
 
   return (
     <div className="space-y-6">
@@ -83,7 +85,27 @@ export default function ManageAnnouncements() {
         />
       </div>
 
-      <FilterBar />
+      <FilterBar
+        search={{
+          placeholder: "Search name or email",
+          value: searchTerm,
+          onChange: setSearchTerm,
+        }}
+        filters={[
+          {
+            key: "sort",
+            label: "Sort By",
+            value: sortBy,
+            onChange: setSortBy,
+            options: [
+              { value: "az", label: "A-Z" },
+              { value: "za", label: "Z-A" },
+              { value: "newest", label: "Newest" },
+              { value: "oldest", label: "Oldest" },
+            ],
+          },
+        ]}
+      />
 
       <AnnouncementsTable
         announcements={announcements}
