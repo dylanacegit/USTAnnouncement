@@ -1,118 +1,105 @@
-import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { useRef } from "react";
+import { NavLink } from "react-router-dom"; //
 
 export default function UpcomingEvents() {
-  const [events, setEvents] = useState([]);
+  const scrollRef = useRef(null);
 
-  useEffect(() => {
-    fetch("http://localhost:5000/api/events")
-      .then((res) => res.json())
-      .then((data) => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+  const dummyEvents = Array(10).fill({
+    title: "Thomasian Welcome Walk 2026",
+    category: "TRADITION",
+    location: "Arch of the Centuries",
+    startDate: "2026-08-01",
+    image: "/images/ust-main-building.png",
+  });
 
-        const upcomingEvents = data
-          .filter((event) => event.status === "published")
-          .filter((event) => new Date(event.startDate) >= today)
-          .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
-          .slice(0, 4);
-
-        setEvents(upcomingEvents);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch upcoming events:", err);
-      });
-  }, []);
-
-  const formatEventDate = (event) => {
-    const start = new Date(event.startDate);
-    const end = event.endDate ? new Date(event.endDate) : null;
-
-    const startDate = start.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-
-    if (!end || event.startDate === event.endDate) {
-      return event.startTime && event.endTime
-        ? `${startDate} · ${event.startTime}–${event.endTime}`
-        : startDate;
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const scrollTo =
+        direction === "left"
+          ? scrollLeft - clientWidth
+          : scrollLeft + clientWidth;
+      scrollRef.current.scrollTo({ left: scrollTo, behavior: "smooth" });
     }
-
-    const endDate = end.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-
-    return `${startDate} - ${endDate}`;
   };
 
   return (
     <section className="mt-10 sm:mt-12">
-      <div className="mb-4 flex items-center justify-between gap-4 sm:mb-5">
-        <h2 className="font-serif text-2xl font-bold sm:text-3xl">
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <h2 className="font-playfair text-2xl font-bold sm:text-3xl text-neutral-800">
           Upcoming Events
         </h2>
-
-        <NavLink
-          to="/events"
-          className="shrink-0 text-xs font-bold text-[#c49600] sm:text-sm"
-        >
-          View All →
-        </NavLink>
-      </div>
-
-      <div className="mb-5 flex gap-2 overflow-x-auto pb-2 sm:mb-6 sm:flex-wrap">
-        {[
-          "All Colleges",
-          "Engineering",
-          "Nursing",
-          "Tourism",
-          "Law",
-          "Arts & Letters",
-          "Commerce",
-        ].map((tab, index) => (
-          <button
-            key={tab}
-            className={`shrink-0 border px-3 py-2 text-[11px] font-semibold ${
-              index === 0
-                ? "border-[#f6c744] bg-[#f6c744]"
-                : "border-neutral-300 bg-white"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {events.map((event) => (
-          <article
-            key={event._id}
-            className="border border-neutral-200 border-t-[#f6c744] border-t-4 p-4 transition hover:-translate-y-1 hover:shadow-md sm:p-5"
-          >
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">
-              {event.category}
-            </p>
-
-            <h3 className="mt-3 min-h-[40px] font-serif text-base font-bold sm:min-h-[44px]">
-              {event.title}
-            </h3>
-
-            <span className="mt-3 block text-xs text-neutral-600">
-              {event.location}
-            </span>
-
-            <small className="mt-2 block text-xs text-neutral-500">
-              {formatEventDate(event)}
-            </small>
-
-            <button className="mt-5 h-8 w-20 bg-[#f6c744] text-xs font-black text-black">
-              View
+        <div className="flex items-center gap-4">
+          <div className="flex gap-2">
+            <button
+              onClick={() => scroll("left")}
+              className="flex h-8 w-8 items-center justify-center border border-neutral-200 text-neutral-400 hover:border-[#f6c744] hover:text-[#f6c744] transition-all"
+            >
+              ←
             </button>
-          </article>
+            <button
+              onClick={() => scroll("right")}
+              className="flex h-8 w-8 items-center justify-center border border-neutral-200 text-neutral-400 hover:border-[#f6c744] hover:text-[#f6c744] transition-all"
+            >
+              →
+            </button>
+          </div>
+          <NavLink
+            to="/events"
+            className="shrink-0 text-[10px] font-black uppercase tracking-widest text-[#c49600] hover:underline"
+          >
+            View All →
+          </NavLink>
+        </div>
+      </div>
+
+      <div
+        ref={scrollRef}
+        className="no-scrollbar flex gap-4 overflow-x-auto scroll-smooth pb-4"
+        style={{ scrollSnapType: "x mandatory", scrollbarWidth: "none" }}
+      >
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `.no-scrollbar::-webkit-scrollbar { display: none; }`,
+          }}
+        />
+        {dummyEvents.map((event, index) => (
+          <div
+            key={index}
+            className="group flex min-w-full flex-col bg-white border border-neutral-100 shadow-sm transition-all border-t-[3px] border-t-[#f6c744] sm:min-w-[calc(50%-8px)] lg:min-w-[calc(25%-12px)]"
+            style={{ scrollSnapAlign: "start" }}
+          >
+            {/* Image: Video aspect ratio + Hover effects */}
+            <div className="relative aspect-video overflow-hidden bg-neutral-200">
+              <img
+                src={event.image}
+                className="h-full w-full object-cover grayscale-[10%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
+                alt={event.title}
+              />
+            </div>
+
+            <div className="p-4 flex-1 flex flex-col">
+              <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400">
+                {event.category}
+              </span>
+              <h3 className="mt-1.5 font-playfair text-[13px] font-bold leading-tight h-8 line-clamp-2 text-neutral-900 group-hover:text-[#c49600] transition-colors">
+                {event.title}
+              </h3>
+              <div className="mt-3 text-[10px] text-neutral-500">
+                <p className="truncate italic">{event.location}</p>
+                <p className="truncate mt-0.5">
+                  {new Date(event.startDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+              <button className="mt-4 w-full bg-[#f6c744] py-2 text-[8px] font-black uppercase tracking-widest text-black hover:bg-[#e3b832] transition-colors">
+                View
+              </button>
+            </div>
+          </div>
         ))}
       </div>
     </section>
