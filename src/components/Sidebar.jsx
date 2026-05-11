@@ -6,6 +6,7 @@ export default function Sidebar() {
 
   useEffect(() => {
     const targetDate = new Date("May 16, 2026 00:00:00").getTime();
+    
     const timer = setInterval(() => {
       const now = new Date().getTime();
       const difference = targetDate - now;
@@ -27,6 +28,7 @@ export default function Sidebar() {
         });
       }
     }, 1000);
+
     return () => clearInterval(timer);
   }, []);
 
@@ -39,7 +41,7 @@ export default function Sidebar() {
 
   return (
     <aside className="space-y-12">
-      {/* Next Event Section - Now Left Aligned */}
+      {/* Next Event Section */}
       <section className="bg-[#080808] px-5 py-7 text-left text-white sm:px-6 sm:py-8">
         <p className="font-inter text-[10px] font-black uppercase tracking-[0.38em] text-[#f6c744]">
           Next Event In
@@ -64,7 +66,7 @@ export default function Sidebar() {
         </div>
       </section>
 
-      {/* Announcements List - Changed text-center to text-left */}
+      {/* Announcements List */}
       <section>
         <h3 className="mb-6 border-b-2 border-[#f6c744] pb-3 font-serif text-xl font-bold text-left">
           Announcements
@@ -74,7 +76,6 @@ export default function Sidebar() {
             ["ACADEMIC", "Summer enrollment now open via MyUSTe portal.", "March 24, 2026"],
             ["LIBRARY", "UST Central Library extends hours until 10 PM.", "March 22, 2026"],
           ].map(([cat, text, date]) => (
-            /* 1. Change article to Link */
             <Link 
               key={text} 
               to="/announcements" 
@@ -83,7 +84,6 @@ export default function Sidebar() {
               <span className="text-[10px] font-black uppercase tracking-[0.32em] text-[#f6c744]">
                 {cat}
               </span>
-              {/* 2. Added hover color change to the text */}
               <p className="mt-1 text-sm leading-relaxed text-black/80 group-hover:text-black">
                 {text}
               </p>
@@ -94,31 +94,29 @@ export default function Sidebar() {
       </section>
 
       {/* Quick Access */}
-        <section>
-          <h3 className="mb-4 border-b-2 border-[#f6c744] pb-3 font-serif text-xl font-bold text-left">
-            Quick Access
-          </h3>
-          <div className="flex flex-col">
-            {["Student Organizations", "MyUSTe Portal", "Campus Map"].map((item) => (
-              <a
-                key={item}
-                // Conditional href: if the item is MyUSTe Portal, use the link; otherwise, use "/"
-                href={
-                  item === "MyUSTe Portal"
-                    ? "https://myusteportal.ust.edu.ph/?msg=You%20have%20been%20signed-out%20due%20to%20inactivity&msgCode=warning"
-                    : "/"
-                }
-                // Optional: Open in a new tab for external portal links
-                target={item === "MyUSTe Portal" ? "_blank" : "_self"}
-                rel={item === "MyUSTe Portal" ? "noopener noreferrer" : ""}
-                className="group flex items-center justify-between border-b border-neutral-200 py-3 text-sm font-medium text-neutral-700 hover:text-[#c49600]"
-              >
-                {item}
-                <span className="transition-transform group-hover:translate-x-1">→</span>
-              </a>
-            ))}
-          </div>
-        </section>
+      <section>
+        <h3 className="mb-4 border-b-2 border-[#f6c744] pb-3 font-serif text-xl font-bold text-left">
+          Quick Access
+        </h3>
+        <div className="flex flex-col">
+          {["Student Organizations", "MyUSTe Portal", "Campus Map"].map((item) => (
+            <a
+              key={item}
+              href={
+                item === "MyUSTe Portal"
+                  ? "https://myusteportal.ust.edu.ph/"
+                  : "/"
+              }
+              target={item === "MyUSTe Portal" ? "_blank" : "_self"}
+              rel={item === "MyUSTe Portal" ? "noopener noreferrer" : ""}
+              className="group flex items-center justify-between border-b border-neutral-200 py-3 text-sm font-medium text-neutral-700 hover:text-[#c49600]"
+            >
+              {item}
+              <span className="transition-transform group-hover:translate-x-1">→</span>
+            </a>
+          ))}
+        </div>
+      </section>
     </aside>
   );
 }
