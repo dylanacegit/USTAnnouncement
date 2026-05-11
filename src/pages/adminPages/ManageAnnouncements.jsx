@@ -1,190 +1,210 @@
-import AdminTable from "../../components/adminComponents/AdminTable";
-import Badge from "../../components/adminComponents/Badge";
-import StatCard from "../../components/adminComponents/StatCard";
-import { LuText } from "react-icons/lu";
-import { IoIosPhotos } from "react-icons/io";
-import { useState } from "react";
-import FilterBar from "../../components/adminComponents/events/FilterBar";
-import Pagination from "../../components/adminComponents/events/Pagination";
-import EventModal from "../../components/adminComponents/events/EventModal";
+import { useEffect, useMemo, useState } from "react";
+import AnnouncementFilters from "../../components/adminComponents/announcements/AnnouncementFilters";
+import AnnouncementModal from "../../components/adminComponents/announcements/AnnouncementModal";
+import AnnouncementStats from "../../components/adminComponents/announcements/AnnouncementStats";
+import AnnouncementsTable from "../../components/adminComponents/announcements/AnnouncementsTable";
+import {
+  getAnnouncements,
+  updateAnnouncementStatus,
+} from "../../services/api";
 
-// import { FiEdit2, FiTrash2, FiEye } from "react-icons/fi";
+const ANNOUNCEMENTS_PER_PAGE = 10;
 
 export default function ManageAnnouncements() {
-  // Sample Data (In a real app, this comes from an API/Database)
-  const events = [
-    {
-      id: 1,
-      title: "University Basketball Cup",
-      type: "Event",
-      etitle: "University Basketball Cup.",
-      category: "Sports",
-      image: "/images/tls.png",
-      createdBy: "Dylan",
-      createdAt: "01/01/2026",
-    },
-    {
-      id: 2,
-      title: "University Basketball Cup",
-      type: "Event",
-      etitle: "University Basketball Cup.",
-      category: "Sports",
-      image: "/images/tls.png",
-      createdBy: "Dylan",
-      createdAt: "01/01/2026",
-    },
-    {
-      id: 3,
-      title: "University Basketball Cup",
-      type: "Event",
-      etitle: "University Basketball Cup.",
-      category: "Sports",
-      image: "/images/tls.png",
-      createdBy: "Dylan",
-      createdAt: "01/01/2026",
-    },
-  ];
+  const [announcements, setAnnouncements] = useState([]);
+  const [activeTab, setActiveTab] = useState("published");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("az");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
 
-  const tableHeaders = [
-    " Title",
-    "Type",
-    "Event Title",
-    "Category",
-    "Image",
-    "Created By",
-    "Created At",
-  ];
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const data = await getAnnouncements();
+        setAnnouncements(
+          Array.isArray(data) ? data : data.announcements || []
+        );
+      } catch (error) {
+        console.error("Failed to fetch announcements:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const formatDate = (date) => {
-    if (!date) return "N/A";
+    fetchAnnouncements();
+  }, []);
 
-    return new Date(date).toLocaleDateString("en-PH", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
+  const announcementsForActiveTab = useMemo(() => {
+    return announcements.filter((announcement) => {
+      const status = announcement.status?.toLowerCase();
+      return activeTab === "archived"
+        ? status === "archived"
+        : status !== "archived";
     });
+  }, [announcements, activeTab]);
+
+  const typeOptions = useMemo(() => {
+    return uniqueOptions(announcementsForActiveTab, (item) => item.type);
+  }, [announcementsForActiveTab]);
+
+  const categoryOptions = useMemo(() => {
+    return uniqueOptions(announcementsForActiveTab, (item) => item.category);
+  }, [announcementsForActiveTab]);
+
+  useEffect(() => {
+    if (typeFilter !== "all" && !typeOptions.includes(typeFilter)) {
+      setTypeFilter("all");
+    }
+  }, [typeFilter, typeOptions]);
+
+  useEffect(() => {
+    if (categoryFilter !== "all" && !categoryOptions.includes(categoryFilter)) {
+      setCategoryFilter("all");
+    }
+  }, [categoryFilter, categoryOptions]);
+
+  const handleToggleArchive = async (announcement) => {
+    const nextStatus =
+      announcement.status?.toLowerCase() === "archived"
+        ? "published"
+        : "archived";
+    const updatedAnnouncement = await updateAnnouncementStatus(
+      announcement._id,
+      nextStatus
+    );
+
+    setAnnouncements((current) =>
+      current.map((item) =>
+        item._id === announcement._id
+          ? { ...item, ...updatedAnnouncement }
+          : item
+      )
+    );
   };
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  //   const handleViewDetails = (event) => {
-  //     // Add dummy data for the details view
-  //     const detailedEvent = {
-  //       ...event,
-  //       venue: "Frassati Building",
-  //       organizer: "CICS Student Council",
-  //       description: "College Week is the biggest annual celebration...",
-  //       createdBy: "Dylan",
-  //       createdAt: "December 18, 2026",
-  //       updatedAt: "December 22, 2026",
-  //     };
-  //     setSelectedEvent(detailedEvent);
-  //     setIsModalOpen(true);
-  //   };
+  const filteredAnnouncements = useMemo(() => {
+    let result = [...announcementsForActiveTab];
+
+    if (searchTerm.trim()) {
+      const keyword = searchTerm.toLowerCase();
+      result = result.filter((announcement) => {
+        return (
+          announcement.title?.toLowerCase().includes(keyword) ||
+          announcement.eventTitle?.toLowerCase().includes(keyword) ||
+          announcement.category?.toLowerCase().includes(keyword) ||
+          announcement.type?.toLowerCase().includes(keyword)
+        );
+      });
+    }
+
+    if (typeFilter !== "all") {
+      result = result.filter((announcement) => announcement.type === typeFilter);
+    }
+
+    if (categoryFilter !== "all") {
+      result = result.filter(
+        (announcement) => announcement.category === categoryFilter
+      );
+    }
+
+    result.sort((a, b) => {
+      const titleA = a.title?.toLowerCase() || "";
+      const titleB = b.title?.toLowerCase() || "";
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+
+      if (sortBy === "az") return titleA.localeCompare(titleB);
+      if (sortBy === "za") return titleB.localeCompare(titleA);
+      if (sortBy === "newest") return dateB - dateA;
+      if (sortBy === "oldest") return dateA - dateB;
+      return 0;
+    });
+
+    return result;
+  }, [
+    announcementsForActiveTab,
+    searchTerm,
+    typeFilter,
+    categoryFilter,
+    sortBy,
+  ]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredAnnouncements.length / ANNOUNCEMENTS_PER_PAGE)
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchTerm, typeFilter, categoryFilter, sortBy]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  const paginatedAnnouncements = useMemo(() => {
+    const start = (currentPage - 1) * ANNOUNCEMENTS_PER_PAGE;
+    return filteredAnnouncements.slice(
+      start,
+      start + ANNOUNCEMENTS_PER_PAGE
+    );
+  }, [filteredAnnouncements, currentPage]);
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="font-serif text-2xl font-bold text-gray-900">
-            Manage Announcements
-          </h1>
-          <p className="text-sm text-gray-500">
-            View and manage all organization events.
-          </p>
-        </div>
-        {/* <button className="bg-dark text-yellow-500 px-6 py-2 rounded-md font-bold text-sm hover:bg-gray-800 transition-colors border border-yellow-600/50">
-          + CREATE NEW EVENT
-        </button> */}
+    <div className="mx-auto max-w-[1800px] space-y-5 sm:space-y-6">
+      <div>
+        <h1 className="font-playfair text-2xl font-bold text-gray-950 sm:text-3xl">
+          Manage Announcements
+        </h1>
+        <p className="mt-1 text-sm text-gray-500 sm:text-base">
+          View, search, and manage published announcements.
+        </p>
       </div>
 
-      {/* 1. Stats Grid */}
-      <div className="grid grid-cols-3  gap-2 sm:gap-6">
-        <StatCard
-          title="Featured Events"
-          value="Thomasian Leadership Summit"
-          subtext="May 08, 2026"
-          image="/images/tls.png" // Path to your image
-          valueClassName="text-[10px] md:text-sm lg:text-[10px] xl:text-sm"
-          subtextClassName="text-gray-500"
-          imageclassName="w-full h-full object-contain"
-        />
-        <StatCard
-          title="Published Events"
-          value="08"
-          subtext="+1 this week"
-          icon={LuText}
-        />
-        <StatCard
-          title="Upcoming Events"
-          value="45"
-          subtext="Needs Review"
-          subtextClassName="text-red-500"
-          icon={IoIosPhotos}
-          className="text-red-500"
-        />
-        {/* <StatCard
-          title="Accounts"
-          value="150"
-          subtext="+5 new users"
-          icon={CiUser}
-        /> */}
-      </div>
+      <AnnouncementStats announcements={announcements} />
 
-      <FilterBar />
+      <AnnouncementFilters
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        typeFilter={typeFilter}
+        setTypeFilter={setTypeFilter}
+        typeOptions={typeOptions}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
+        categoryOptions={categoryOptions}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+      />
 
-      {/* Tabs Layout */}
-      <div className="flex border-b border-gray-200 gap-8 mb-4">
-        <button className="pb-2 border-b-2 border-dark font-bold text-xs uppercase tracking-widest text-dark">
-          Published
-        </button>
-        <button className="pb-2 border-b-2 border-transparent font-bold text-xs uppercase tracking-widest text-gray-400 hover:text-gray-600">
-          Archived
-        </button>
-      </div>
+      <AnnouncementsTable
+        announcements={paginatedAnnouncements}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        loading={loading}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalAnnouncements={filteredAnnouncements.length}
+        totalPages={totalPages}
+        pageSize={ANNOUNCEMENTS_PER_PAGE}
+        onToggleArchive={handleToggleArchive}
+        onViewAnnouncement={setSelectedAnnouncement}
+      />
 
-      {/* The Table */}
-      <AdminTable headers={tableHeaders}>
-        {events.map((event) => (
-          <tr
-            key={event.id}
-            className="hover:bg-gray-50/50 transition-colors group"
-          >
-            <td className="px-6 py-4 text-sm font-medium text-gray-900">
-              {event.title}
-            </td>
-            <td className="px-6 py-4 text-sm text-gray-500">{event.type}</td>
-            <td className="px-6 py-4 text-sm text-dark"> {event.etitle}</td>
-
-            <td className="px-6 py-4">
-              <Badge type={event.category}>{event.category}</Badge>
-            </td>
-            <td className="px-6 py-4">
-              <div className=" flex items-center gap-3">
-                <img
-                  src={event.image}
-                  alt=""
-                  className="w-25 h-15  rounded object-cover border border-gray-200"
-                />
-              </div>
-            </td>
-            <td className="px-6 py-4 text-sm font-medium text-gray-900">
-              {event.createdBy}
-            </td>
-            <td className="px-6 py-4 text-sm text-dark">
-              {" "}
-              {formatDate(event.createdAt)}
-            </td>
-          </tr>
-        ))}
-      </AdminTable>
-
-      <Pagination />
-      <EventModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        event={selectedEvent || {}}
+      <AnnouncementModal
+        isOpen={Boolean(selectedAnnouncement)}
+        onClose={() => setSelectedAnnouncement(null)}
+        announcement={selectedAnnouncement || {}}
       />
     </div>
   );
+}
+
+function uniqueOptions(items, getValue) {
+  return Array.from(
+    new Set(items.map((item) => getValue(item)?.trim()).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b));
 }

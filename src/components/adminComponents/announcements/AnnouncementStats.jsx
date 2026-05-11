@@ -1,40 +1,38 @@
 import {
-  IoPersonOutline,
   IoArchiveOutline,
-  IoShieldCheckmarkOutline,
+  IoCheckmarkCircleOutline,
+  IoMegaphoneOutline,
 } from "react-icons/io5";
 
-export default function AccountStats({ accounts }) {
-  const activeAccounts = accounts.filter(
-    (account) => account.status?.toLowerCase() === "active",
+export default function AnnouncementStats({ announcements }) {
+  const published = announcements.filter(
+    (announcement) => announcement.status?.toLowerCase() !== "archived"
   );
-
-  const archivedAccounts = accounts.filter(
-    (account) => account.status?.toLowerCase() === "archived",
+  const archived = announcements.filter(
+    (announcement) => announcement.status?.toLowerCase() === "archived"
   );
-
-  const adminAccounts = accounts.filter(
-    (account) => account.role?.toLowerCase() === "admin",
+  const eventAnnouncements = published.filter(
+    (announcement) => announcement.type?.toLowerCase() === "event"
   );
 
   const stats = [
     {
-      title: "Active Accounts",
-      value: activeAccounts.length,
-      subtext: "Currently active",
-      icon: IoPersonOutline,
+      title: "Published",
+      value: published.length,
+      subtext: "Visible to users",
+      icon: IoCheckmarkCircleOutline,
     },
     {
-      title: "Archived Accounts",
-      value: archivedAccounts.length,
+      title: "Archived",
+      value: archived.length,
       subtext: "Hidden from active list",
       icon: IoArchiveOutline,
     },
     {
-      title: "Admin Accounts",
-      value: adminAccounts.length,
-      subtext: "Users with admin access",
-      icon: IoShieldCheckmarkOutline,
+      title: "Event Posts",
+      value: eventAnnouncements.length,
+      subtext: "Linked to events",
+      icon: IoMegaphoneOutline,
     },
   ];
 

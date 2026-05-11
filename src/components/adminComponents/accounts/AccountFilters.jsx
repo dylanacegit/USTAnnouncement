@@ -1,34 +1,82 @@
 export default function AccountFilters({
   searchTerm,
   setSearchTerm,
+  departmentFilter,
+  setDepartmentFilter,
+  departmentOptions,
+  roleFilter,
+  setRoleFilter,
+  roleOptions,
   sortBy,
   setSortBy,
 }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <input
-        type="text"
-        placeholder="Search name or email"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full sm:w-80 bg-white border border-gray-300 px-4 py-2 text-sm rounded-md focus:outline-none focus:border-yellow-500"
-      />
+    <div className="flex flex-col gap-2 rounded-2xl bg-white/70 p-2 shadow-sm ring-1 ring-gray-200/80 backdrop-blur lg:flex-row lg:items-center lg:justify-between lg:p-3">
+      <div className="flex h-10 w-full items-center rounded-xl bg-gray-50 px-3 transition-colors focus-within:bg-white focus-within:ring-1 focus-within:ring-yellow-500 sm:h-12 sm:px-4 lg:max-w-xl">
+        <input
+          type="text"
+          placeholder="Search name or email"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="h-full w-full bg-transparent text-xs text-gray-900 outline-none placeholder:text-gray-400 sm:text-sm"
+        />
+      </div>
 
-      <div className="flex items-center gap-2">
-        <label className="text-xs font-bold uppercase tracking-widest text-gray-500">
-          Sort By
-        </label>
+      <div className="grid grid-cols-3 gap-2">
+        <div className="flex h-10 min-w-0 flex-col justify-center rounded-xl bg-gray-50 px-3 transition-colors focus-within:bg-white focus-within:ring-1 focus-within:ring-yellow-500 sm:h-12">
+          <label className="text-[8px] font-black uppercase tracking-[0.16em] text-gray-500 sm:text-[10px]">
+            Dept
+          </label>
 
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="bg-white border border-gray-300 px-3 py-2 text-sm rounded-md focus:outline-none focus:border-yellow-500"
-        >
-          <option value="az">A-Z</option>
-          <option value="za">Z-A</option>
-          <option value="newest">Newest</option>
-          <option value="oldest">Oldest</option>
-        </select>
+          <select
+            value={departmentFilter}
+            onChange={(e) => setDepartmentFilter(e.target.value)}
+            className="h-5 w-full min-w-0 appearance-none border-0 bg-transparent p-0 text-xs text-gray-900 outline-none ring-0 focus:border-0 focus:outline-none focus:ring-0 sm:text-sm"
+          >
+            <option value="all">All</option>
+            {departmentOptions.map((department) => (
+              <option key={department} value={department}>
+                {department}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex h-10 min-w-0 flex-col justify-center rounded-xl bg-gray-50 px-3 transition-colors focus-within:bg-white focus-within:ring-1 focus-within:ring-yellow-500 sm:h-12">
+          <label className="text-[8px] font-black uppercase tracking-[0.16em] text-gray-500 sm:text-[10px]">
+            Role
+          </label>
+
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="h-5 w-full min-w-0 appearance-none border-0 bg-transparent p-0 text-xs text-gray-900 outline-none ring-0 focus:border-0 focus:outline-none focus:ring-0 sm:text-sm"
+          >
+            <option value="all">All</option>
+            {roleOptions.map((role) => (
+              <option key={role} value={role}>
+                {role}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex h-10 min-w-0 flex-col justify-center rounded-xl bg-gray-50 px-3 transition-colors focus-within:bg-white focus-within:ring-1 focus-within:ring-yellow-500 sm:h-12">
+          <label className="text-[8px] font-black uppercase tracking-[0.16em] text-gray-500 sm:text-[10px]">
+            Sort
+          </label>
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="h-5 w-full min-w-0 appearance-none border-0 bg-transparent p-0 text-xs text-gray-900 outline-none ring-0 focus:border-0 focus:outline-none focus:ring-0 sm:text-sm"
+          >
+            <option value="az">A-Z</option>
+            <option value="za">Z-A</option>
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+          </select>
+        </div>
       </div>
     </div>
   );

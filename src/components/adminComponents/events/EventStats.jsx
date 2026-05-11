@@ -1,40 +1,39 @@
 import {
-  IoPersonOutline,
   IoArchiveOutline,
-  IoShieldCheckmarkOutline,
+  IoCalendarOutline,
+  IoCheckmarkCircleOutline,
 } from "react-icons/io5";
 
-export default function AccountStats({ accounts }) {
-  const activeAccounts = accounts.filter(
-    (account) => account.status?.toLowerCase() === "active",
+export default function EventStats({ events }) {
+  const publishedEvents = events.filter(
+    (event) => event.status?.toLowerCase() !== "archived"
   );
-
-  const archivedAccounts = accounts.filter(
-    (account) => account.status?.toLowerCase() === "archived",
+  const archivedEvents = events.filter(
+    (event) => event.status?.toLowerCase() === "archived"
   );
-
-  const adminAccounts = accounts.filter(
-    (account) => account.role?.toLowerCase() === "admin",
-  );
+  const upcomingEvents = publishedEvents.filter((event) => {
+    const date = new Date(event.startDate || event.date);
+    return !Number.isNaN(date.valueOf()) && date >= new Date();
+  });
 
   const stats = [
     {
-      title: "Active Accounts",
-      value: activeAccounts.length,
-      subtext: "Currently active",
-      icon: IoPersonOutline,
+      title: "Published Events",
+      value: publishedEvents.length,
+      subtext: "Visible to users",
+      icon: IoCheckmarkCircleOutline,
     },
     {
-      title: "Archived Accounts",
-      value: archivedAccounts.length,
+      title: "Archived Events",
+      value: archivedEvents.length,
       subtext: "Hidden from active list",
       icon: IoArchiveOutline,
     },
     {
-      title: "Admin Accounts",
-      value: adminAccounts.length,
-      subtext: "Users with admin access",
-      icon: IoShieldCheckmarkOutline,
+      title: "Upcoming Events",
+      value: upcomingEvents.length,
+      subtext: "Scheduled ahead",
+      icon: IoCalendarOutline,
     },
   ];
 

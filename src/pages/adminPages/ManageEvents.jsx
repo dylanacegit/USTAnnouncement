@@ -1,201 +1,186 @@
-import AdminTable from "../../components/adminComponents/AdminTable";
-import Badge from "../../components/adminComponents/Badge";
-import StatCard from "../../components/adminComponents/StatCard";
-import { LuText } from "react-icons/lu";
-import { IoIosPhotos } from "react-icons/io";
-import { useState } from "react";
-import FilterBar from "../../components/adminComponents/events/FilterBar";
-import Pagination from "../../components/adminComponents/events/Pagination";
+import { useEffect, useMemo, useState } from "react";
+import EventFilters from "../../components/adminComponents/events/EventFilters";
 import EventModal from "../../components/adminComponents/events/EventModal";
+import EventStats from "../../components/adminComponents/events/EventStats";
+import EventsTable from "../../components/adminComponents/events/EventsTable";
+import { getEvents, updateEventStatus } from "../../services/api";
 
-// import { FiEdit2, FiTrash2, FiEye } from "react-icons/fi";
+const EVENTS_PER_PAGE = 10;
 
 export default function ManageEvents() {
-  // Sample Data (In a real app, this comes from an API/Database)
-  const events = [
-    {
-      id: 1,
-      title: "University Basketball Cup",
-      date: "Oct 24, 2024",
-      venue: "Main Bldg Aud.",
-      category: "Sports",
-      attending: 120,
-      //   status: "Published",
-    },
-    {
-      id: 2,
-      title: "University Basketball Cup",
-      date: "Oct 24, 2024",
-      venue: "Main Bldg Aud.",
-      category: "Sports",
-      attending: 120,
-      //   status: "Published",
-    },
-    {
-      id: 3,
-      title: "University Basketball Cup",
-      date: "Oct 24, 2024",
-      venue: "Main Bldg Aud.",
-      category: "Sports",
-      attending: 120,
-      //   status: "Published",
-    },
-  ];
-
-  const tableHeaders = [
-    "Event Title",
-    "Date",
-    "Venue",
-    "Category",
-    "Attending",
-    "Actions",
-  ];
-
-  const formatDate = (date) => {
-    if (!date) return "N/A";
-
-    return new Date(date).toLocaleDateString("en-PH", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-    });
-  };
+  const [events, setEvents] = useState([]);
+  const [activeTab, setActiveTab] = useState("published");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [venueFilter, setVenueFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("az");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleViewDetails = (event) => {
-    // Add dummy data for the details view
-    const detailedEvent = {
-      ...event,
-      venue: "Frassati Building",
-      organizer: "CICS Student Council",
-      description: "College Week is the biggest annual celebration...",
-      createdBy: "Dylan",
-      createdAt: "December 18, 2026",
-      updatedAt: "December 22, 2026",
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const data = await getEvents();
+        setEvents(Array.isArray(data) ? data : data.events || []);
+      } catch (error) {
+        console.error("Failed to fetch events:", error);
+      } finally {
+        setLoading(false);
+      }
     };
-    setSelectedEvent(detailedEvent);
-    setIsModalOpen(true);
+
+    fetchEvents();
+  }, []);
+
+  const eventsForActiveTab = useMemo(() => {
+    return events.filter((event) => {
+      const status = event.status?.toLowerCase();
+      return activeTab === "archived"
+        ? status === "archived"
+        : status !== "archived";
+    });
+  }, [events, activeTab]);
+
+  const categoryOptions = useMemo(() => {
+    return uniqueOptions(eventsForActiveTab, (event) => event.category);
+  }, [eventsForActiveTab]);
+
+  const venueOptions = useMemo(() => {
+    return uniqueOptions(eventsForActiveTab, (event) => event.location || event.venue);
+  }, [eventsForActiveTab]);
+
+  useEffect(() => {
+    if (categoryFilter !== "all" && !categoryOptions.includes(categoryFilter)) {
+      setCategoryFilter("all");
+    }
+  }, [categoryFilter, categoryOptions]);
+
+  useEffect(() => {
+    if (venueFilter !== "all" && !venueOptions.includes(venueFilter)) {
+      setVenueFilter("all");
+    }
+  }, [venueFilter, venueOptions]);
+
+  const handleToggleArchive = async (event) => {
+    const nextStatus =
+      event.status?.toLowerCase() === "archived" ? "published" : "archived";
+    const updatedEvent = await updateEventStatus(event._id, nextStatus);
+
+    setEvents((current) =>
+      current.map((item) =>
+        item._id === event._id ? { ...item, ...updatedEvent } : item
+      )
+    );
   };
+
+  const filteredEvents = useMemo(() => {
+    let result = [...eventsForActiveTab];
+
+    if (searchTerm.trim()) {
+      const keyword = searchTerm.toLowerCase();
+      result = result.filter((event) => {
+        const venue = event.location || event.venue || "";
+        return (
+          event.title?.toLowerCase().includes(keyword) ||
+          event.category?.toLowerCase().includes(keyword) ||
+          venue.toLowerCase().includes(keyword)
+        );
+      });
+    }
+
+    if (categoryFilter !== "all") {
+      result = result.filter((event) => event.category === categoryFilter);
+    }
+
+    if (venueFilter !== "all") {
+      result = result.filter(
+        (event) => (event.location || event.venue) === venueFilter
+      );
+    }
+
+    result.sort((a, b) => {
+      const titleA = a.title?.toLowerCase() || "";
+      const titleB = b.title?.toLowerCase() || "";
+      const dateA = new Date(a.startDate || a.date || a.createdAt);
+      const dateB = new Date(b.startDate || b.date || b.createdAt);
+
+      if (sortBy === "az") return titleA.localeCompare(titleB);
+      if (sortBy === "za") return titleB.localeCompare(titleA);
+      if (sortBy === "newest") return dateB - dateA;
+      if (sortBy === "oldest") return dateA - dateB;
+      return 0;
+    });
+
+    return result;
+  }, [eventsForActiveTab, searchTerm, categoryFilter, venueFilter, sortBy]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredEvents.length / EVENTS_PER_PAGE));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, searchTerm, categoryFilter, venueFilter, sortBy]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  const paginatedEvents = useMemo(() => {
+    const start = (currentPage - 1) * EVENTS_PER_PAGE;
+    return filteredEvents.slice(start, start + EVENTS_PER_PAGE);
+  }, [filteredEvents, currentPage]);
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="font-serif text-2xl font-bold text-gray-900">
-            Manage Events
-          </h1>
-          <p className="text-sm text-gray-500">
-            View and manage all organization events.
-          </p>
-        </div>
-        {/* <button className="bg-dark text-yellow-500 px-6 py-2 rounded-md font-bold text-sm hover:bg-gray-800 transition-colors border border-yellow-600/50">
-          + CREATE NEW EVENT
-        </button> */}
+    <div className="mx-auto max-w-[1800px] space-y-5 sm:space-y-6">
+      <div>
+        <h1 className="font-playfair text-2xl font-bold text-gray-950 sm:text-3xl">
+          Manage Events
+        </h1>
+        <p className="mt-1 text-sm text-gray-500 sm:text-base">
+          View, search, and manage organization events.
+        </p>
       </div>
 
-      {/* 1. Stats Grid */}
-      <div className="grid grid-cols-3  gap-2 sm:gap-6">
-        <StatCard
-          title="Featured Events"
-          value="Thomasian Leadership Summit"
-          subtext="May 08, 2026"
-          image="/images/tls.png" // Path to your image
-          valueClassName="text-[10px] md:text-sm lg:text-[10px] xl:text-sm"
-          subtextClassName="text-gray-500"
-          imageclassName="w-full h-full object-contain"
-        />
-        <StatCard
-          title="Published Events"
-          value="08"
-          subtext="+1 this week"
-          icon={LuText}
-        />
-        <StatCard
-          title="Upcoming Events"
-          value="45"
-          subtext="Needs Review"
-          subtextClassName="text-red-500"
-          icon={IoIosPhotos}
-          className="text-red-500"
-        />
-        {/* <StatCard
-          title="Accounts"
-          value="150"
-          subtext="+5 new users"
-          icon={CiUser}
-        /> */}
-      </div>
+      <EventStats events={events} />
 
-      <FilterBar />
+      <EventFilters
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        categoryFilter={categoryFilter}
+        setCategoryFilter={setCategoryFilter}
+        categoryOptions={categoryOptions}
+        venueFilter={venueFilter}
+        setVenueFilter={setVenueFilter}
+        venueOptions={venueOptions}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+      />
 
-      {/* Tabs Layout */}
-      <div className="flex border-b border-gray-200 gap-8 mb-4">
-        <button className="pb-2 border-b-2 border-dark font-bold text-xs uppercase tracking-widest text-dark">
-          Published
-        </button>
-        <button className="pb-2 border-b-2 border-transparent font-bold text-xs uppercase tracking-widest text-gray-400 hover:text-gray-600">
-          Archived
-        </button>
-      </div>
+      <EventsTable
+        events={paginatedEvents}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        loading={loading}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalEvents={filteredEvents.length}
+        totalPages={totalPages}
+        pageSize={EVENTS_PER_PAGE}
+        onToggleArchive={handleToggleArchive}
+        onViewEvent={setSelectedEvent}
+      />
 
-      {/* The Table */}
-      <AdminTable headers={tableHeaders}>
-        {events.map((event) => (
-          <tr
-            key={event.id}
-            className="hover:bg-gray-50/50 transition-colors group"
-          >
-            <td className="px-6 py-4 text-sm font-medium text-gray-900">
-              {event.title}
-            </td>
-            <td className="px-6 py-4 text-sm text-gray-500">
-              {formatDate(event.date)}
-            </td>
-            <td className="px-6 py-4">
-              <Badge type={event.venue}>{event.venue}</Badge>
-            </td>
-
-            <td className="px-6 py-4">
-              <Badge type={event.category}>{event.category}</Badge>
-            </td>
-            <td className="px-6 py-4 text-sm text-dark">{event.attending}</td>
-
-            <td className="px-6 py-4 flex gap-2">
-              {/* <div className="flex gap-3 text-gray-400">
-                           <button className="hover:text-blue-600 transition-colors">
-                             <FiEye size={18} />
-                           </button>
-                           <button className="hover:text-yellow-600 transition-colors">
-                             <FiEdit2 size={18} />
-                           </button>
-                           <button className="hover:text-red-600 transition-colors">
-                             <FiTrash2 size={18} />
-                           </button>
-                         </div> */}
-              <button
-                onClick={() => handleViewDetails(event)}
-                className="hover:bg-gray-300 border  border-gray-500 text-gray-500 px-1 transition-colors"
-              >
-                view
-              </button>
-              <button className="hover:bg-gray-300 border  border-gray-500 text-gray-500 px-1 transition-colors">
-                edit
-              </button>
-              <button className="hover:bg-gray-300 border  border-red-500 text-red-500 px-1 transition-colors">
-                archive
-              </button>
-            </td>
-          </tr>
-        ))}
-      </AdminTable>
-
-      <Pagination />
       <EventModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={Boolean(selectedEvent)}
+        onClose={() => setSelectedEvent(null)}
         event={selectedEvent || {}}
       />
     </div>
   );
+}
+
+function uniqueOptions(items, getValue) {
+  return Array.from(
+    new Set(items.map((item) => getValue(item)?.trim()).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b));
 }

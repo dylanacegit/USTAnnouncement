@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
+const { ObjectId } = require("mongodb");
 const connectDB = require("./db");
 const askOpenRouter = require("./openrouter");
 
@@ -82,6 +83,86 @@ app.get("/api/announcements/event/:eventTitle", async (req, res) => {
   }
 });
 
+app.patch("/api/events/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid event ID." });
+    }
+
+    if (!["published", "archived"].includes(status)) {
+      return res.status(400).json({ message: "Invalid event status." });
+    }
+
+    const db = await connectDB();
+    const eventId = new ObjectId(id);
+
+    const result = await db.collection("events").updateOne(
+      { _id: eventId },
+      {
+        $set: {
+          status,
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "Event not found." });
+    }
+
+    const updatedEvent = await db.collection("events").findOne({ _id: eventId });
+
+    res.json(updatedEvent);
+  } catch (error) {
+    console.error("PATCH /api/events/:id error:", error);
+    res.status(500).json({ message: "Failed to update event" });
+  }
+});
+
+app.patch("/api/announcements/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid announcement ID." });
+    }
+
+    if (!["published", "archived"].includes(status)) {
+      return res.status(400).json({ message: "Invalid announcement status." });
+    }
+
+    const db = await connectDB();
+    const announcementId = new ObjectId(id);
+
+    const result = await db.collection("announcements").updateOne(
+      { _id: announcementId },
+      {
+        $set: {
+          status,
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "Announcement not found." });
+    }
+
+    const updatedAnnouncement = await db
+      .collection("announcements")
+      .findOne({ _id: announcementId });
+
+    res.json(updatedAnnouncement);
+  } catch (error) {
+    console.error("PATCH /api/announcements/:id error:", error);
+    res.status(500).json({ message: "Failed to update announcement" });
+  }
+});
+
 app.get("/api/accounts", async (req, res) => {
   try {
     const db = await connectDB();
@@ -99,6 +180,62 @@ app.get("/api/accounts", async (req, res) => {
       message: "Failed to fetch accounts",
       error: error.message
     });
+  }
+});
+
+app.patch("/api/accounts/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, department } = req.body;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid account ID." });
+    }
+
+    const updates = {
+      updatedAt: new Date(),
+    };
+
+    if (status !== undefined) {
+      if (!["active", "archived"].includes(status)) {
+        return res.status(400).json({ message: "Invalid account status." });
+      }
+
+      updates.status = status;
+    }
+
+    if (department !== undefined) {
+      if (!department || !department.trim()) {
+        return res.status(400).json({ message: "Department is required." });
+      }
+
+      updates.department = department.trim();
+    }
+
+    if (Object.keys(updates).length === 1) {
+      return res.status(400).json({ message: "No account updates provided." });
+    }
+
+    const db = await connectDB();
+
+    const accountId = new ObjectId(id);
+    const result = await db.collection("accounts").updateOne(
+      { _id: accountId },
+      { $set: updates },
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "Account not found." });
+    }
+
+    const updatedAccount = await db
+      .collection("accounts")
+      .findOne({ _id: accountId });
+
+    res.json(updatedAccount);
+  } catch (error) {
+    console.error("PATCH /api/accounts/:id error:", error);
+    res.status(500).json({ message: "Failed to update account" });
   }
 });
 

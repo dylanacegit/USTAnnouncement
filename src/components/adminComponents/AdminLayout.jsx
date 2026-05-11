@@ -195,21 +195,21 @@ export default function AdminLayout() {
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Top Header (Dark) */}
-        <header className="bg-dark text-white h-16 flex items-center justify-between px-6 shrink-0">
-          <div className="flex items-center gap-4">
+        <header className="bg-dark text-white h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 shrink-0">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             <button
               onClick={() => setIsSideBarOpen(!isSideBarOpen)}
               className="text-gray-400 hover:text-white"
             >
-              <IoMdMenu size={24} />
+              <IoMdMenu size={22} />
             </button>
-            <h1 className="font-serif text-xl font-medium tracking-wide">
+            <h1 className="truncate font-serif text-lg font-medium tracking-wide sm:text-xl">
               {/* Dynamic Title based on route or fixed for now */}
               {getTitle()}
             </h1>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
             <div className="relative hidden md:block">
               <IoMdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
@@ -229,7 +229,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Dynamic Page Content */}
-        <main className="flex-1 overflow-y-auto py-2 px-6 bg-gray-100">
+        <main className="flex-1 overflow-y-auto bg-gray-100 px-3 py-3 sm:px-6 sm:py-2">
           <Outlet />
         </main>
       </div>

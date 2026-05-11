@@ -28,8 +28,22 @@ export function getEvents() {
   return request("/api/events");
 }
 
+export function updateEventStatus(eventId, status) {
+  return request(`/api/events/${eventId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
 export function getAnnouncements() {
   return request("/api/announcements");
+}
+
+export function updateAnnouncementStatus(announcementId, status) {
+  return request(`/api/announcements/${announcementId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
 }
 
 export function getEventAnnouncements(eventTitle) {
@@ -38,6 +52,20 @@ export function getEventAnnouncements(eventTitle) {
 
 export function getAccounts() {
   return request("/api/accounts");
+}
+
+export function updateAccountStatus(accountId, status) {
+  return request(`/api/accounts/${accountId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+export function updateAccountDepartment(accountId, department) {
+  return request(`/api/accounts/${accountId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ department }),
+  });
 }
 
 export function askTiggy(question, history = [], signal) {

@@ -2,101 +2,169 @@ import { IoMdClose } from "react-icons/io";
 import {
   CiCalendar,
   CiClock2,
+  CiGrid41,
   CiLocationOn,
   CiUser,
-  CiGrid41,
 } from "react-icons/ci";
 
 export default function EventModal({ isOpen, onClose, event }) {
   if (!isOpen) return null;
 
+  const venue = event.location || event.venue || "No venue provided";
+  const organizer = event.organizer || event.organizedBy || "No organizer";
+  const image = event.image || event.bannerImage;
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5">
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/55 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal Content */}
-      <div className="relative bg-white w-full max-w-3xl rounded-sm overflow-hidden shadow-2xl">
-        {/* Header */}
-        <div className="bg-dark text-white px-6 py-3 flex justify-between items-center">
-          <h2 className="font-serif text-lg tracking-wide">
-            Detailed Event Information
-          </h2>
-          <button
-            onClick={onClose}
-            className="hover:text-yellow-500 transition-colors"
-          >
-            <IoMdClose size={24} />
-          </button>
-        </div>
+      <article className="relative max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-black text-white transition-colors hover:bg-yellow-500 hover:text-black"
+          aria-label="Close event details"
+        >
+          <IoMdClose size={20} />
+        </button>
 
-        <div className="p-8">
-          <h1 className="text-3xl font-serif font-bold text-gray-900 mb-6">
-            {event.title}
-          </h1>
-
-          {/* Info Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            <InfoItem icon={CiCalendar} label="DATE" value={event.date} />
-            <InfoItem icon={CiClock2} label="TIME" value="9AM-6PM" />
-            <InfoItem icon={CiLocationOn} label="VENUE" value={event.venue} />
-            <InfoItem
-              icon={CiUser}
-              label="ORGANIZED BY"
-              value={event.organizer}
-            />
-            <InfoItem icon={CiGrid41} label="CATEGORY" value={event.category} />
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-8">
-            <img
-              src="/images/placeholder-event.jpg"
-              alt="Event"
-              className="w-full md:w-1/2 h-64 object-cover rounded shadow-md"
-            />
-            <div className="flex-1">
-              <p className="text-gray-600 text-sm leading-relaxed">
-                {event.description}
-              </p>
-
-              <div className="mt-12 pt-4 border-t border-gray-100 flex justify-between items-end text-[10px] text-gray-400 uppercase font-bold tracking-widest">
-                <div>
-                  <p>
-                    Created by {event.createdBy} on {event.createdAt}
+        <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="min-h-64 bg-black p-4 text-white sm:p-5">
+            {image ? (
+              <img
+                src={image}
+                alt={event.title}
+                className="h-64 w-full rounded-xl object-cover lg:h-full"
+              />
+            ) : (
+              <div className="grid h-64 w-full place-items-center rounded-xl bg-gradient-to-br from-neutral-900 to-neutral-700 lg:h-full">
+                <div className="text-center">
+                  <p className="font-playfair text-5xl font-bold text-yellow-400">
+                    {(event.title || "E").slice(0, 1)}
                   </p>
-                  <p>
-                    Updated by {event.createdBy} on {event.updatedAt}
+                  <p className="mt-2 text-xs font-black uppercase tracking-[0.2em] text-white/50">
+                    Event Preview
                   </p>
                 </div>
-                <button className="bg-yellow-50 text-yellow-700 px-4 py-1 border border-yellow-200 rounded hover:bg-yellow-100">
-                  EDIT
-                </button>
               </div>
+            )}
+          </div>
+
+          <div className="p-5 sm:p-7">
+            <div className="max-w-xl">
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-600">
+                {event.category || "Event"}
+              </p>
+              <h1 className="mt-3 font-playfair text-3xl font-bold leading-tight text-gray-950 sm:text-4xl">
+                {event.title}
+              </h1>
+              <p className="mt-4 text-sm leading-7 text-gray-600">
+                {event.description || "No event description has been provided."}
+              </p>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <InfoItem icon={CiCalendar} label="Date" value={formatDateRange(event)} />
+              <InfoItem icon={CiClock2} label="Schedule" value={getScheduleLength(event)} />
+              <InfoItem icon={CiLocationOn} label="Venue" value={venue} />
+              <InfoItem icon={CiGrid41} label="Category" value={event.category || "N/A"} />
+              <InfoItem icon={CiUser} label="Organizer" value={organizer} />
+              <InfoItem icon={CiClock2} label="Time" value={formatTime(event)} />
+            </div>
+
+            <div className="mt-7 rounded-xl bg-gray-50 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400">
+                Record
+              </p>
+              <div className="mt-3 grid gap-2 text-xs text-gray-600 sm:grid-cols-2">
+                <Meta label="Created By" value={event.createdBy || "System"} />
+                <Meta label="Created At" value={formatDate(event.createdAt)} />
+                <Meta label="Updated At" value={formatDate(event.updatedAt)} />
+                <Meta label="Status" value={event.status || "Published"} />
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end">
+              <button className="h-9 rounded-lg border border-yellow-500 px-5 text-xs font-black uppercase tracking-[0.14em] text-yellow-700 transition-colors hover:bg-yellow-50">
+                Edit
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </article>
     </div>
   );
 }
 
 function InfoItem({ icon: Icon, label, value }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
       <div className="flex items-center gap-2 text-yellow-600">
-        <div className="p-1.5 bg-yellow-100 rounded text-yellow-700">
-          <Icon size={16} />
-        </div>
-        <span className="text-[9px] font-black tracking-tighter text-gray-500 uppercase">
+        <Icon size={17} />
+        <span className="text-[9px] font-black uppercase tracking-[0.16em] text-gray-400">
           {label}
         </span>
       </div>
-      <p className="text-[10px] font-bold text-gray-800 leading-none ml-8">
+      <p className="mt-2 text-xs font-bold leading-snug text-gray-900">
         {value}
       </p>
     </div>
   );
+}
+
+function Meta({ label, value }) {
+  return (
+    <div>
+      <span className="font-bold text-gray-400">{label}</span>
+      <p className="mt-0.5 font-semibold text-gray-800">{value}</p>
+    </div>
+  );
+}
+
+function formatDate(date) {
+  if (!date) return "N/A";
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.valueOf())) return String(date);
+  return parsed.toLocaleDateString("en-PH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatDateRange(event) {
+  const start = formatDate(event.startDate || event.date);
+  const endDate = event.endDate;
+
+  if (!endDate || endDate === event.startDate || endDate === event.date) {
+    return start;
+  }
+
+  return `${start} - ${formatDate(endDate)}`;
+}
+
+function formatTime(event) {
+  if (event.startTime && event.endTime) return `${event.startTime} - ${event.endTime}`;
+  return event.startTime || event.time || "No time provided";
+}
+
+function getScheduleLength(event) {
+  const start = new Date(event.startDate || event.date);
+  const end = new Date(event.endDate || event.startDate || event.date);
+
+  if (Number.isNaN(start.valueOf()) || Number.isNaN(end.valueOf())) {
+    return "N/A";
+  }
+
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+
+  const days = Math.max(
+    1,
+    Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1
+  );
+
+  return `${days} ${days === 1 ? "day" : "days"}`;
 }
