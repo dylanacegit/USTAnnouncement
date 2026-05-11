@@ -1,13 +1,12 @@
-import Badge from "../Badge";
-import DataTable from "../DataTable";
+import Badge from "./Badge";
+import DataTable from "./DataTable";
 
 const tableHeaders = [
-  "Name",
-  "Email",
-  "Department",
-  "Role",
-  "Created By",
-  "Created At",
+  "Event Title",
+  "Date",
+  "Venue",
+  "Category",
+  "Attending",
   "Actions",
 ];
 
@@ -26,45 +25,37 @@ const tabs = [
   { label: "Archived", value: "archived" },
 ];
 
-export default function AccountsTable({
-  accounts,
-  activeTab,
-  setActiveTab,
-  loading,
-}) {
+export default function DashboardTable({ events, activeTab, setActiveTab }) {
   return (
     <DataTable
       headers={tableHeaders}
       tabs={tabs}
       activeTab={activeTab}
       setActiveTab={setActiveTab}
-      loading={loading}
-      loadingMessage="Loading accounts..."
-      emptyMessage="No accounts found."
+      emptyMessage="No events found."
     >
-      {accounts.map((account) => (
-        <tr key={account._id} className="hover:bg-gray-50/50 transition-colors">
-          <td className="px-6 py-4 text-sm font-bold text-gray-900">
-            {account.firstName} {account.lastName}
+      {events.map((event) => (
+        <tr
+          key={event.id}
+          className="hover:bg-gray-50/50 transition-colors group"
+        >
+          <td className="px-6 py-4 text-sm font-medium text-gray-900">
+            {event.title}
           </td>
 
-          <td className="px-6 py-4 text-sm text-gray-600">{account.email}</td>
-
-          <td className="px-6 py-4 text-sm text-gray-600">
-            {account.department || "N/A"}
+          <td className="px-6 py-4 text-sm text-gray-500">
+            {formatDate(event.date)}
           </td>
 
           <td className="px-6 py-4">
-            <Badge type={account.role}>{account.role || "N/A"}</Badge>
+            <Badge type={event.venue}>{event.venue}</Badge>
           </td>
 
-          <td className="px-6 py-4 text-sm text-gray-600">
-            {account.createdBy || "System"}
+          <td className="px-6 py-4">
+            <Badge type={event.category}>{event.category}</Badge>
           </td>
 
-          <td className="px-6 py-4 text-sm text-gray-600">
-            {formatDate(account.createdAt)}
-          </td>
+          <td className="px-6 py-4 text-sm text-dark">{event.attending}</td>
 
           <td className="px-6 py-4">
             <div className="flex gap-2">

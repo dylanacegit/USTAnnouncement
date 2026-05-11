@@ -229,7 +229,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Dynamic Page Content */}
-        <main className="flex-1 overflow-y-auto py-2 px-6 bg-gray-100">
+        <main className="flex-1 overflow-y-auto py-2 pt-5 px-6 bg-gray-100">
           <Outlet />
         </main>
       </div>

@@ -4,8 +4,8 @@ import { CiCalendar, CiBullhorn, CiUser } from "react-icons/ci";
 import { IoIosPhotos } from "react-icons/io";
 import { FaPlus } from "react-icons/fa6";
 import { LuText } from "react-icons/lu";
-import AdminTable from "../../components/adminComponents/AdminTable";
-import Badge from "../../components/adminComponents/Badge";
+import DashboardTable from "../../components/adminComponents/DashboardTable"; // add this
+import { useState, useMemo } from "react";
 export default function Dashboard() {
   // Sample Data (In a real app, this comes from an API/Database)
   const events = [
@@ -55,6 +55,9 @@ export default function Dashboard() {
       year: "numeric",
     });
   };
+
+  const [activeTab, setActiveTab] = useState("active"); // add if not already here
+
   return (
     <div className="space-y-2">
       <div>
@@ -94,7 +97,7 @@ export default function Dashboard() {
 
       {/* 2. Recent Activity Table (Placeholder for now) */}
       <div className="grid grid-cols-6  gap-4">
-        <div className="sm:col-span-4 col-span-6 bg-white rounded-xl shadow-sm border border-gray-100  px-6">
+        <div className="sm:col-span-4 col-span-6   px-6">
           <h2 className="font-serif text-sm tracking-widest uppercase font-bold mb-4 border-b py-3">
             Recent Activity
           </h2>
@@ -103,7 +106,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="sm:col-span-2 col-span-6 bg-white rounded-xl shadow-sm border border-gray-100  px-6">
+        <div className="sm:col-span-2 col-span-6    px-6">
           <h2 className="font-serif text-sm py-3 tracking-widest uppercase font-bold mb-4 border-b">
             Quick Actions
           </h2>
@@ -117,57 +120,11 @@ export default function Dashboard() {
       </div>
 
       {/* upcoming events */}
-      <div className=" bg-white rounded-xl shadow-sm border border-gray-100  px-6">
-        <h2 className="font-serif text-sm tracking-widest uppercase font-bold mb-4 border-b py-3">
-          upcoming events at a glance
-        </h2>
-        <AdminTable headers={tableHeaders}>
-          {events.map((event) => (
-            <tr
-              key={event.id}
-              className="hover:bg-gray-50/50 transition-colors group"
-            >
-              <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                {event.title}
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-500">
-                {formatDate(event.date)}
-              </td>
-              <td className="px-6 py-4">
-                <Badge type={event.venue}>{event.venue}</Badge>
-              </td>
-
-              <td className="px-6 py-4">
-                <Badge type={event.category}>{event.category}</Badge>
-              </td>
-              <td className="px-6 py-4 text-sm text-dark">{event.attending}</td>
-
-              <td className="px-6 py-4 flex gap-2">
-                {/* <div className="flex gap-3 text-gray-400">
-                       <button className="hover:text-blue-600 transition-colors">
-                         <FiEye size={18} />
-                       </button>
-                       <button className="hover:text-yellow-600 transition-colors">
-                         <FiEdit2 size={18} />
-                       </button>
-                       <button className="hover:text-red-600 transition-colors">
-                         <FiTrash2 size={18} />
-                       </button>
-                     </div> */}
-                <button className="hover:bg-gray-300 border  border-gray-500 text-gray-500 px-1 transition-colors">
-                  view
-                </button>
-                <button className="hover:bg-gray-300 border  border-gray-500 text-gray-500 px-1 transition-colors">
-                  edit
-                </button>
-                <button className="hover:bg-gray-300 border  border-red-500 text-red-500 px-1 transition-colors">
-                  archive
-                </button>
-              </td>
-            </tr>
-          ))}
-        </AdminTable>
-      </div>
+      <DashboardTable
+        events={events}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+      />
     </div>
   );
 }

@@ -54,7 +54,6 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="events" element={<ManageEvents />} />
           <Route path="announcements" element={<ManageAnnouncements />} />
-
           <Route path="accounts" element={<ManageAccounts />} />
         </Route>
       </Routes>
