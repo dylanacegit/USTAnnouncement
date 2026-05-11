@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import AccountStats from "../../components/adminComponents/accounts/AccountStats";
 import AccountFilters from "../../components/adminComponents/accounts/AccountFilters";
 import AccountsTable from "../../components/adminComponents/accounts/AccountsTable";
+import { getAccounts } from "../../services/api";
 
 export default function ManageAccounts() {
   const [accounts, setAccounts] = useState([]);
@@ -10,19 +11,10 @@ export default function ManageAccounts() {
   const [sortBy, setSortBy] = useState("az");
   const [loading, setLoading] = useState(true);
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/accounts`);
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch accounts");
-        }
-
-        const data = await res.json();
-
+        const data = await getAccounts();
         const accountsData = Array.isArray(data) ? data : data.accounts || [];
 
         setAccounts(accountsData);
@@ -34,7 +26,7 @@ export default function ManageAccounts() {
     };
 
     fetchAccounts();
-  }, [API_URL]);
+  }, []);
 
   const filteredAccounts = useMemo(() => {
     let result = accounts.filter((account) => {

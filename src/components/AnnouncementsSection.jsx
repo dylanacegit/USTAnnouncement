@@ -86,7 +86,7 @@ export default function AnnouncementsSection() {
   const createdDate = formatDate(selected.createdAt);
 
   return (
-    <section className="flex flex-1 flex-col p-6 sm:p-10 lg:p-12 text-black bg-white">
+    <section className="flex flex-1 flex-col text-black bg-white">
       <div className="mb-4 flex flex-none items-center justify-between">
         <h2 className="font-playfair text-3xl font-bold tracking-tight text-neutral-800">
           Announcements

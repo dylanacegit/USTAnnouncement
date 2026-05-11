@@ -1,5 +1,7 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+
+const API_URL = "http://localhost:5000/api/ai/ask";
 
 const suggestionPrompts = [
   "What are the upcoming events?",
@@ -10,26 +12,69 @@ const suggestionPrompts = [
 
 export default function AIChatWidget() {
   const [open, setOpen] = useState(false);
-  const [hasNotification, setHasNotification] = useState(true);
-  const [responseNotification, setResponseNotification] = useState(false);
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showWelcomeBubble, setShowWelcomeBubble] = useState(true);
+  const [hasOpenedOnce, setHasOpenedOnce] = useState(false);
 
+  const chatEndRef = useRef(null);
   const controllerRef = useRef(null);
   const cacheRef = useRef(new Map());
 
-  const showResponseNotification = () => {
-    if (!open) {
-      setResponseNotification(true);
+  useEffect(() => {
+    if (open) {
+      setUnreadCount(0);
+      setShowWelcomeBubble(false);
+      setHasOpenedOnce(true);
     }
-  };
+  }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, loading, open]);
+
+  useEffect(() => {
+    if (!loading) return;
+
+    const timers = [
+      setTimeout(() => setLoadingText("Tiggy is checking events..."), 0),
+      setTimeout(() => setLoadingText("Looking through announcements..."), 700),
+      setTimeout(() => setLoadingText("Preparing answer..."), 1400),
+    ];
+
+    return () => timers.forEach(clearTimeout);
+  }, [loading]);
 
   const clearChat = () => {
     setMessages([]);
     setQuestion("");
+    setUnreadCount(0);
     cacheRef.current.clear();
+  };
+
+  const toggleChat = () => {
+    setOpen((prev) => !prev);
+  };
+
+  const addAssistantMessage = (text, cached = false) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        text,
+        cached,
+        time: new Date(),
+      },
+    ]);
+
+    if (!open) {
+      setUnreadCount((prev) => prev + 1);
+    }
   };
 
   async function handleAsk(customQuestion = null) {
@@ -39,17 +84,19 @@ export default function AIChatWidget() {
     const recentHistory = messages.slice(-6);
     const cacheKey = trimmed.toLowerCase();
 
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "user",
+        text: trimmed,
+        time: new Date(),
+      },
+    ]);
+
+    setQuestion("");
+
     if (cacheRef.current.has(cacheKey)) {
-      const cachedAnswer = cacheRef.current.get(cacheKey);
-
-      setMessages((prev) => [
-        ...prev,
-        { role: "user", text: trimmed },
-        { role: "assistant", text: cachedAnswer, cached: true },
-      ]);
-
-      setQuestion("");
-      showResponseNotification();
+      addAssistantMessage(cacheRef.current.get(cacheKey), true);
       return;
     }
 
@@ -60,16 +107,10 @@ export default function AIChatWidget() {
     const controller = new AbortController();
     controllerRef.current = controller;
 
-    setMessages((prev) => [...prev, { role: "user", text: trimmed }]);
-    setQuestion("");
     setLoading(true);
-    setLoadingText("Tiggy is checking events...");
-
-    setTimeout(() => setLoadingText("Looking through announcements..."), 700);
-    setTimeout(() => setLoadingText("Preparing answer..."), 1400);
 
     try {
-      const response = await fetch("http://localhost:5000/api/ai/ask", {
+      const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -81,7 +122,17 @@ export default function AIChatWidget() {
         signal: controller.signal,
       });
 
-      const data = await response.json();
+      let data = {};
+
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(data.answer || data.message || "Request failed.");
+      }
 
       let finalAnswer =
         data.answer || data.message || "No matching information was found.";
@@ -90,32 +141,22 @@ export default function AIChatWidget() {
         finalAnswer = `
 No matching information was found.
 
-You can try asking:
+Try asking:
 - What are the upcoming events?
 - Are there events this week?
-- Show sports events.
-- Show latest announcements.
+- Show sports events
+- Show latest announcements
         `.trim();
       }
 
       cacheRef.current.set(cacheKey, finalAnswer);
-
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", text: finalAnswer, cached: false },
-      ]);
-
-      showResponseNotification();
+      addAssistantMessage(finalAnswer, false);
     } catch (error) {
       if (error.name !== "AbortError") {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            text: "Failed to contact Tiggy.",
-            cached: false,
-          },
-        ]);
+        addAssistantMessage(
+          "Sorry, Tiggy could not connect right now. Please try again.",
+          false
+        );
       }
     } finally {
       setLoading(false);
@@ -132,51 +173,72 @@ You can try asking:
 
   return (
     <>
-      {!open && hasNotification && !responseNotification && (
-        <div className="fixed bottom-24 right-6 z-[98] hidden w-[420px] items-center gap-4 rounded-3xl bg-white px-6 py-4 shadow-2xl md:flex">
-          <img src="/images/tiggy-half.png" alt="Tiggy" className="h-10 w-10" />
+      {!open && showWelcomeBubble && !hasOpenedOnce && (
+        <button
+          onClick={toggleChat}
+          className="fixed bottom-24 right-5 z-[98] hidden w-[360px] items-center gap-4 rounded-3xl bg-white px-5 py-4 text-left shadow-2xl transition hover:-translate-y-1 md:flex"
+        >
+          <img
+            src="/images/tiggy-half.png"
+            alt="Tiggy"
+            className="h-11 w-11 shrink-0"
+          />
 
           <div>
-            <p className="text-base font-medium text-black">
-              For faster event searches and announcements...
+            <p className="text-sm font-semibold text-black">
+              Need help finding events?
             </p>
-
-            <span className="text-sm text-neutral-500">Tiggy · Just now</span>
+            <p className="mt-1 text-xs text-neutral-500">
+              Ask Tiggy about schedules, venues, and announcements.
+            </p>
           </div>
-        </div>
+        </button>
       )}
 
-      {responseNotification && !open && (
-        <div className="fixed bottom-24 right-6 z-[98] hidden w-[360px] items-center gap-4 rounded-3xl bg-white px-5 py-4 shadow-2xl md:flex">
-          <img src="/images/tiggy-half.png" alt="Tiggy" className="h-10 w-10" />
+      {!open && unreadCount > 0 && (
+        <button
+          onClick={toggleChat}
+          className="fixed bottom-24 right-5 z-[98] hidden w-[320px] items-center gap-4 rounded-3xl bg-white px-5 py-4 text-left shadow-2xl transition hover:-translate-y-1 md:flex"
+        >
+          <img
+            src="/images/tiggy-head.png"
+            alt="Tiggy"
+            className="h-10 w-10 shrink-0"
+          />
 
           <div>
-            <p className="text-base font-medium text-black">Tiggy is ready.</p>
-
-            <span className="text-sm text-neutral-500">Tiggy · Just now</span>
+            <p className="text-sm font-semibold text-black">
+              Tiggy replied to your question.
+            </p>
+            <p className="mt-1 text-xs text-neutral-500">
+              Open chat to view the answer.
+            </p>
           </div>
-        </div>
+        </button>
       )}
 
       {open && (
-        <div className="fixed inset-x-3 bottom-20 z-[99] flex max-h-[calc(100svh-96px)] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:inset-x-auto sm:right-8 sm:bottom-24 sm:h-[620px] sm:w-[460px]">
-          <div className="flex h-16 shrink-0 items-center justify-between border-b border-neutral-200 px-4 sm:h-20 sm:px-6">
+        <section className="fixed inset-x-3 bottom-20 z-[99] flex h-[min(720px,calc(100svh-96px))] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:inset-x-auto sm:right-7 sm:bottom-24 sm:w-[460px] md:w-[480px]">
+          <header className="flex h-16 shrink-0 items-center justify-between border-b border-neutral-200 px-4 sm:h-20 sm:px-6">
             <div className="flex min-w-0 items-center gap-3">
-              <img
-                src="/images/tiggy-head.png"
-                alt="Tiggy"
-                className="h-9 w-9 shrink-0 sm:h-10 sm:w-10"
-              />
+              <div className="relative">
+                <img
+                  src="/images/tiggy-head.png"
+                  alt="Tiggy"
+                  className="h-10 w-10 shrink-0"
+                />
+                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500" />
+              </div>
 
               <div className="min-w-0">
                 <h4 className="text-base font-bold text-black">Tiggy</h4>
                 <p className="truncate text-xs text-neutral-500 sm:text-sm">
-                  Ask me about UST events or announcements
+                  UST events and announcements assistant
                 </p>
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <div className="flex shrink-0 items-center gap-3">
               {messages.length > 0 && (
                 <button
                   onClick={clearChat}
@@ -187,26 +249,24 @@ You can try asking:
               )}
 
               <button
-                onClick={() => setOpen(false)}
-                className="text-3xl leading-none text-neutral-500 hover:text-black"
+                onClick={toggleChat}
+                className="grid h-9 w-9 place-items-center rounded-full text-2xl leading-none text-neutral-500 hover:bg-neutral-100 hover:text-black"
+                aria-label="Close chat"
               >
                 ×
               </button>
             </div>
-          </div>
+          </header>
 
-          <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
+          <main className="flex-1 space-y-4 overflow-y-auto bg-neutral-50 p-4 sm:p-5">
             {messages.length === 0 ? (
               <>
-                <div className="rounded-3xl border border-neutral-200 p-4 text-sm leading-7 text-neutral-700 sm:p-5">
-                  <p className="font-bold text-black">👋 Hi Thomasian!</p>
-                  <p className="mt-2">I can help you find:</p>
-                  <ul className="mt-2 list-disc space-y-1 pl-5">
-                    <li>Upcoming events</li>
-                    <li>College activities</li>
-                    <li>Venue schedules</li>
-                    <li>Organization announcements</li>
-                  </ul>
+                <div className="rounded-3xl bg-white p-4 text-sm leading-7 text-neutral-700 shadow-sm sm:p-5">
+                  <p className="font-bold text-black">👋 Hi, Thomasian!</p>
+                  <p className="mt-2">
+                    I can help you search for event dates, venues,
+                    announcements, organizers, and schedules.
+                  </p>
                 </div>
 
                 <div className="grid gap-2">
@@ -214,7 +274,7 @@ You can try asking:
                     <button
                       key={prompt}
                       onClick={() => handleAsk(prompt)}
-                      className="rounded-full border border-[#f6c744] px-4 py-2 text-left text-xs font-semibold text-black hover:bg-[#f6c744]"
+                      className="rounded-2xl border border-[#f6c744] bg-white px-4 py-3 text-left text-xs font-semibold text-black transition hover:bg-[#f6c744]"
                     >
                       {prompt}
                     </button>
@@ -230,25 +290,25 @@ You can try asking:
                   }`}
                 >
                   <div
-                    className={`max-w-[86%] rounded-3xl px-4 py-3 text-sm leading-6 sm:max-w-[80%] sm:px-5 ${
+                    className={`max-w-[88%] rounded-3xl px-4 py-3 text-sm leading-6 shadow-sm sm:max-w-[82%] sm:px-5 ${
                       msg.role === "user"
                         ? "bg-[#f6c744] text-black"
-                        : "bg-neutral-100 text-black"
+                        : "bg-white text-black"
                     }`}
                   >
                     <ReactMarkdown
                       components={{
                         p: ({ children }) => (
-                          <p className="mb-2 leading-7">{children}</p>
+                          <p className="mb-2 last:mb-0">{children}</p>
                         ),
                         strong: ({ children }) => (
                           <strong className="font-bold">{children}</strong>
                         ),
                         ul: ({ children }) => (
-                          <ul className="my-2 space-y-1">{children}</ul>
+                          <ul className="my-2 space-y-1 pl-4">{children}</ul>
                         ),
                         li: ({ children }) => (
-                          <li className="ml-5 list-disc">{children}</li>
+                          <li className="list-disc">{children}</li>
                         ),
                       }}
                     >
@@ -256,8 +316,8 @@ You can try asking:
                     </ReactMarkdown>
 
                     {msg.cached && (
-                      <span className="mt-1 block text-[10px] text-neutral-500">
-                        cached
+                      <span className="mt-2 block text-[10px] text-neutral-500">
+                        cached answer
                       </span>
                     )}
                   </div>
@@ -266,32 +326,38 @@ You can try asking:
             )}
 
             {loading && (
-              <div className="inline-block rounded-3xl bg-neutral-100 px-5 py-3 text-sm text-neutral-600">
-                {loadingText || "Tiggy is thinking..."}
+              <div className="flex justify-start">
+                <div className="rounded-3xl bg-white px-5 py-3 text-sm text-neutral-600 shadow-sm">
+                  {loadingText || "Tiggy is thinking..."}
+                </div>
               </div>
             )}
 
             {messages.length >= 10 && (
               <div className="rounded-2xl border border-[#f6c744] bg-[#fff8df] p-4 text-xs text-black">
-                Conversation may become less accurate after many messages.
+                This chat is getting long. For better accuracy, you can start a
+                new chat.
                 <button
                   onClick={clearChat}
-                  className="ml-2 font-bold text-[#c49600] hover:underline"
+                  className="ml-2 font-bold text-[#b88600] hover:underline"
                 >
                   Start New Chat
                 </button>
               </div>
             )}
-          </div>
+
+            <div ref={chatEndRef} />
+          </main>
 
           {messages.length > 0 && (
-            <div className="shrink-0 border-t border-neutral-100 px-4 py-3">
-              <div className="flex gap-2 overflow-x-auto">
+            <div className="shrink-0 border-t border-neutral-100 bg-white px-4 py-3">
+              <div className="flex gap-2 overflow-x-auto pb-1">
                 {suggestionPrompts.map((prompt) => (
                   <button
                     key={prompt}
                     onClick={() => handleAsk(prompt)}
-                    className="shrink-0 rounded-full border border-neutral-300 px-3 py-2 text-xs font-medium text-black hover:border-[#f6c744] hover:bg-[#f6c744]"
+                    disabled={loading}
+                    className="shrink-0 rounded-full border border-neutral-300 px-3 py-2 text-xs font-medium text-black transition hover:border-[#f6c744] hover:bg-[#f6c744] disabled:opacity-50"
                   >
                     {prompt}
                   </button>
@@ -300,46 +366,49 @@ You can try asking:
             </div>
           )}
 
-          <div className="shrink-0 border-t border-neutral-200 p-3 sm:p-4">
+          <footer className="shrink-0 border-t border-neutral-200 bg-white p-3 sm:p-4">
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask about events, dates, announcements..."
-              className="h-16 w-full resize-none rounded-2xl border border-neutral-300 p-3 text-sm outline-none focus:border-[#f6c744] sm:h-20 sm:p-4"
+              placeholder="Ask about events, dates, venues..."
+              className="h-14 w-full resize-none rounded-2xl border border-neutral-300 p-3 text-sm outline-none transition focus:border-[#f6c744] sm:h-20 sm:p-4"
             />
 
             <button
               onClick={() => handleAsk()}
-              disabled={loading}
-              className="mt-3 h-11 w-full rounded-full bg-[#f6c744] text-sm font-bold text-black hover:bg-[#e3b832] disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={loading || !question.trim()}
+              className="mt-3 h-11 w-full rounded-full bg-[#f6c744] text-sm font-bold text-black transition hover:bg-[#e3b832] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? "Searching..." : "Ask"}
+              {loading ? "Searching..." : "Ask Tiggy"}
             </button>
-          </div>
-        </div>
+          </footer>
+        </section>
       )}
 
       <button
-        onClick={() => {
-          setOpen((prev) => !prev);
-          setHasNotification(false);
-          setResponseNotification(false);
-        }}
-        className="fixed bottom-5 right-5 z-[100] grid h-14 w-14 place-items-center rounded-full bg-[#f6c744] text-xl text-black shadow-2xl hover:scale-105 sm:bottom-7 sm:right-7 sm:h-16 sm:w-16 sm:text-2xl"
+        onClick={toggleChat}
+        className="fixed bottom-5 right-5 z-[100] grid h-14 w-14 place-items-center rounded-full bg-[#f6c744] text-xl text-black shadow-2xl transition hover:scale-105 sm:bottom-7 sm:right-7 sm:h-16 sm:w-16"
+        aria-label="Open Tiggy chat"
       >
-        {open ? "⌄" : 
-            <img
-                src="/images/tiggy-head.png"
-                alt="Tiggy"
-                className="h-9 w-9 shrink-0 sm:h-10 sm:w-10"
-              />
-        }
+        {open ? (
+          <span className="text-3xl leading-none">⌄</span>
+        ) : (
+          <img
+            src="/images/tiggy-head.png"
+            alt="Tiggy"
+            className="h-9 w-9 sm:h-10 sm:w-10"
+          />
+        )}
 
-        {!open && (hasNotification || responseNotification) && (
-          <span className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-red-600 text-xs font-bold text-white">
-            1
+        {!open && unreadCount > 0 && (
+          <span className="absolute -right-1 -top-1 grid h-6 min-w-6 place-items-center rounded-full bg-red-600 px-1 text-xs font-bold text-white">
+            {unreadCount}
           </span>
+        )}
+
+        {!open && showWelcomeBubble && unreadCount === 0 && !hasOpenedOnce && (
+          <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-red-600" />
         )}
       </button>
     </>

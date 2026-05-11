@@ -1,4 +1,3 @@
-import Header from "../components/Header";
 import Hero from "../components/Hero";
 import AnnouncementsSection from "../components/AnnouncementsSection";
 import UpcomingEvents from "../components/UpcomingEvents";
@@ -46,7 +45,7 @@ export default function Home() {
         </div>
       </main>
 
-      {/* <AIChatWidget /> */}
+      <AIChatWidget />
     </div>
   );
 }
