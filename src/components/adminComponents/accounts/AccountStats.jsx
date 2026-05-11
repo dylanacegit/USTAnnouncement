@@ -19,7 +19,8 @@ export default function AccountStats({ accounts }) {
   );
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    /* Changed grid-cols-1 md:grid-cols-3 to grid-cols-3 and adjusted gaps */
+    <div className="grid grid-cols-3 gap-2 sm:gap-6">
       <StatCard
         title="Active Accounts"
         value={activeAccounts.length}

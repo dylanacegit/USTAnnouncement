@@ -1,42 +1,38 @@
-export default function FilterBar() {
+export default function FilterBar({ search, filters = [] }) {
   return (
-    <div className="flex flex-wrap sm:flex-nowrap  items-center gap-2 sm:gap-4 bg-gray-50/50 sm:p-4 rounded-lg mb-6 border border-gray-100">
-      {/* Search Input */}
-      <div className="w-full sm:w-auto  ">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {/* Search — only renders if configured */}
+      {search && (
         <input
           type="text"
-          placeholder="Search events, venue, category etc."
-          className="w-full md:max-w-lg bg-white border-b border-gray-300 py-2 px-1 text-sm focus:outline-none focus:border-dark transition-colors"
+          placeholder={search.placeholder || "Search..."}
+          value={search.value}
+          onChange={(e) => search.onChange(e.target.value)}
+          className="w-full sm:w-80 bg-white border border-gray-300 px-4 py-2 text-sm rounded-md focus:outline-none focus:border-yellow-500"
         />
-      </div>
+      )}
 
-      {/* Dropdowns */}
-      <div className=" flex w-full justify-evenly sm:justify-start  items-center sm:gap-4 text-sm text-gray-600 ">
-        <div className="flex flex-col sm:flex-row items-center sm:gap-2">
-          <span className="text-[10px]">Sort By</span>
-          <select className="border border-gray-300 rounded sm:px-2 py-1 bg-white focus:outline-none">
-            <option>A-Z</option>
-            <option>Recent</option>
-          </select>
-        </div>
+      {/* Filters — one <select> per filter config */}
+      <div className="flex items-center gap-4 flex-wrap">
+        {filters.map((filter) => (
+          <div key={filter.key} className="flex items-center gap-2">
+            <label className="text-xs font-bold uppercase tracking-widest text-gray-500">
+              {filter.label}
+            </label>
 
-        <div className="flex flex-col sm:flex-row items-center sm:gap-2">
-          <span className="text-[10px]">Category</span>
-          <select className="border border-gray-300 rounded sm:px-2 py-1 bg-white focus:outline-none">
-            <option>All</option>
-            <option>Academic</option>
-            <option>Sports</option>
-          </select>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center sm:gap-2">
-          <span className="text-[10px]">Venue</span>
-          <select className="border border-gray-300 rounded sm:px-2 py-1 bg-white focus:outline-none">
-            <option>All</option>
-            <option>Main Bldg</option>
-            <option>TARC</option>
-          </select>
-        </div>
+            <select
+              value={filter.value}
+              onChange={(e) => filter.onChange(e.target.value)}
+              className="bg-white border border-gray-300 px-3 py-2 text-sm rounded-md focus:outline-none focus:border-yellow-500"
+            >
+              {filter.options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        ))}
       </div>
     </div>
   );

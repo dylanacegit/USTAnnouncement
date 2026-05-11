@@ -38,6 +38,9 @@ export default function ManageEvents() {
   const [activeTab, setActiveTab] = useState("published");
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("az");
+  const [category, setCategory] = useState("all");
 
   const handleViewDetails = (event) => {
     const detailedEvent = {
@@ -91,8 +94,37 @@ export default function ManageEvents() {
         />
       </div>
 
-      <FilterBar />
-
+      <FilterBar
+        search={{
+          placeholder: "Search events...",
+          value: searchTerm,
+          onChange: setSearchTerm,
+        }}
+        filters={[
+          {
+            key: "category",
+            label: "Category",
+            value: category,
+            onChange: setCategory,
+            options: [
+              { value: "all", label: "All" },
+              { value: "sports", label: "Sports" },
+              { value: "academic", label: "Academic" },
+              { value: "career", label: "Career" },
+            ],
+          },
+          {
+            key: "sort",
+            label: "Sort By",
+            value: sortBy,
+            onChange: setSortBy,
+            options: [
+              { value: "newest", label: "Newest" },
+              { value: "oldest", label: "Oldest" },
+            ],
+          },
+        ]}
+      />
       <EventsTable
         events={events}
         activeTab={activeTab}

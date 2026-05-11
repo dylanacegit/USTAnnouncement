@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import AccountStats from "../../components/adminComponents/accounts/AccountStats";
-import AccountFilters from "../../components/adminComponents/accounts/AccountFilters";
+// import AccountFilters from "../../components/adminComponents/accounts/AccountFilters";
 import AccountsTable from "../../components/adminComponents/accounts/AccountsTable";
-
+import FilterBar from "../../components/adminComponents/events/FilterBar"; // Reusing the same FilterBar for accounts page since it has search and sort functionality. You can customize it later if needed.
 export default function ManageAccounts() {
   const [accounts, setAccounts] = useState([]);
   const [activeTab, setActiveTab] = useState("active");
@@ -96,11 +96,26 @@ export default function ManageAccounts() {
 
       <AccountStats accounts={accounts} />
 
-      <AccountFilters
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
+      <FilterBar
+        search={{
+          placeholder: "Search name or email",
+          value: searchTerm,
+          onChange: setSearchTerm,
+        }}
+        filters={[
+          {
+            key: "sort",
+            label: "Sort By",
+            value: sortBy,
+            onChange: setSortBy,
+            options: [
+              { value: "az", label: "A-Z" },
+              { value: "za", label: "Z-A" },
+              { value: "newest", label: "Newest" },
+              { value: "oldest", label: "Oldest" },
+            ],
+          },
+        ]}
       />
 
       <AccountsTable
