@@ -68,6 +68,19 @@ export function updateAccountDepartment(accountId, department) {
   });
 }
 
+export function updateAccountProfile(accountId, profile) {
+  return request(`/api/accounts/${accountId}`, {
+    method: "PATCH",
+    body: JSON.stringify(profile),
+  });
+}
+
+export function deleteAccount(accountId) {
+  return request(`/api/accounts/${accountId}`, {
+    method: "DELETE",
+  });
+}
+
 export function askTiggy(question, history = [], signal) {
   return request("/api/ai/ask", {
     method: "POST",

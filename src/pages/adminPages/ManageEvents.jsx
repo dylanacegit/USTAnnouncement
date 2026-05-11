@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import EventFilters from "../../components/adminComponents/events/EventFilters";
 import EventModal from "../../components/adminComponents/events/EventModal";
 import EventStats from "../../components/adminComponents/events/EventStats";
@@ -8,6 +9,7 @@ import { getEvents, updateEventStatus } from "../../services/api";
 const EVENTS_PER_PAGE = 10;
 
 export default function ManageEvents() {
+  const location = useLocation();
   const [events, setEvents] = useState([]);
   const [activeTab, setActiveTab] = useState("published");
   const [searchTerm, setSearchTerm] = useState("");
@@ -32,6 +34,18 @@ export default function ManageEvents() {
 
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const query = params.get("search") || "";
+    const tab = params.get("tab");
+
+    if (["published", "archived"].includes(tab)) {
+      setActiveTab(tab);
+    }
+
+    setSearchTerm(query);
+  }, [location.search]);
 
   const eventsForActiveTab = useMemo(() => {
     return events.filter((event) => {
@@ -84,7 +98,10 @@ export default function ManageEvents() {
         return (
           event.title?.toLowerCase().includes(keyword) ||
           event.category?.toLowerCase().includes(keyword) ||
-          venue.toLowerCase().includes(keyword)
+          venue.toLowerCase().includes(keyword) ||
+          event.organizer?.toLowerCase().includes(keyword) ||
+          event.createdBy?.toLowerCase().includes(keyword) ||
+          event.description?.toLowerCase().includes(keyword)
         );
       });
     }

@@ -186,7 +186,7 @@ app.get("/api/accounts", async (req, res) => {
 app.patch("/api/accounts/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, department } = req.body;
+    const { status, department, firstName, lastName, email } = req.body;
 
     if (!ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid account ID." });
@@ -210,6 +210,32 @@ app.patch("/api/accounts/:id", async (req, res) => {
       }
 
       updates.department = department.trim();
+    }
+
+    if (firstName !== undefined) {
+      if (!firstName || !firstName.trim()) {
+        return res.status(400).json({ message: "First name is required." });
+      }
+
+      updates.firstName = firstName.trim();
+    }
+
+    if (lastName !== undefined) {
+      if (!lastName || !lastName.trim()) {
+        return res.status(400).json({ message: "Last name is required." });
+      }
+
+      updates.lastName = lastName.trim();
+    }
+
+    if (email !== undefined) {
+      const trimmedEmail = email.trim().toLowerCase();
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+        return res.status(400).json({ message: "Valid email is required." });
+      }
+
+      updates.email = trimmedEmail;
     }
 
     if (Object.keys(updates).length === 1) {
@@ -236,6 +262,30 @@ app.patch("/api/accounts/:id", async (req, res) => {
   } catch (error) {
     console.error("PATCH /api/accounts/:id error:", error);
     res.status(500).json({ message: "Failed to update account" });
+  }
+});
+
+app.delete("/api/accounts/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid account ID." });
+    }
+
+    const db = await connectDB();
+    const accountId = new ObjectId(id);
+
+    const result = await db.collection("accounts").deleteOne({ _id: accountId });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "Account not found." });
+    }
+
+    res.json({ message: "Account deleted successfully." });
+  } catch (error) {
+    console.error("DELETE /api/accounts/:id error:", error);
+    res.status(500).json({ message: "Failed to delete account" });
   }
 });
 

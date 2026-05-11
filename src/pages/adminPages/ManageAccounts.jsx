@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import AccountStats from "../../components/adminComponents/accounts/AccountStats";
 import AccountFilters from "../../components/adminComponents/accounts/AccountFilters";
 import AccountsTable from "../../components/adminComponents/accounts/AccountsTable";
@@ -11,6 +12,7 @@ import {
 const ACCOUNTS_PER_PAGE = 10;
 
 export default function ManageAccounts() {
+  const location = useLocation();
   const [accounts, setAccounts] = useState([]);
   const [activeTab, setActiveTab] = useState("active");
   const [searchTerm, setSearchTerm] = useState("");
@@ -36,6 +38,18 @@ export default function ManageAccounts() {
 
     fetchAccounts();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const query = params.get("search") || "";
+    const tab = params.get("tab");
+
+    if (["active", "archived"].includes(tab)) {
+      setActiveTab(tab);
+    }
+
+    setSearchTerm(query);
+  }, [location.search]);
 
   const accountsForActiveTab = useMemo(() => {
     return accounts.filter((account) => {
@@ -126,7 +140,10 @@ export default function ManageAccounts() {
 
         return (
           fullName.includes(keyword) ||
-          account.email?.toLowerCase().includes(keyword)
+          account.email?.toLowerCase().includes(keyword) ||
+          account.department?.toLowerCase().includes(keyword) ||
+          account.role?.toLowerCase().includes(keyword) ||
+          account.createdBy?.toLowerCase().includes(keyword)
         );
       });
     }

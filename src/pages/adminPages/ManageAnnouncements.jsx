@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import AnnouncementFilters from "../../components/adminComponents/announcements/AnnouncementFilters";
 import AnnouncementModal from "../../components/adminComponents/announcements/AnnouncementModal";
 import AnnouncementStats from "../../components/adminComponents/announcements/AnnouncementStats";
@@ -11,6 +12,7 @@ import {
 const ANNOUNCEMENTS_PER_PAGE = 10;
 
 export default function ManageAnnouncements() {
+  const location = useLocation();
   const [announcements, setAnnouncements] = useState([]);
   const [activeTab, setActiveTab] = useState("published");
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,6 +39,18 @@ export default function ManageAnnouncements() {
 
     fetchAnnouncements();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const query = params.get("search") || "";
+    const tab = params.get("tab");
+
+    if (["published", "archived"].includes(tab)) {
+      setActiveTab(tab);
+    }
+
+    setSearchTerm(query);
+  }, [location.search]);
 
   const announcementsForActiveTab = useMemo(() => {
     return announcements.filter((announcement) => {
@@ -96,7 +110,10 @@ export default function ManageAnnouncements() {
           announcement.title?.toLowerCase().includes(keyword) ||
           announcement.eventTitle?.toLowerCase().includes(keyword) ||
           announcement.category?.toLowerCase().includes(keyword) ||
-          announcement.type?.toLowerCase().includes(keyword)
+          announcement.type?.toLowerCase().includes(keyword) ||
+          announcement.caption?.toLowerCase().includes(keyword) ||
+          announcement.content?.toLowerCase().includes(keyword) ||
+          announcement.createdBy?.toLowerCase().includes(keyword)
         );
       });
     }
