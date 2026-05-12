@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FiArchive, FiEdit2, FiRotateCcw, FiTrash2 } from "react-icons/fi";
 import AdminTable from "../AdminTable";
 import Badge from "../Badge";
 
@@ -13,15 +14,41 @@ export default function AnnouncementsTable({
   totalPages,
   pageSize,
   onToggleArchive,
+  onDeleteAnnouncement,
   onViewAnnouncement,
+  onEditAnnouncement,
+  onCreateAnnouncement,
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
   const headers = isEditing
-    ? ["Title", "Type", "Event", "Category", "Created By", "Created At", "Actions"]
-    : ["Title", "Type", "Event", "Category", "Created By", "Created At"];
+    ? [
+        "Title",
+        "Type",
+        "Event",
+        "Category",
+        "Created By",
+        "Created At",
+        "Updated By",
+        "Updated At",
+        "Actions",
+      ]
+    : [
+        "Title",
+        "Type",
+        "Event",
+        "Category",
+        "Created By",
+        "Created At",
+        "Updated By",
+        "Updated At",
+      ];
 
   const getId = (announcement) => announcement._id || announcement.id;
+  const getUpdatedBy = (announcement) =>
+    announcement.updatedBy || announcement.createdBy || "System";
+  const getUpdatedAt = (announcement) =>
+    announcement.updatedAt || announcement.createdAt;
   const formatDate = (date) => {
     if (!date) return "N/A";
     return new Date(date).toLocaleDateString("en-PH", {
@@ -41,6 +68,32 @@ export default function AnnouncementsTable({
     } finally {
       setUpdatingId(null);
     }
+  };
+
+  const handleDeleteAnnouncement = async (announcement) => {
+    const confirmed = window.confirm(
+      `Permanently delete "${announcement.title}"? This cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setUpdatingId(getId(announcement));
+      await onDeleteAnnouncement(announcement);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleRowKeyDown = (keyboardEvent, announcement) => {
+    if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") {
+      keyboardEvent.preventDefault();
+      onViewAnnouncement(announcement);
+    }
+  };
+
+  const stopActionClick = (clickEvent) => {
+    clickEvent.stopPropagation();
   };
 
   const PaginationControls = () => (
@@ -92,7 +145,10 @@ export default function AnnouncementsTable({
         </div>
 
         <div className="grid grid-cols-2 gap-2 sm:flex">
-          <button className="h-8 rounded-md border border-gray-700 px-3 text-xs font-bold hover:bg-black hover:text-white sm:h-9 sm:px-4">
+          <button
+            onClick={onCreateAnnouncement}
+            className="h-8 rounded-md border border-gray-700 px-3 text-xs font-bold hover:bg-black hover:text-white sm:h-9 sm:px-4"
+          >
             Create
           </button>
           <button
@@ -117,7 +173,13 @@ export default function AnnouncementsTable({
           announcements.map((announcement) => (
             <article
               key={getId(announcement)}
-              className="rounded-lg border border-gray-100 bg-white p-3 shadow-sm"
+              role="button"
+              tabIndex={0}
+              onClick={() => onViewAnnouncement(announcement)}
+              onKeyDown={(keyboardEvent) =>
+                handleRowKeyDown(keyboardEvent, announcement)
+              }
+              className="cursor-pointer rounded-lg border border-gray-100 bg-white p-3 shadow-sm transition-colors hover:border-yellow-300 hover:bg-yellow-50/50 focus:outline-none focus:ring-2 focus:ring-yellow-400"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -134,41 +196,62 @@ export default function AnnouncementsTable({
               </div>
               <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                 <Info label="Type" value={announcement.type || "N/A"} />
-                <Info label="Created" value={formatDate(announcement.createdAt)} />
-                <div className="col-span-2">
-                  <Info label="Created By" value={announcement.createdBy || "System"} />
-                </div>
+                <Info label="Category" value={announcement.category || "N/A"} />
+                <Info label="Created By" value={announcement.createdBy || "System"} />
+                <Info label="Created At" value={formatDate(announcement.createdAt)} />
+                <Info label="Updated By" value={getUpdatedBy(announcement)} />
+                <Info label="Updated At" value={formatDate(getUpdatedAt(announcement))} />
               </dl>
               {isEditing && (
                 <div className="mt-3">
                   {activeTab === "archived" ? (
-                    <button
-                      onClick={() => handleToggleArchive(announcement)}
-                      disabled={updatingId === getId(announcement)}
-                      className="h-8 w-full rounded-md border border-green-500 px-3 text-xs font-bold text-green-700 hover:bg-green-50 disabled:opacity-60"
-                    >
-                      {updatingId === getId(announcement)
-                        ? "Updating..."
-                        : "Unarchive"}
-                    </button>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-2">
-                      <button
-                        onClick={() => onViewAnnouncement(announcement)}
-                        className="h-8 rounded-md border border-blue-500 px-2 text-xs font-bold text-blue-600 hover:bg-blue-50"
-                      >
-                        View
-                      </button>
-                      <button className="h-8 rounded-md border border-yellow-500 px-2 text-xs font-bold text-yellow-700 hover:bg-yellow-50">
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleToggleArchive(announcement)}
+                    <div className="flex justify-end gap-2">
+                      <IconButton
+                        label="Unarchive announcement"
+                        tone="green"
+                        onClick={(clickEvent) => {
+                          stopActionClick(clickEvent);
+                          handleToggleArchive(announcement);
+                        }}
                         disabled={updatingId === getId(announcement)}
-                        className="h-8 rounded-md border border-red-500 px-2 text-xs font-bold text-red-600 hover:bg-red-50 disabled:opacity-60"
                       >
-                        {updatingId === getId(announcement) ? "..." : "Archive"}
-                      </button>
+                        <FiRotateCcw size={16} />
+                      </IconButton>
+                      <IconButton
+                        label="Permanently delete announcement"
+                        tone="red"
+                        onClick={(clickEvent) => {
+                          stopActionClick(clickEvent);
+                          handleDeleteAnnouncement(announcement);
+                        }}
+                        disabled={updatingId === getId(announcement)}
+                      >
+                        <FiTrash2 size={16} />
+                      </IconButton>
+                    </div>
+                  ) : (
+                    <div className="flex justify-end gap-2">
+                      <IconButton
+                        label="Edit announcement"
+                        tone="yellow"
+                        onClick={(clickEvent) => {
+                          stopActionClick(clickEvent);
+                          onEditAnnouncement(announcement);
+                        }}
+                      >
+                        <FiEdit2 size={16} />
+                      </IconButton>
+                      <IconButton
+                        label="Archive announcement"
+                        tone="red"
+                        onClick={(clickEvent) => {
+                          stopActionClick(clickEvent);
+                          handleToggleArchive(announcement);
+                        }}
+                        disabled={updatingId === getId(announcement)}
+                      >
+                        <FiArchive size={16} />
+                      </IconButton>
                     </div>
                   )}
                 </div>
@@ -179,7 +262,7 @@ export default function AnnouncementsTable({
       </div>
 
       <div className="hidden overflow-x-auto rounded-lg border border-gray-100 md:block">
-        <div className="min-w-[1040px]">
+        <div className="min-w-[1320px]">
           <AdminTable headers={headers}>
             {loading ? (
               <TableState colSpan={headers.length} text="Loading announcements..." />
@@ -187,7 +270,15 @@ export default function AnnouncementsTable({
               <TableState colSpan={headers.length} text="No announcements found." />
             ) : (
               announcements.map((announcement) => (
-                <tr key={getId(announcement)} className="hover:bg-yellow-50/50">
+                <tr
+                  key={getId(announcement)}
+                  tabIndex={0}
+                  onClick={() => onViewAnnouncement(announcement)}
+                  onKeyDown={(keyboardEvent) =>
+                    handleRowKeyDown(keyboardEvent, announcement)
+                  }
+                  className="cursor-pointer transition-colors hover:bg-yellow-50/50 focus:bg-yellow-50 focus:outline-none"
+                >
                   <td className="px-6 py-5 text-sm font-bold text-gray-950">
                     {announcement.title}
                   </td>
@@ -208,38 +299,62 @@ export default function AnnouncementsTable({
                   <td className="px-6 py-5 text-sm text-gray-600">
                     {formatDate(announcement.createdAt)}
                   </td>
+                  <td className="px-6 py-5 text-sm text-gray-600">
+                    {getUpdatedBy(announcement)}
+                  </td>
+                  <td className="px-6 py-5 text-sm text-gray-600">
+                    {formatDate(getUpdatedAt(announcement))}
+                  </td>
                   {isEditing && (
                     <td className="px-6 py-5">
                       {activeTab === "archived" ? (
-                        <button
-                          onClick={() => handleToggleArchive(announcement)}
-                          disabled={updatingId === getId(announcement)}
-                          className="h-8 rounded-md border border-green-500 px-3 text-xs font-bold text-green-700 hover:bg-green-50 disabled:opacity-60"
-                        >
-                          {updatingId === getId(announcement)
-                            ? "Updating..."
-                            : "Unarchive"}
-                        </button>
+                        <div className="flex gap-2">
+                          <IconButton
+                            label="Unarchive announcement"
+                            tone="green"
+                            onClick={(clickEvent) => {
+                              stopActionClick(clickEvent);
+                              handleToggleArchive(announcement);
+                            }}
+                            disabled={updatingId === getId(announcement)}
+                          >
+                            <FiRotateCcw size={16} />
+                          </IconButton>
+                          <IconButton
+                            label="Permanently delete announcement"
+                            tone="red"
+                            onClick={(clickEvent) => {
+                              stopActionClick(clickEvent);
+                              handleDeleteAnnouncement(announcement);
+                            }}
+                            disabled={updatingId === getId(announcement)}
+                          >
+                            <FiTrash2 size={16} />
+                          </IconButton>
+                        </div>
                       ) : (
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => onViewAnnouncement(announcement)}
-                            className="h-8 rounded-md border border-blue-500 px-3 text-xs font-bold text-blue-600 hover:bg-blue-50"
+                          <IconButton
+                            label="Edit announcement"
+                            tone="yellow"
+                            onClick={(clickEvent) => {
+                              stopActionClick(clickEvent);
+                              onEditAnnouncement(announcement);
+                            }}
                           >
-                            View
-                          </button>
-                          <button className="h-8 rounded-md border border-yellow-500 px-3 text-xs font-bold text-yellow-700 hover:bg-yellow-50">
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleToggleArchive(announcement)}
+                            <FiEdit2 size={16} />
+                          </IconButton>
+                          <IconButton
+                            label="Archive announcement"
+                            tone="red"
+                            onClick={(clickEvent) => {
+                              stopActionClick(clickEvent);
+                              handleToggleArchive(announcement);
+                            }}
                             disabled={updatingId === getId(announcement)}
-                            className="h-8 rounded-md border border-red-500 px-3 text-xs font-bold text-red-600 hover:bg-red-50 disabled:opacity-60"
                           >
-                            {updatingId === getId(announcement)
-                              ? "Updating..."
-                              : "Archive"}
-                          </button>
+                            <FiArchive size={16} />
+                          </IconButton>
                         </div>
                       )}
                     </td>
@@ -282,5 +397,26 @@ function TableState({ colSpan, text }) {
         {text}
       </td>
     </tr>
+  );
+}
+
+function IconButton({ label, tone, disabled = false, onClick, children }) {
+  const toneClasses = {
+    green: "border-green-500 text-green-700 hover:bg-green-50",
+    red: "border-red-500 text-red-600 hover:bg-red-50",
+    yellow: "border-yellow-500 text-yellow-700 hover:bg-yellow-50",
+  };
+
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={`grid h-9 w-9 place-items-center rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${toneClasses[tone]}`}
+    >
+      {children}
+    </button>
   );
 }

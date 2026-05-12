@@ -1,6 +1,6 @@
 const express = require("express");
-const askOpenRouter = require("../openrouter");
-const { buildAiContext } = require("../services/aiContext.service");
+const askOpenRouter = require("../services/openrouter.service");
+const { buildTiggyContext } = require("../services/tiggyContext.service");
 
 const router = express.Router();
 const questionCache = new Map();
@@ -16,7 +16,7 @@ router.post("/ask", async (req, res) => {
       });
     }
 
-    const aiContext = await buildAiContext(question, history);
+    const aiContext = await buildTiggyContext(question, history);
 
     if (aiContext.empty) {
       return res.json({

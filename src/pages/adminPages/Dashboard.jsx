@@ -230,13 +230,13 @@ export default function Dashboard() {
               icon={FaPlus}
               title="Add New Event"
               description="Create an event record"
-              to="/admin/events"
+              to="/admin/events?action=create"
             />
             <QuickActions
               icon={FaPlus}
               title="Add Announcement"
               description="Publish a campus update"
-              to="/admin/announcements"
+              to="/admin/announcements?action=create"
             />
             <QuickActions
               icon={LuText}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-
-const API_URL = "http://localhost:5000/api/ai/ask";
+import { useLocation } from "react-router-dom";
+import { askTiggy } from "../services/api";
 
 const suggestionPrompts = [
   "What are the upcoming events?",
@@ -11,6 +11,7 @@ const suggestionPrompts = [
 ];
 
 export default function AIChatWidget() {
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([]);
@@ -23,6 +24,14 @@ export default function AIChatWidget() {
   const chatEndRef = useRef(null);
   const controllerRef = useRef(null);
   const cacheRef = useRef(new Map());
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+
+    if (params.get("ask") === "tiggy") {
+      setOpen(true);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     if (open) {
@@ -110,30 +119,7 @@ export default function AIChatWidget() {
     setLoading(true);
 
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          question: trimmed,
-          history: recentHistory,
-        }),
-        signal: controller.signal,
-      });
-
-      let data = {};
-
-      try {
-        data = await response.json();
-      } catch {
-        data = {};
-      }
-
-      if (!response.ok) {
-        throw new Error(data.answer || data.message || "Request failed.");
-      }
-
+      const data = await askTiggy(trimmed, recentHistory, controller.signal);
       let finalAnswer =
         data.answer || data.message || "No matching information was found.";
 

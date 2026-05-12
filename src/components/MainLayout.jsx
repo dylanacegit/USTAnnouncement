@@ -1,8 +1,9 @@
 import Sidebar from "./Sidebar";
 
-export default function MainLayout({ children }) {
+export default function MainLayout({ children, hero = null }) {
   return (
     <main className="flex min-h-screen w-full flex-col bg-white">
+      {hero}
       <div className="grid flex-1 grid-cols-1 lg:grid-cols-5">
         {/* Left Side (80%) - Renders dynamic content */}
         <div className="lg:col-span-4">{children}</div>

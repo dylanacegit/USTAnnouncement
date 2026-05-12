@@ -18,6 +18,10 @@ async function request(path, options = {}) {
   }
 
   if (!response.ok) {
+    if (response.status === 413) {
+      throw new Error("The selected image is too large. Please choose a smaller image.");
+    }
+
     throw new Error(data?.message || data?.answer || "Request failed.");
   }
 
@@ -28,6 +32,20 @@ export function getEvents() {
   return request("/api/events");
 }
 
+export function createEvent(eventData) {
+  return request("/api/events", {
+    method: "POST",
+    body: JSON.stringify(eventData),
+  });
+}
+
+export function updateEvent(eventId, eventData) {
+  return request(`/api/events/${eventId}`, {
+    method: "PUT",
+    body: JSON.stringify(eventData),
+  });
+}
+
 export function updateEventStatus(eventId, status) {
   return request(`/api/events/${eventId}`, {
     method: "PATCH",
@@ -35,14 +53,47 @@ export function updateEventStatus(eventId, status) {
   });
 }
 
+export function updateEventFeatured(eventId, isFeatured) {
+  return request(`/api/events/${eventId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ isFeatured }),
+  });
+}
+
+export function deleteEvent(eventId) {
+  return request(`/api/events/${eventId}`, {
+    method: "DELETE",
+  });
+}
+
 export function getAnnouncements() {
   return request("/api/announcements");
+}
+
+export function createAnnouncement(announcementData) {
+  return request("/api/announcements", {
+    method: "POST",
+    body: JSON.stringify(announcementData),
+  });
+}
+
+export function updateAnnouncement(announcementId, announcementData) {
+  return request(`/api/announcements/${announcementId}`, {
+    method: "PUT",
+    body: JSON.stringify(announcementData),
+  });
 }
 
 export function updateAnnouncementStatus(announcementId, status) {
   return request(`/api/announcements/${announcementId}`, {
     method: "PATCH",
     body: JSON.stringify({ status }),
+  });
+}
+
+export function deleteAnnouncement(announcementId) {
+  return request(`/api/announcements/${announcementId}`, {
+    method: "DELETE",
   });
 }
 

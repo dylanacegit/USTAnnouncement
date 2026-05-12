@@ -2,7 +2,6 @@ import Hero from "../components/Hero";
 import AnnouncementsSection from "../components/AnnouncementsSection";
 import UpcomingEvents from "../components/UpcomingEvents";
 import Sidebar from "../components/Sidebar";
-import AIChatWidget from "../components/AIChatWidget";
 import { NavLink } from "react-router-dom";
 
 export default function Home() {
@@ -44,8 +43,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-
-      <AIChatWidget />
     </div>
   );
 }

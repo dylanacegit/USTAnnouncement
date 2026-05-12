@@ -30,14 +30,30 @@ async function getPublishedAnnouncements() {
     .toArray();
 }
 
-async function updateAnnouncementStatus(announcementId, status) {
+async function createAnnouncement(announcementData) {
+  const db = await connectDB();
+  const now = new Date();
+
+  const announcement = {
+    ...announcementData,
+    status: "published",
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const result = await db.collection("announcements").insertOne(announcement);
+
+  return db.collection("announcements").findOne({ _id: result.insertedId });
+}
+
+async function updateAnnouncement(announcementId, announcementData) {
   const db = await connectDB();
 
   const result = await db.collection("announcements").updateOne(
     { _id: announcementId },
     {
       $set: {
-        status,
+        ...announcementData,
         updatedAt: new Date(),
       },
     }
@@ -48,9 +64,40 @@ async function updateAnnouncementStatus(announcementId, status) {
   return db.collection("announcements").findOne({ _id: announcementId });
 }
 
+async function updateAnnouncementStatus(announcementId, status) {
+  const db = await connectDB();
+
+  const result = await db.collection("announcements").updateOne(
+    { _id: announcementId },
+    {
+      $set: {
+        status,
+        updatedBy: "Admin",
+        updatedAt: new Date(),
+      },
+    }
+  );
+
+  if (result.matchedCount === 0) return null;
+
+  return db.collection("announcements").findOne({ _id: announcementId });
+}
+
+async function deleteAnnouncement(announcementId) {
+  const db = await connectDB();
+  const result = await db
+    .collection("announcements")
+    .deleteOne({ _id: announcementId });
+
+  return result.deletedCount > 0;
+}
+
 module.exports = {
+  createAnnouncement,
+  deleteAnnouncement,
   getAllAnnouncements,
   getEventAnnouncements,
   getPublishedAnnouncements,
+  updateAnnouncement,
   updateAnnouncementStatus,
 };

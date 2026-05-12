@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import EventFilters from "../../components/adminComponents/events/EventFilters";
+import EventCreateModal from "../../components/adminComponents/events/EventCreateModal";
 import EventModal from "../../components/adminComponents/events/EventModal";
 import EventStats from "../../components/adminComponents/events/EventStats";
 import EventsTable from "../../components/adminComponents/events/EventsTable";
-import { getEvents, updateEventStatus } from "../../services/api";
+import {
+  createEvent,
+  deleteEvent,
+  getEvents,
+  updateEvent,
+  updateEventFeatured,
+  updateEventStatus,
+} from "../../services/api";
 
 const EVENTS_PER_PAGE = 10;
 
@@ -19,6 +27,8 @@ export default function ManageEvents() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -42,6 +52,10 @@ export default function ManageEvents() {
 
     if (["published", "archived"].includes(tab)) {
       setActiveTab(tab);
+    }
+
+    if (params.get("action") === "create") {
+      setIsCreateModalOpen(true);
     }
 
     setSearchTerm(query);
@@ -86,6 +100,53 @@ export default function ManageEvents() {
         item._id === event._id ? { ...item, ...updatedEvent } : item
       )
     );
+  };
+
+  const handleToggleFeatured = async (event) => {
+    const updatedEvent = await updateEventFeatured(event._id, !event.isFeatured);
+
+    setEvents((current) =>
+      current.map((item) => {
+        if (item._id === updatedEvent._id) return { ...item, ...updatedEvent };
+        if (updatedEvent.isFeatured) return { ...item, isFeatured: false };
+        return item;
+      })
+    );
+    setSelectedEvent((current) => {
+      if (!current) return current;
+      if (current._id === updatedEvent._id) return { ...current, ...updatedEvent };
+      if (updatedEvent.isFeatured) return { ...current, isFeatured: false };
+      return current;
+    });
+  };
+
+  const handleCreateEvent = async (eventData) => {
+    const createdEvent = await createEvent(eventData);
+
+    setEvents((current) => [createdEvent, ...current]);
+    setActiveTab("published");
+    setSelectedEvent(createdEvent);
+  };
+
+  const handleUpdateEvent = async (eventData) => {
+    const updatedEvent = await updateEvent(editingEvent._id, eventData);
+
+    setEvents((current) =>
+      current.map((item) =>
+        item._id === updatedEvent._id ? { ...item, ...updatedEvent } : item
+      )
+    );
+    setSelectedEvent((current) =>
+      current?._id === updatedEvent._id ? { ...current, ...updatedEvent } : current
+    );
+    setEditingEvent(null);
+  };
+
+  const handleDeleteEvent = async (event) => {
+    await deleteEvent(event._id);
+
+    setEvents((current) => current.filter((item) => item._id !== event._id));
+    setSelectedEvent((current) => (current?._id === event._id ? null : current));
   };
 
   const filteredEvents = useMemo(() => {
@@ -184,7 +245,26 @@ export default function ManageEvents() {
         totalPages={totalPages}
         pageSize={EVENTS_PER_PAGE}
         onToggleArchive={handleToggleArchive}
+        onToggleFeatured={handleToggleFeatured}
+        onDeleteEvent={handleDeleteEvent}
         onViewEvent={setSelectedEvent}
+        onEditEvent={setEditingEvent}
+        onCreateEvent={() => setIsCreateModalOpen(true)}
+      />
+
+      <EventCreateModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreate={handleCreateEvent}
+      />
+
+      <EventCreateModal
+        key={editingEvent?._id || "event-edit"}
+        isOpen={Boolean(editingEvent)}
+        onClose={() => setEditingEvent(null)}
+        onUpdate={handleUpdateEvent}
+        event={editingEvent}
+        mode="edit"
       />
 
       <EventModal

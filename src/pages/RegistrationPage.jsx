@@ -139,6 +139,24 @@ export default function RegistrationPage({ isOpen, onClose }) {
                   ))}
                 </div>
               </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-neutral-400 uppercase">Interests</label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {interests.map((interest) => (
+                    <button
+                      key={interest}
+                      onClick={() => handleInterestToggle(interest)}
+                      className={`text-[9px] font-bold py-1.5 border transition-all ${
+                        formData.interests.includes(interest)
+                          ? "bg-[#f6c744] text-black border-[#f6c744]"
+                          : "bg-white text-neutral-400 border-neutral-100 hover:border-[#f6c744]"
+                      }`}
+                    >
+                      {interest}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 

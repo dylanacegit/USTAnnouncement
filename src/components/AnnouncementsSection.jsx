@@ -1,60 +1,56 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-
-const DUMMY_DATA = [
-  {
-    _id: "1",
-    title: "Fun Run during April 27 - May 1, 2026",
-    category: "CATEGORY",
-    content:
-      "A premier academic gathering uniting researchers, faculty, and students from all colleges in a full-day program of paper presentations and poster exhibits.",
-    image: "/images/fun-run.png",
-    location: "Main Building Auditorium",
-    time: "8:00 AM - 6:00 PM",
-    published: "April 20, 2026 12:31 PM",
-    updated: "April 24, 2026 2:54 PM",
-    createdAt: "2026-04-12T12:10:00Z",
-    updatedAt: "2026-04-14T15:45:00Z",
-    isAdminFeatured: true,
-  },
-  {
-    _id: "2",
-    title: "New Library Operating Hours",
-    category: "FACILITIES",
-    content:
-      "The Miguel de Benavides Library will now be open until 10:00 PM on weekdays to accommodate research students.",
-    image: "/images/fun-run.png",
-    location: "Central Library",
-    time: "8:00 AM - 10:00 PM",
-    published: "May 1, 2026 8:00 AM",
-    updated: "May 1, 2026 9:00 AM",
-    createdAt: "2026-04-07T08:00:00Z",
-    updatedAt: "2026-04-07T08:00:00Z",
-  },
-  {
-    _id: "3",
-    title: "Thomasian Welcome Mass 2026",
-    category: "RELIGIOUS",
-    content:
-      "Join the entire community as we start the academic year with a Eucharistic celebration.",
-    image: "/images/fun-run.png",
-    location: "QPav",
-    time: "9:00 AM - 11:30 AM",
-    published: "May 7, 2026 9:00 AM",
-    updated: "May 7, 2026 9:00 AM",
-    createdAt: "2026-04-07T09:00:00Z",
-    updatedAt: "2026-04-07T09:00:00Z",
-  },
-];
+import { getAnnouncements } from "../services/api";
+import {
+  formatDisplayDate,
+  getAnnouncementBody,
+  getItemImage,
+  getPublishedItems,
+} from "../utils/contentFormatters";
 
 export default function AnnouncementsSection() {
-  const [announcements] = useState(DUMMY_DATA);
-  const [selected, setSelected] = useState(DUMMY_DATA[0]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const [viewedIds, setViewedIds] = useState(() => {
     return JSON.parse(localStorage.getItem("viewedAnnouncements")) || [];
   });
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadAnnouncements() {
+      try {
+        const data = await getAnnouncements();
+        const publishedAnnouncements = getPublishedItems(
+          Array.isArray(data) ? data : data.announcements || []
+        )
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 6);
+
+        if (!ignore) {
+          setAnnouncements(publishedAnnouncements);
+          setSelected(
+            publishedAnnouncements.find((item) => item.isAdminFeatured) ||
+              publishedAnnouncements[0] ||
+              null
+          );
+        }
+      } catch (error) {
+        console.error("Failed to load announcements:", error);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+
+    loadAnnouncements();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const handleSelectAnnouncement = (item) => {
     setSelected(item);
@@ -73,8 +69,8 @@ export default function AnnouncementsSection() {
     navigate("/announcements", { state: { featuredAnnouncement: selected } });
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
+  const formatDateParts = (dateString) => {
+    const date = dateString ? new Date(dateString) : new Date();
     return {
       day: date.toLocaleDateString("en-US", { day: "2-digit" }),
       month: date.toLocaleDateString("en-US", { month: "short" }).toUpperCase(),
@@ -82,8 +78,32 @@ export default function AnnouncementsSection() {
     };
   };
 
-  if (!selected) return null;
-  const createdDate = formatDate(selected.createdAt);
+  if (loading) {
+    return (
+      <section className="flex flex-1 flex-col text-black bg-white">
+        <div className="mb-4 h-8 w-56 animate-pulse bg-neutral-200" />
+        <div className="h-[320px] animate-pulse border border-neutral-100 bg-neutral-100" />
+      </section>
+    );
+  }
+
+  if (!selected) {
+    return (
+      <section className="flex flex-1 flex-col text-black bg-white">
+        <div className="mb-4 flex flex-none items-center justify-between">
+          <h2 className="font-playfair text-3xl font-bold tracking-tight text-neutral-800">
+            Announcements
+          </h2>
+        </div>
+        <div className="border border-dashed border-neutral-200 bg-white p-6 text-sm text-neutral-500">
+          No published announcements are available yet.
+        </div>
+      </section>
+    );
+  }
+
+  const selectedBody = getAnnouncementBody(selected);
+  const createdDate = formatDateParts(selected.createdAt);
 
   return (
     <section className="flex flex-1 flex-col text-black bg-white">
@@ -95,40 +115,42 @@ export default function AnnouncementsSection() {
           to="/announcements"
           className="text-[10px] font-black uppercase tracking-widest text-[#c49600] hover:underline"
         >
-          View All →
+          View All
         </NavLink>
       </div>
 
-      <div className="grid w-full h-[320px] gap-3 bg-[#F8F7F4] p-3 shadow-sm lg:grid-cols-[1fr_60px_280px] overflow-hidden border border-neutral-100">
+      <div className="grid w-full gap-3 overflow-hidden border border-neutral-100 bg-[#F8F7F4] p-3 shadow-sm lg:h-[320px] lg:grid-cols-[1fr_60px_280px]">
         {/* HERO CARD */}
-        <article className="relative h-full overflow-hidden group bg-neutral-900">
+        <article className="group relative min-h-[230px] overflow-hidden bg-neutral-900 sm:min-h-[280px] lg:h-full lg:min-h-0">
           <img
-            src={selected.image}
+            src={getItemImage(selected)}
             alt={selected.title}
             className="absolute inset-0 h-full w-full object-cover opacity-60 transition-transform duration-700 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-          <div className="relative z-10 flex h-full flex-col p-6 text-white md:p-8">
+          <div className="relative z-10 flex h-full flex-col p-5 text-white sm:p-6 md:p-8">
             <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[#f6c744]">
               {selected.category}
             </span>
 
-            <h3 className="mt-2 max-w-xl font-playfair text-xl font-bold leading-tight md:text-2xl">
+            <h3 className="mt-2 max-w-xl font-playfair text-lg font-bold leading-tight sm:text-xl md:text-2xl">
               {selected.title}
             </h3>
 
             <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[8px] font-black uppercase tracking-wider text-white/90">
               <span className="flex items-center gap-1.5">
-                <div className="h-2.5 w-2.5 bg-[#f6c744]" /> {selected.location}
+                <div className="h-2.5 w-2.5 bg-[#f6c744]" />{" "}
+                {selected.location || selected.eventTitle || "General"}
               </span>
               <span className="flex items-center gap-1.5">
-                <div className="h-2.5 w-2.5 bg-[#f6c744]" /> {selected.time}
+                <div className="h-2.5 w-2.5 bg-[#f6c744]" />{" "}
+                {formatDisplayDate(selected.createdAt)}
               </span>
             </div>
 
-            <p className="mt-3 max-w-lg text-[11px] leading-relaxed text-white/70 italic line-clamp-3">
-              {selected.content}
+            <p className="mt-3 max-w-lg text-[11px] leading-relaxed text-white/70 italic line-clamp-2 sm:line-clamp-3">
+              {selectedBody}
             </p>
 
             <button
@@ -138,9 +160,9 @@ export default function AnnouncementsSection() {
               View
             </button>
 
-            <div className="mt-auto pt-6 flex gap-4 text-[8px] font-bold uppercase tracking-tighter text-white/40">
-              <span>Created at: {selected.createdAt.split("T")[0]}</span>
-              <span>Updated: {selected.updatedAt.split("T")[0]}</span>
+            <div className="mt-auto hidden gap-4 pt-6 text-[8px] font-bold uppercase tracking-tighter text-white/40 sm:flex">
+              <span>Created at: {formatDisplayDate(selected.createdAt)}</span>
+              <span>Updated: {formatDisplayDate(selected.updatedAt)}</span>
             </div>
           </div>
         </article>
@@ -159,14 +181,14 @@ export default function AnnouncementsSection() {
         </div>
 
         {/* SIDEBAR QUEUE */}
-        <div className="flex h-full flex-col gap-2 overflow-y-auto pr-1 custom-scrollbar">
+        <div className="flex max-h-[190px] flex-col gap-2 overflow-y-auto pr-1 custom-scrollbar sm:max-h-[220px] lg:h-full lg:max-h-none">
           {announcements
             .filter((item) => item._id !== selected._id)
             .map((item) => (
               <button
                 key={item._id}
                 onClick={() => handleSelectAnnouncement(item)}
-                className="group relative flex flex-none flex-col justify-center bg-white border border-neutral-200/60 p-4 text-left transition-all hover:bg-white/50"
+                className="group relative flex flex-none flex-col justify-center bg-white border border-neutral-200/60 p-3 text-left transition-all hover:bg-white/50 sm:p-4"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[8px] font-black uppercase tracking-widest text-[#c49600]">
@@ -180,9 +202,9 @@ export default function AnnouncementsSection() {
                   {item.title}
                 </strong>
                 <span className="mt-1 text-[9px] text-neutral-400 font-bold uppercase tracking-tighter">
-                  {item.location.split(" ")[0]} |{" "}
-                  {formatDate(item.createdAt).month}{" "}
-                  {formatDate(item.createdAt).day}
+                  {(item.location || item.eventTitle || "General").split(" ")[0]} |{" "}
+                  {formatDateParts(item.createdAt).month}{" "}
+                  {formatDateParts(item.createdAt).day}
                 </span>
               </button>
             ))}

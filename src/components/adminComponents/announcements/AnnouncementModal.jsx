@@ -100,13 +100,10 @@ export default function AnnouncementModal({ isOpen, onClose, announcement }) {
               </p>
             </section>
 
-            <div className="mt-5 flex items-center justify-between gap-3">
+            <div className="mt-5 flex items-center justify-end gap-3">
               <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-gray-500">
                 {announcement.status || "Published"}
               </span>
-              <button className="h-9 rounded-lg border border-yellow-500 px-5 text-xs font-black uppercase tracking-[0.14em] text-yellow-700 transition-colors hover:bg-yellow-50">
-                Edit
-              </button>
             </div>
           </div>
         </div>

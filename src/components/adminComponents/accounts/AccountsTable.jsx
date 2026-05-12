@@ -28,6 +28,8 @@ export default function AccountsTable({
     "Role",
     "Created By",
     "Created At",
+    "Updated By",
+    "Updated At",
   ];
   const tableHeaders = isEditing ? [...baseHeaders, "Actions"] : baseHeaders;
 
@@ -90,6 +92,8 @@ export default function AccountsTable({
   const endItem = Math.min(currentPage * pageSize, totalAccounts);
   const canGoPrevious = currentPage > 1;
   const canGoNext = currentPage < totalPages;
+  const getUpdatedBy = (account) => account.updatedBy || account.createdBy || "System";
+  const getUpdatedAt = (account) => account.updatedAt || account.createdAt;
 
   const PaginationControls = () => (
     <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
@@ -264,18 +268,42 @@ export default function AccountsTable({
                 </div>
                 <div>
                   <dt className="font-black uppercase tracking-[0.14em] text-gray-400">
-                    Created
+                    Role
                   </dt>
                   <dd className="mt-0.5 text-gray-700">
-                    {formatDate(account.createdAt)}
+                    {account.role || "N/A"}
                   </dd>
                 </div>
-                <div className="col-span-2">
+                <div>
                   <dt className="font-black uppercase tracking-[0.14em] text-gray-400">
                     Created By
                   </dt>
                   <dd className="mt-0.5 truncate text-gray-700">
                     {account.createdBy || "System"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-black uppercase tracking-[0.14em] text-gray-400">
+                    Created At
+                  </dt>
+                  <dd className="mt-0.5 text-gray-700">
+                    {formatDate(account.createdAt)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-black uppercase tracking-[0.14em] text-gray-400">
+                    Updated By
+                  </dt>
+                  <dd className="mt-0.5 truncate text-gray-700">
+                    {getUpdatedBy(account)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-black uppercase tracking-[0.14em] text-gray-400">
+                    Updated At
+                  </dt>
+                  <dd className="mt-0.5 text-gray-700">
+                    {formatDate(getUpdatedAt(account))}
                   </dd>
                 </div>
               </dl>
@@ -318,7 +346,7 @@ export default function AccountsTable({
       </div>
 
       <div className="hidden overflow-x-auto rounded-lg border border-gray-100 md:block">
-        <div className="min-w-[1040px]">
+        <div className="min-w-[1320px]">
           <AdminTable headers={tableHeaders}>
             {loading ? (
               <tr>
@@ -366,6 +394,12 @@ export default function AccountsTable({
 
                   <td className="px-6 py-5 text-sm text-gray-600">
                     {formatDate(account.createdAt)}
+                  </td>
+                  <td className="px-6 py-5 text-sm text-gray-600">
+                    {getUpdatedBy(account)}
+                  </td>
+                  <td className="px-6 py-5 text-sm text-gray-600">
+                    {formatDate(getUpdatedAt(account))}
                   </td>
 
                   {isEditing && (

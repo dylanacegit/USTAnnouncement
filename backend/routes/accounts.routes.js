@@ -38,6 +38,7 @@ router.patch("/:id", async (req, res) => {
     }
 
     const updates = {
+      updatedBy: "Admin",
       updatedAt: new Date(),
     };
 
@@ -89,7 +90,7 @@ router.patch("/:id", async (req, res) => {
       updates.email = normalizedEmail;
     }
 
-    if (Object.keys(updates).length === 1) {
+    if (Object.keys(updates).length === 2) {
       return res.status(400).json({ message: "No account updates provided." });
     }
 

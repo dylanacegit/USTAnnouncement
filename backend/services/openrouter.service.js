@@ -20,7 +20,7 @@ async function askOpenRouter(question, contextText, history = []) {
     .join("\n");
 
   const requestPromise = client.chat.completions.create({
-    model: process.env.OPENROUTER_MODEL || "openrouter/free",
+    model: process.env.OPENROUTER_MODEL || "openrouter/owl-alpha",
     messages: [
       {
         role: "system",
@@ -31,6 +31,7 @@ Your job:
 - Answer ONLY from the provided context.
 - Never invent event details.
 - Never mention "database", "context", "JSON", or "provided data".
+- Treat follow-up words like it, that, this, and there as referring to the most recent matching event or announcement in the conversation.
 - If no matching information exists, reply exactly:
 No matching information was found.
 

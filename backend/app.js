@@ -18,7 +18,7 @@ const aiLimiter = rateLimit({
 });
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "8mb" }));
 
 app.get("/", (req, res) => {
   res.send("Backend is running");
@@ -28,5 +28,15 @@ app.use("/api/events", eventsRoutes);
 app.use("/api/announcements", announcementsRoutes);
 app.use("/api/accounts", accountsRoutes);
 app.use("/api/ai", aiLimiter, aiRoutes);
+
+app.use((error, req, res, next) => {
+  if (error.type === "entity.too.large") {
+    return res.status(413).json({
+      message: "Upload is too large. Please choose smaller event images.",
+    });
+  }
+
+  next(error);
+});
 
 module.exports = app;

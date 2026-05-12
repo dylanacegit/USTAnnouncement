@@ -7,7 +7,6 @@ import RegistrationPage from "../pages/RegistrationPage";
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-  const [isLoginOpen, setIsLoginOpen] = useState(false); // Added to prevent crash if referenced
 
   const links = [
     ["Home", "/"], 
@@ -108,8 +107,6 @@ export default function Header() {
         onClose={() => setIsRegisterOpen(false)} 
       />
 
-      {/* LOGIN MODAL (Optional - uncomment if you have the component) */}
-      {/* <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} /> */}
     </>
   );
 }

@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Events from "./pages/Events";
 import Announcements from "./pages/Announcements";
 import Footer from "./components/Footer";
+import AIChatWidget from "./components/AIChatWidget";
 import AdminLayout from "./components/adminComponents/AdminLayout";
 import Dashboard from "./pages/adminPages/Dashboard";
 import ManageEvents from "./pages/adminPages/ManageEvents";
@@ -26,6 +27,7 @@ function UserLayout() {
       <main className="min-h-screen">
         <Outlet />
       </main>
+      <AIChatWidget />
       <Footer />
     </>
   );

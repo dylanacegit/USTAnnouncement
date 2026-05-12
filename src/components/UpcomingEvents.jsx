@@ -1,16 +1,49 @@
-import { useRef } from "react";
-import { NavLink } from "react-router-dom"; //
+import { useEffect, useRef, useState } from "react";
+import { NavLink } from "react-router-dom";
+import { getEvents } from "../services/api";
+import {
+  formatDateRange,
+  getItemImage,
+  getPublishedItems,
+  isUpcomingItem,
+} from "../utils/contentFormatters";
 
 export default function UpcomingEvents() {
   const scrollRef = useRef(null);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const dummyEvents = Array(10).fill({
-    title: "Thomasian Welcome Walk 2026",
-    category: "TRADITION",
-    location: "Arch of the Centuries",
-    startDate: "2026-08-01",
-    image: "/images/ust-main-building.png",
-  });
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadEvents() {
+      try {
+        const data = await getEvents();
+        const upcomingPublishedEvents = getPublishedItems(
+          Array.isArray(data) ? data : data.events || []
+        )
+          .filter(isUpcomingItem)
+          .sort(
+            (a, b) =>
+              new Date(a.startDate || a.date || a.createdAt) -
+              new Date(b.startDate || b.date || b.createdAt)
+          )
+          .slice(0, 12);
+
+        if (!ignore) setEvents(upcomingPublishedEvents);
+      } catch (error) {
+        console.error("Failed to load upcoming events:", error);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+
+    loadEvents();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const scroll = (direction) => {
     if (scrollRef.current) {
@@ -63,16 +96,35 @@ export default function UpcomingEvents() {
             __html: `.no-scrollbar::-webkit-scrollbar { display: none; }`,
           }}
         />
-        {dummyEvents.map((event, index) => (
+        {loading &&
+          Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="min-w-full border border-neutral-100 bg-white p-4 shadow-sm sm:min-w-[calc(50%-8px)] lg:min-w-[calc(25%-12px)]"
+            >
+              <div className="aspect-video animate-pulse bg-neutral-200" />
+              <div className="mt-4 h-3 w-20 animate-pulse bg-neutral-200" />
+              <div className="mt-3 h-8 animate-pulse bg-neutral-200" />
+              <div className="mt-4 h-8 animate-pulse bg-neutral-200" />
+            </div>
+          ))}
+
+        {!loading && events.length === 0 && (
+          <div className="w-full border border-dashed border-neutral-200 bg-white p-6 text-sm text-neutral-500">
+            No upcoming published events are available yet.
+          </div>
+        )}
+
+        {!loading && events.map((event) => (
           <div
-            key={index}
+            key={event._id || event.title}
             className="group flex min-w-full flex-col bg-white border border-neutral-100 shadow-sm transition-all border-t-[3px] border-t-[#f6c744] sm:min-w-[calc(50%-8px)] lg:min-w-[calc(25%-12px)]"
             style={{ scrollSnapAlign: "start" }}
           >
             {/* Image: Video aspect ratio + Hover effects */}
             <div className="relative aspect-video overflow-hidden bg-neutral-200">
               <img
-                src={event.image}
+                src={getItemImage(event)}
                 className="h-full w-full object-cover grayscale-[10%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
                 alt={event.title}
               />
@@ -86,13 +138,11 @@ export default function UpcomingEvents() {
                 {event.title}
               </h3>
               <div className="mt-3 text-[10px] text-neutral-500">
-                <p className="truncate italic">{event.location}</p>
+                <p className="truncate italic">
+                  {event.location || event.venue || "Venue TBA"}
+                </p>
                 <p className="truncate mt-0.5">
-                  {new Date(event.startDate).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
+                  {formatDateRange(event)}
                 </p>
               </div>
               <button className="mt-4 w-full bg-[#f6c744] py-2 text-[8px] font-black uppercase tracking-widest text-black hover:bg-[#e3b832] transition-colors">

@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import AnnouncementFilters from "../../components/adminComponents/announcements/AnnouncementFilters";
+import AnnouncementFormModal from "../../components/adminComponents/announcements/AnnouncementFormModal";
 import AnnouncementModal from "../../components/adminComponents/announcements/AnnouncementModal";
 import AnnouncementStats from "../../components/adminComponents/announcements/AnnouncementStats";
 import AnnouncementsTable from "../../components/adminComponents/announcements/AnnouncementsTable";
 import {
+  createAnnouncement,
+  deleteAnnouncement,
   getAnnouncements,
+  updateAnnouncement,
   updateAnnouncementStatus,
 } from "../../services/api";
 
 const ANNOUNCEMENTS_PER_PAGE = 10;
+const CURRENT_ADMIN_NAME = "Admin";
 
 export default function ManageAnnouncements() {
   const location = useLocation();
@@ -22,6 +27,8 @@ export default function ManageAnnouncements() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState(null);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -47,6 +54,10 @@ export default function ManageAnnouncements() {
 
     if (["published", "archived"].includes(tab)) {
       setActiveTab(tab);
+    }
+
+    if (params.get("action") === "create") {
+      setIsCreateModalOpen(true);
     }
 
     setSearchTerm(query);
@@ -97,6 +108,52 @@ export default function ManageAnnouncements() {
           ? { ...item, ...updatedAnnouncement }
           : item
       )
+    );
+  };
+
+  const handleCreateAnnouncement = async (announcementData) => {
+    const createdAnnouncement = await createAnnouncement({
+      ...announcementData,
+      createdBy: CURRENT_ADMIN_NAME,
+    });
+
+    setAnnouncements((current) => [createdAnnouncement, ...current]);
+    setActiveTab("published");
+    setSelectedAnnouncement(createdAnnouncement);
+  };
+
+  const handleUpdateAnnouncement = async (announcementData) => {
+    const updatedAnnouncement = await updateAnnouncement(
+      editingAnnouncement._id,
+      {
+        ...announcementData,
+        updatedBy: CURRENT_ADMIN_NAME,
+      }
+    );
+
+    setAnnouncements((current) =>
+      current.map((item) =>
+        item._id === updatedAnnouncement._id
+          ? { ...item, ...updatedAnnouncement }
+          : item
+      )
+    );
+    setSelectedAnnouncement((current) =>
+      current?._id === updatedAnnouncement._id
+        ? { ...current, ...updatedAnnouncement }
+        : current
+    );
+    setEditingAnnouncement(null);
+  };
+
+  const handleDeleteAnnouncement = async (announcement) => {
+    await deleteAnnouncement(announcement._id);
+
+    setAnnouncements((current) =>
+      current.filter((item) => item._id !== announcement._id)
+    );
+    setSelectedAnnouncement((current) =>
+      current?._id === announcement._id ? null : current
     );
   };
 
@@ -208,7 +265,25 @@ export default function ManageAnnouncements() {
         totalPages={totalPages}
         pageSize={ANNOUNCEMENTS_PER_PAGE}
         onToggleArchive={handleToggleArchive}
+        onDeleteAnnouncement={handleDeleteAnnouncement}
         onViewAnnouncement={setSelectedAnnouncement}
+        onEditAnnouncement={setEditingAnnouncement}
+        onCreateAnnouncement={() => setIsCreateModalOpen(true)}
+      />
+
+      <AnnouncementFormModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreate={handleCreateAnnouncement}
+      />
+
+      <AnnouncementFormModal
+        key={editingAnnouncement?._id || "announcement-edit"}
+        isOpen={Boolean(editingAnnouncement)}
+        onClose={() => setEditingAnnouncement(null)}
+        onUpdate={handleUpdateAnnouncement}
+        announcement={editingAnnouncement}
+        mode="edit"
       />
 
       <AnnouncementModal

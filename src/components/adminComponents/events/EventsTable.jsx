@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FiArchive, FiEdit2, FiRotateCcw, FiStar, FiTrash2 } from "react-icons/fi";
 import AdminTable from "../AdminTable";
 import Badge from "../Badge";
 
@@ -13,7 +14,11 @@ export default function EventsTable({
   totalPages,
   pageSize,
   onToggleArchive,
+  onToggleFeatured,
+  onDeleteEvent,
   onViewEvent,
+  onEditEvent,
+  onCreateEvent,
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
@@ -25,9 +30,20 @@ export default function EventsTable({
         "Category",
         "Created By",
         "Created At",
+        "Updated By",
+        "Updated At",
         "Actions",
       ]
-    : ["Event", "Schedule", "Venue", "Category", "Created By", "Created At"];
+    : [
+        "Event",
+        "Schedule",
+        "Venue",
+        "Category",
+        "Created By",
+        "Created At",
+        "Updated By",
+        "Updated At",
+      ];
 
   const formatDate = (date) => {
     if (!date) return "N/A";
@@ -43,6 +59,8 @@ export default function EventsTable({
   const getId = (event) => event._id || event.id;
   const getCreatedBy = (event) => event.createdBy || event.organizer || "System";
   const getCreatedAt = (event) => event.createdAt || event.updatedAt;
+  const getUpdatedBy = (event) => event.updatedBy || event.createdBy || "System";
+  const getUpdatedAt = (event) => event.updatedAt || event.createdAt;
   const getScheduleLength = (event) => {
     const start = new Date(event.startDate || event.date);
     const end = new Date(event.endDate || event.startDate || event.date);
@@ -71,6 +89,41 @@ export default function EventsTable({
     } finally {
       setUpdatingId(null);
     }
+  };
+
+  const handleDeleteEvent = async (event) => {
+    const confirmed = window.confirm(
+      `Permanently delete "${event.title}"? This cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setUpdatingId(getId(event));
+      await onDeleteEvent(event);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleToggleFeatured = async (event) => {
+    try {
+      setUpdatingId(getId(event));
+      await onToggleFeatured(event);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleRowKeyDown = (keyboardEvent, event) => {
+    if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") {
+      keyboardEvent.preventDefault();
+      onViewEvent(event);
+    }
+  };
+
+  const stopActionClick = (clickEvent) => {
+    clickEvent.stopPropagation();
   };
 
   const PaginationControls = () => (
@@ -122,7 +175,10 @@ export default function EventsTable({
         </div>
 
         <div className="grid grid-cols-2 gap-2 sm:flex">
-          <button className="h-8 rounded-md border border-gray-700 px-3 text-xs font-bold transition-colors hover:bg-black hover:text-white sm:h-9 sm:px-4">
+          <button
+            onClick={onCreateEvent}
+            className="h-8 rounded-md border border-gray-700 px-3 text-xs font-bold transition-colors hover:bg-black hover:text-white sm:h-9 sm:px-4"
+          >
             Create
           </button>
           <button
@@ -147,7 +203,11 @@ export default function EventsTable({
           events.map((event) => (
             <article
               key={getId(event)}
-              className="rounded-lg border border-gray-100 bg-white p-3 shadow-sm"
+              role="button"
+              tabIndex={0}
+              onClick={() => onViewEvent(event)}
+              onKeyDown={(keyboardEvent) => handleRowKeyDown(keyboardEvent, event)}
+              className="cursor-pointer rounded-lg border border-gray-100 bg-white p-3 shadow-sm transition-colors hover:border-yellow-300 hover:bg-yellow-50/50 focus:outline-none focus:ring-2 focus:ring-yellow-400"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -165,35 +225,77 @@ export default function EventsTable({
                 <Info label="Date" value={formatDate(getDate(event))} />
                 <Info label="Created By" value={getCreatedBy(event)} />
                 <Info label="Created At" value={formatDate(getCreatedAt(event))} />
+                <Info label="Updated By" value={getUpdatedBy(event)} />
+                <Info label="Updated At" value={formatDate(getUpdatedAt(event))} />
               </dl>
               {isEditing && (
                 <div className="mt-3">
                   {activeTab === "archived" ? (
-                    <button
-                      onClick={() => handleToggleArchive(event)}
-                      disabled={updatingId === getId(event)}
-                      className="h-8 w-full rounded-md border border-green-500 px-3 text-xs font-bold text-green-700 transition-colors hover:bg-green-50 disabled:opacity-60"
-                    >
-                      {updatingId === getId(event) ? "Updating..." : "Unarchive"}
-                    </button>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-2">
-                      <button
-                        onClick={() => onViewEvent(event)}
-                        className="h-8 rounded-md border border-blue-500 px-2 text-xs font-bold text-blue-600 hover:bg-blue-50"
-                      >
-                        View
-                      </button>
-                      <button className="h-8 rounded-md border border-yellow-500 px-2 text-xs font-bold text-yellow-700 hover:bg-yellow-50">
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleToggleArchive(event)}
+                    <div className="flex justify-end gap-2">
+                      <IconButton
+                        label="Unarchive event"
+                        tone="green"
+                        onClick={(clickEvent) => {
+                          stopActionClick(clickEvent);
+                          handleToggleArchive(event);
+                        }}
                         disabled={updatingId === getId(event)}
-                        className="h-8 rounded-md border border-red-500 px-2 text-xs font-bold text-red-600 hover:bg-red-50 disabled:opacity-60"
                       >
-                        {updatingId === getId(event) ? "..." : "Archive"}
-                      </button>
+                        <FiRotateCcw size={16} />
+                      </IconButton>
+                      <IconButton
+                        label="Permanently delete event"
+                        tone="red"
+                        onClick={(clickEvent) => {
+                          stopActionClick(clickEvent);
+                          handleDeleteEvent(event);
+                        }}
+                        disabled={updatingId === getId(event)}
+                      >
+                        <FiTrash2 size={16} />
+                      </IconButton>
+                    </div>
+                  ) : (
+                    <div className="flex justify-end gap-2">
+                      <IconButton
+                        label={
+                          event.isFeatured
+                            ? "Remove featured event"
+                            : "Set as featured event"
+                        }
+                        tone={event.isFeatured ? "black" : "yellow"}
+                        onClick={(clickEvent) => {
+                          stopActionClick(clickEvent);
+                          handleToggleFeatured(event);
+                        }}
+                        disabled={updatingId === getId(event)}
+                      >
+                        <FiStar
+                          size={16}
+                          className={event.isFeatured ? "fill-current" : ""}
+                        />
+                      </IconButton>
+                      <IconButton
+                        label="Edit event"
+                        tone="yellow"
+                        onClick={(clickEvent) => {
+                          stopActionClick(clickEvent);
+                          onEditEvent(event);
+                        }}
+                      >
+                        <FiEdit2 size={16} />
+                      </IconButton>
+                      <IconButton
+                        label="Archive event"
+                        tone="red"
+                        onClick={(clickEvent) => {
+                          stopActionClick(clickEvent);
+                          handleToggleArchive(event);
+                        }}
+                        disabled={updatingId === getId(event)}
+                      >
+                        <FiArchive size={16} />
+                      </IconButton>
                     </div>
                   )}
                 </div>
@@ -204,7 +306,7 @@ export default function EventsTable({
       </div>
 
       <div className="hidden overflow-x-auto rounded-lg border border-gray-100 md:block">
-        <div className="min-w-[1040px]">
+        <div className="min-w-[1320px]">
           <AdminTable headers={headers}>
             {loading ? (
               <TableState colSpan={headers.length} text="Loading events..." />
@@ -212,7 +314,15 @@ export default function EventsTable({
               <TableState colSpan={headers.length} text="No events found." />
             ) : (
               events.map((event) => (
-                <tr key={getId(event)} className="hover:bg-yellow-50/50">
+                <tr
+                  key={getId(event)}
+                  tabIndex={0}
+                  onClick={() => onViewEvent(event)}
+                  onKeyDown={(keyboardEvent) =>
+                    handleRowKeyDown(keyboardEvent, event)
+                  }
+                  className="cursor-pointer transition-colors hover:bg-yellow-50/50 focus:bg-yellow-50 focus:outline-none"
+                >
                   <td className="px-6 py-5 text-sm font-bold text-gray-950">
                     {event.title}
                   </td>
@@ -231,38 +341,80 @@ export default function EventsTable({
                   <td className="px-6 py-5 text-sm text-gray-600">
                     {formatDate(getCreatedAt(event))}
                   </td>
+                  <td className="px-6 py-5 text-sm text-gray-600">
+                    {getUpdatedBy(event)}
+                  </td>
+                  <td className="px-6 py-5 text-sm text-gray-600">
+                    {formatDate(getUpdatedAt(event))}
+                  </td>
                   {isEditing && (
                     <td className="px-6 py-5">
                       {activeTab === "archived" ? (
-                        <button
-                          onClick={() => handleToggleArchive(event)}
-                          disabled={updatingId === getId(event)}
-                          className="h-8 rounded-md border border-green-500 px-3 text-xs font-bold text-green-700 hover:bg-green-50 disabled:opacity-60"
-                        >
-                          {updatingId === getId(event)
-                            ? "Updating..."
-                            : "Unarchive"}
-                        </button>
+                        <div className="flex gap-2">
+                          <IconButton
+                            label="Unarchive event"
+                            tone="green"
+                            onClick={(clickEvent) => {
+                              stopActionClick(clickEvent);
+                              handleToggleArchive(event);
+                            }}
+                            disabled={updatingId === getId(event)}
+                          >
+                            <FiRotateCcw size={16} />
+                          </IconButton>
+                          <IconButton
+                            label="Permanently delete event"
+                            tone="red"
+                            onClick={(clickEvent) => {
+                              stopActionClick(clickEvent);
+                              handleDeleteEvent(event);
+                            }}
+                            disabled={updatingId === getId(event)}
+                          >
+                            <FiTrash2 size={16} />
+                          </IconButton>
+                        </div>
                       ) : (
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => onViewEvent(event)}
-                            className="h-8 rounded-md border border-blue-500 px-3 text-xs font-bold text-blue-600 hover:bg-blue-50"
-                          >
-                            View
-                          </button>
-                          <button className="h-8 rounded-md border border-yellow-500 px-3 text-xs font-bold text-yellow-700 hover:bg-yellow-50">
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleToggleArchive(event)}
+                          <IconButton
+                            label={
+                              event.isFeatured
+                                ? "Remove featured event"
+                                : "Set as featured event"
+                            }
+                            tone={event.isFeatured ? "black" : "yellow"}
+                            onClick={(clickEvent) => {
+                              stopActionClick(clickEvent);
+                              handleToggleFeatured(event);
+                            }}
                             disabled={updatingId === getId(event)}
-                            className="h-8 rounded-md border border-red-500 px-3 text-xs font-bold text-red-600 hover:bg-red-50 disabled:opacity-60"
                           >
-                            {updatingId === getId(event)
-                              ? "Updating..."
-                              : "Archive"}
-                          </button>
+                            <FiStar
+                              size={16}
+                              className={event.isFeatured ? "fill-current" : ""}
+                            />
+                          </IconButton>
+                          <IconButton
+                            label="Edit event"
+                            tone="yellow"
+                            onClick={(clickEvent) => {
+                              stopActionClick(clickEvent);
+                              onEditEvent(event);
+                            }}
+                          >
+                            <FiEdit2 size={16} />
+                          </IconButton>
+                          <IconButton
+                            label="Archive event"
+                            tone="red"
+                            onClick={(clickEvent) => {
+                              stopActionClick(clickEvent);
+                              handleToggleArchive(event);
+                            }}
+                            disabled={updatingId === getId(event)}
+                          >
+                            <FiArchive size={16} />
+                          </IconButton>
                         </div>
                       )}
                     </td>
@@ -305,5 +457,27 @@ function TableState({ colSpan, text }) {
         {text}
       </td>
     </tr>
+  );
+}
+
+function IconButton({ label, tone, disabled = false, onClick, children }) {
+  const toneClasses = {
+    green: "border-green-500 text-green-700 hover:bg-green-50",
+    red: "border-red-500 text-red-600 hover:bg-red-50",
+    yellow: "border-yellow-500 text-yellow-700 hover:bg-yellow-50",
+    black: "border-gray-900 bg-black text-yellow-300 hover:bg-gray-800",
+  };
+
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={`grid h-9 w-9 place-items-center rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${toneClasses[tone]}`}
+    >
+      {children}
+    </button>
   );
 }

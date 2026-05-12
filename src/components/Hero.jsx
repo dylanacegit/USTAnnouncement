@@ -1,6 +1,22 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 export default function Hero() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearch = (event) => {
+    event.preventDefault();
+
+    const query = searchTerm.trim();
+
+    if (!query) return;
+
+    navigate(`/events?search=${encodeURIComponent(query)}`);
+  };
+
   return (
-    <section className="relative h-[60vh] w-full overflow-hidden bg-[#f6c744] min-h-[450px]">
+    <section className="relative min-h-[530px] w-full overflow-hidden bg-[#f6c744] md:h-[60vh] md:min-h-[450px]">
       {/* Background Image */}
       <img
         src="/images/ust-main-building.png"
@@ -21,14 +37,14 @@ export default function Hero() {
       />
 
       {/* Content Container - Reduced padding from px-20 to lg:px-12 */}
-      <div className="relative z-10 flex h-full flex-col justify-center px-4 py-8 sm:px-8 lg:w-[50%] lg:px-12">
+      <div className="relative z-10 flex h-full min-h-[560px] flex-col justify-center px-4 py-8 pr-32 sm:px-8 sm:pr-52 md:min-h-0 lg:w-[50%] lg:px-12">
         {/* 1. Label: Now 7px/8px */}
         <p className="mb-2 text-[7px] font-black font-inter uppercase tracking-[0.4em] text-[#f6c744] sm:text-[8px]">
           Academic Year 2025 - 2026
         </p>
 
         {/* 2. Main Title: Scaled down again */}
-        <h2 className="font-playfair text-2xl font-bold leading-[1.1] text-white min-[420px]:text-3xl md:text-4xl lg:text-4xl xl:text-5xl">
+        <h2 className="font-playfair text-3xl font-bold leading-[1.05] text-white min-[420px]:text-4xl md:text-4xl lg:text-4xl xl:text-5xl">
           Where Thomasians <br />
           <span className="text-[#f6c744]">Come Together.</span>
         </h2>
@@ -40,15 +56,23 @@ export default function Hero() {
         </p>
 
         {/* 4. Search Bar: More compact height (h-9) */}
-        <div className="mt-5 flex w-full max-w-sm overflow-hidden bg-white/50 shadow-md backdrop-blur-sm">
+        <form
+          onSubmit={handleSearch}
+          className="mt-5 flex w-full max-w-sm overflow-hidden bg-white/70 shadow-md backdrop-blur-sm"
+        >
           <input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
             className="h-9 min-w-0 flex-1 bg-transparent font-inter px-3 text-[11px] outline-none placeholder:text-neutral-500"
-            placeholder="Search events, colleges,..."
+            placeholder="Search events or announcements..."
           />
-          <button className="w-20 bg-[#f6c744] font-inter text-[10px] font-black text-black hover:bg-[#e3b832]">
+          <button
+            type="submit"
+            className="w-20 bg-[#f6c744] font-inter text-[10px] font-black text-black hover:bg-[#e3b832]"
+          >
             Search
           </button>
-        </div>
+        </form>
 
         {/* 5. Stats Grid: Tighter spacing and smaller text */}
         <div className="mt-6 grid max-w-sm grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
@@ -74,7 +98,7 @@ export default function Hero() {
       <img
         src="/images/tiger-mascot.png"
         alt="UST Tiger Mascot"
-        className="pointer-events-none absolute bottom-0 right-[-20px] z-20 hidden md:block object-contain h-[85%] lg:right-5 lg:h-[90%] xl:h-[105%]"
+        className="pointer-events-none absolute bottom-0 right-[-26px] z-20 h-[42%] max-h-[280px] min-h-[210px] object-contain sm:right-[-10px] sm:h-[50%] sm:max-h-[360px] md:right-[-6px] md:h-[66%] md:max-h-[470px] lg:right-5 lg:h-[86%] lg:max-h-[680px] xl:h-[92%] xl:max-h-[760px] 2xl:h-[86%] 2xl:max-h-[780px]"
       />
     </section>
   );
