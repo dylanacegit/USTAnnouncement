@@ -10,6 +10,7 @@ import {
   matchesSearch,
 } from "../utils/contentFormatters";
 
+
 export default function Announcements() {
   const location = useLocation();
   const topRef = useRef(null);

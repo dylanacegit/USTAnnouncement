@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import RegistrationPage from "../pages/RegistrationPage"; 
-// Note: If you have a LoginModal, import it here too. 
-// import LoginModal from "./LoginModal"; 
+import LoginModal from "../components/LoginModal";
 
+/**
+ * Header Component
+ * Manages navigation and the switching logic between Login and Registration.
+ */
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   const links = [
     ["Home", "/"], 
@@ -15,12 +19,24 @@ export default function Header() {
     ["About", "/about"],
   ];
 
+  // Logic to jump from Login Modal to Registration Modal
+  const openRegisterFromLogin = () => {
+    setIsLoginOpen(false);
+    setIsRegisterOpen(true);
+  };
+
+  // Logic to jump from Registration Modal back to Login Modal
+  const openLoginFromRegister = () => {
+    setIsRegisterOpen(false);
+    setIsLoginOpen(true);
+  };
+
   return (
     <>
       <header className="sticky top-0 z-50 w-full bg-[#070707] border-b border-white/10 h-16">
         <div className="relative flex h-full w-full items-center justify-between px-4 sm:px-6 lg:px-12">
           
-          {/* LOGO */}
+          {/* LOGO SECTION */}
           <NavLink to="/" className="flex items-center gap-2 z-50 shrink-0">
             <img src="/images/Logo 2.svg" alt="Logo" className="h-8 w-8 lg:h-10 lg:w-10" />
             <div className="leading-tight">
@@ -33,7 +49,7 @@ export default function Header() {
             </div>
           </NavLink>
 
-          {/* DESKTOP NAV */}
+          {/* DESKTOP NAVIGATION */}
           <nav className="hidden absolute left-1/2 -translate-x-1/2 items-center gap-6 md:flex lg:gap-10">
             {links.map(([label, path]) => (
               <NavLink 
@@ -52,7 +68,7 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* ACTION ICONS */}
+          {/* ACTION BUTTONS */}
           <div className="flex items-center gap-3 sm:gap-5 z-50">
             <NavLink to="/bookmarks" className="text-white hover:text-[#f6c744] transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:w-5 sm:h-5">
@@ -60,17 +76,18 @@ export default function Header() {
               </svg>
             </NavLink>
             
-            {/* USER ICON - Triggers Registration */}
+            {/* USER LOGIN TRIGGER */}
             <button 
-              onClick={() => setIsRegisterOpen(true)} 
+              onClick={() => setIsLoginOpen(true)} 
               className="text-white hover:text-[#f6c744] transition-colors focus:outline-none"
+              aria-label="Login"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
               </svg>
             </button>
 
-            {/* MOBILE BURGER */}
+            {/* MOBILE MENU TOGGLE */}
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)} 
               className="flex flex-col gap-1.5 md:hidden pl-2 border-l border-white/10"
@@ -82,7 +99,7 @@ export default function Header() {
           </div>
         </div>
 
-        {/* MOBILE DROPDOWN */}
+        {/* MOBILE DROPDOWN MENU */}
         <div className={`absolute top-full left-0 w-full bg-[#0d0d0d] border-b border-white/10 transition-all duration-300 md:hidden ${
           isMenuOpen ? "translate-y-0 opacity-100 visible" : "-translate-y-4 opacity-0 invisible"
         }`}>
@@ -101,12 +118,21 @@ export default function Header() {
         </div>
       </header>
 
-      {/* REGISTRATION MODAL */}
+      {/* MODAL CONTROLLERS */}
+      
+      {/* 1. LOGIN MODAL */}
+      <LoginModal 
+        isOpen={isLoginOpen} 
+        onClose={() => setIsLoginOpen(false)} 
+        onSwitchToRegister={openRegisterFromLogin} 
+      />
+
+      {/* 2. REGISTRATION PAGE/MODAL */}
       <RegistrationPage 
         isOpen={isRegisterOpen} 
         onClose={() => setIsRegisterOpen(false)} 
+        onSwitchToLogin={openLoginFromRegister}
       />
-
     </>
   );
 }
