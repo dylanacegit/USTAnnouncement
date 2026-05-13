@@ -11,6 +11,7 @@ import ManageEvents from "./pages/adminPages/ManageEvents";
 import ManageAnnouncements from "./pages/adminPages/ManageAnnouncements";
 import ManageAccounts from "./pages/adminPages/ManageAccounts";
 import Settings from "./pages/adminPages/Settings";
+import About from "./pages/About";
 function PlaceholderPage({ title }) {
   return (
     <div className="min-h-screen bg-[#070707] p-10">
@@ -44,10 +45,7 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="events" element={<Events />} />
           <Route path="announcements" element={<Announcements />} />
-          <Route
-            path="about"
-            element={<PlaceholderPage title="About Page" />}
-          />
+          <Route path="about" element={<About />} />
         </Route>
 
         {/* =========================================
