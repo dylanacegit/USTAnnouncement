@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { loginUser, resendVerification } from "../services/api";
 
-export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
+export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onForgotPassword }) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,6 +60,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
         {/* HEADER SECTION */}
         <div className="relative bg-[#0f0f0f] p-8 text-white">
           <button 
+            type="button"
             onClick={onClose} 
             className="absolute right-6 top-6 text-neutral-500 hover:text-[#f6c744] transition-all hover:rotate-90 duration-300 z-20"
           >
@@ -85,6 +86,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
           <div className="space-y-2">
             <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.15em]">UST Email Address</label>
             <input 
+              required
               type="email" 
               value={email}
               onChange={(event) => {
@@ -101,11 +103,19 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.15em]">Password</label>
-              <button type="button" className="text-[9px] font-bold text-[#c49600] hover:text-black transition-colors uppercase tracking-widest">Forgot Password?</button>
+              {/* TRIGGER FORGOT PASSWORD MODAL */}
+              <button 
+                type="button" 
+                onClick={onForgotPassword}
+                className="text-[9px] font-bold text-[#c49600] hover:text-black transition-colors uppercase tracking-widest"
+              >
+                Forgot Password?
+              </button>
             </div>
             
             <div className="relative group">
               <input 
+                required
                 type={showPassword ? "text" : "password"} 
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -132,12 +142,13 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
             </div>
           </div>
 
+          {/* Feedback Messages */}
           {(error || success) && (
             <div className="space-y-3">
               <p className={`text-[11px] font-semibold leading-relaxed ${error ? "text-red-600" : "text-emerald-700"}`}>
                 {error || success}
               </p>
-              {email.trim().toLowerCase().endsWith("@ust.edu.ph") && (
+              {error && email.trim().toLowerCase().endsWith("@ust.edu.ph") && (
                 <button
                   type="button"
                   onClick={handleResendVerification}
@@ -151,7 +162,11 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
           )}
 
           {/* Sign In Button */}
-          <button disabled={isSubmitting || isResending} className="relative w-full group overflow-hidden bg-[#f6c744] py-4 text-[12px] font-black uppercase tracking-[0.25em] text-black transition-all hover:bg-[#e3b832] hover:text-black shadow-lg active:scale-[0.98]">
+          <button 
+            type="submit"
+            disabled={isSubmitting || isResending} 
+            className="relative w-full group overflow-hidden bg-[#f6c744] py-4 text-[12px] font-black uppercase tracking-[0.25em] text-black transition-all hover:bg-[#e3b832] hover:text-black shadow-lg active:scale-[0.98] disabled:bg-neutral-200 disabled:text-neutral-400 disabled:cursor-not-allowed"
+          >
             {isSubmitting ? "Signing In..." : "Sign In"}
           </button>
         </form>

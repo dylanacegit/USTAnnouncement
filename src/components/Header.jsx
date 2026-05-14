@@ -2,15 +2,17 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import RegistrationPage from "../pages/RegistrationPage"; 
 import LoginModal from "../components/LoginModal";
+import ForgotPasswordModal from "../components/ForgotPasswordModal"; // Import the new modal
 
 /**
  * Header Component
- * Manages navigation and the switching logic between Login and Registration.
+ * Manages navigation and the switching logic between Login, Registration, and Forgot Password.
  */
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isForgotOpen, setIsForgotOpen] = useState(false); // New state
 
   const links = [
     ["Home", "/"], 
@@ -29,6 +31,24 @@ export default function Header() {
   const openLoginFromRegister = () => {
     setIsRegisterOpen(false);
     setIsLoginOpen(true);
+  };
+
+  // Logic to jump from Login to Forgot Password
+  const openForgotFromLogin = () => {
+    setIsLoginOpen(false);
+    setIsForgotOpen(true);
+  };
+
+  // Logic to jump from Forgot Password back to Login
+  const openLoginFromForgot = () => {
+    setIsForgotOpen(false);
+    setIsLoginOpen(true);
+  };
+
+  const closeAllModals = () => {
+    setIsLoginOpen(false);
+    setIsRegisterOpen(false);
+    setIsForgotOpen(false);
   };
 
   return (
@@ -124,7 +144,8 @@ export default function Header() {
       <LoginModal 
         isOpen={isLoginOpen} 
         onClose={() => setIsLoginOpen(false)} 
-        onSwitchToRegister={openRegisterFromLogin} 
+        onSwitchToRegister={openRegisterFromLogin}
+        onForgotPassword={openForgotFromLogin} // New Prop passed to Login Modal
       />
 
       {/* 2. REGISTRATION PAGE/MODAL */}
@@ -132,6 +153,13 @@ export default function Header() {
         isOpen={isRegisterOpen} 
         onClose={() => setIsRegisterOpen(false)} 
         onSwitchToLogin={openLoginFromRegister}
+      />
+
+      {/* 3. FORGOT PASSWORD MODAL */}
+      <ForgotPasswordModal
+        isOpen={isForgotOpen}
+        onClose={() => setIsForgotOpen(false)}
+        onBackToLogin={openLoginFromForgot}
       />
     </>
   );
