@@ -1,7 +1,54 @@
 import React, { useState } from "react";
+import { loginUser, resendVerification } from "../services/api";
 
 export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+    setSuccess("");
+    setIsSubmitting(true);
+
+    try {
+      const result = await loginUser({ email, password });
+      localStorage.setItem("authToken", result.token);
+      localStorage.setItem("authUser", JSON.stringify(result.user));
+      onClose();
+    } catch (requestError) {
+      setError(requestError.message || "Sign in failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail.endsWith("@ust.edu.ph")) {
+      setError("Enter your UST email address before resending verification.");
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setIsResending(true);
+
+    try {
+      const result = await resendVerification(normalizedEmail);
+      setSuccess(result.message || "A new verification email has been sent.");
+    } catch (requestError) {
+      setError(requestError.message || "Verification email could not be sent. Please try again.");
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -33,12 +80,18 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
         </div>
 
         {/* FORM BODY */}
-        <div className="bg-white p-7 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-white p-7 space-y-4">
           {/* Email Field */}
           <div className="space-y-2">
             <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.15em]">UST Email Address</label>
             <input 
               type="email" 
+              value={email}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                setError("");
+                setSuccess("");
+              }}
               className="w-full bg-neutral-50 border border-neutral-200 px-4 py-4 text-sm text-black outline-none focus:border-[#f6c744] focus:bg-white transition-all placeholder:text-neutral-300" 
               placeholder="juan.delacruz.cics@ust.edu.ph" 
             />
@@ -48,12 +101,14 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.15em]">Password</label>
-              <button className="text-[9px] font-bold text-[#c49600] hover:text-black transition-colors uppercase tracking-widest">Forgot Password?</button>
+              <button type="button" className="text-[9px] font-bold text-[#c49600] hover:text-black transition-colors uppercase tracking-widest">Forgot Password?</button>
             </div>
             
             <div className="relative group">
               <input 
                 type={showPassword ? "text" : "password"} 
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
                 className="w-full bg-neutral-50 border border-neutral-200 px-4 py-4 pr-12 text-sm text-black outline-none focus:border-[#f6c744] focus:bg-white transition-all placeholder:text-neutral-300" 
                 placeholder="••••••••" 
               />
@@ -77,11 +132,29 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
             </div>
           </div>
 
+          {(error || success) && (
+            <div className="space-y-3">
+              <p className={`text-[11px] font-semibold leading-relaxed ${error ? "text-red-600" : "text-emerald-700"}`}>
+                {error || success}
+              </p>
+              {email.trim().toLowerCase().endsWith("@ust.edu.ph") && (
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={isResending}
+                  className="text-[10px] font-black uppercase tracking-widest text-[#c49600] hover:text-black disabled:text-neutral-400"
+                >
+                  {isResending ? "Sending..." : "Resend Verification Email"}
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Sign In Button */}
-          <button className="relative w-full group overflow-hidden bg-[#f6c744] py-4 text-[12px] font-black uppercase tracking-[0.25em] text-black transition-all hover:bg-[#e3b832] hover:text-black shadow-lg active:scale-[0.98]">
-            Sign In
+          <button disabled={isSubmitting || isResending} className="relative w-full group overflow-hidden bg-[#f6c744] py-4 text-[12px] font-black uppercase tracking-[0.25em] text-black transition-all hover:bg-[#e3b832] hover:text-black shadow-lg active:scale-[0.98]">
+            {isSubmitting ? "Signing In..." : "Sign In"}
           </button>
-        </div>
+        </form>
 
         {/* FOOTER */}
         <div className="bg-neutral-50 px-8 py-4 text-center border-t border-neutral-100">

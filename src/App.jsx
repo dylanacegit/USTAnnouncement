@@ -12,6 +12,7 @@ import ManageAnnouncements from "./pages/adminPages/ManageAnnouncements";
 import ManageAccounts from "./pages/adminPages/ManageAccounts";
 import Settings from "./pages/adminPages/Settings";
 import About from "./pages/About";
+import VerifyEmail from "./pages/VerifyEmail";
 function PlaceholderPage({ title }) {
   return (
     <div className="min-h-screen bg-[#070707] p-10">
@@ -47,6 +48,8 @@ export default function App() {
           <Route path="announcements" element={<Announcements />} />
           <Route path="about" element={<About />} />
         </Route>
+
+        <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
         {/* =========================================
             ADMIN SIDE (Sidebar only, NO Header/Footer)

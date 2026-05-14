@@ -13,8 +13,8 @@ export default function AccountStats({ accounts }) {
     (account) => account.status?.toLowerCase() === "archived",
   );
 
-  const adminAccounts = accounts.filter(
-    (account) => account.role?.toLowerCase() === "admin",
+  const verifiedUsers = accounts.filter(
+    (account) => account.isVerified,
   );
 
   const stats = [
@@ -31,9 +31,9 @@ export default function AccountStats({ accounts }) {
       icon: IoArchiveOutline,
     },
     {
-      title: "Admin Accounts",
-      value: adminAccounts.length,
-      subtext: "Users with admin access",
+      title: "Verified Users",
+      value: verifiedUsers.length,
+      subtext: "Email confirmed",
       icon: IoShieldCheckmarkOutline,
     },
   ];
