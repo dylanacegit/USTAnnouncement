@@ -1,49 +1,96 @@
-import React from "react";
+import React, { useState } from "react";
 
 export default function LoginModal({ isOpen, onClose, onSwitchToRegister }) {
+  const [showPassword, setShowPassword] = useState(false);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 font-inter">
-      <div className="relative w-full max-w-[420px] bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden rounded-sm">
+      {/* Main Modal Container */}
+      <div className="relative w-full max-w-[440px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] animate-in fade-in zoom-in-95 duration-300 overflow-hidden rounded-sm">
         
-        {/* HEADER */}
-        <div className="relative bg-[#0f0f0f] p-5 text-white">
-          <button onClick={onClose} className="absolute right-4 top-4 text-neutral-500 hover:text-white transition-colors z-20">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        {/* HEADER SECTION */}
+        <div className="relative bg-[#0f0f0f] p-8 text-white">
+          <button 
+            onClick={onClose} 
+            className="absolute right-6 top-6 text-neutral-500 hover:text-[#f6c744] transition-all hover:rotate-90 duration-300 z-20"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
-          <div className="relative z-10">
-            <h2 className="font-playfair text-xl font-bold leading-tight">Welcome back, <span className="text-[#f6c744]">Thomasian</span></h2>
-            <p className="text-[9px] font-medium tracking-widest text-neutral-400 uppercase">Sign in to your account</p>
+
+          <div className="flex items-center gap-5 relative z-10">
+            <img src="/images/Logo 2.svg" alt="UST Logo" className="h-14 w-14 object-contain" />
+            <div className="space-y-0.5">
+              <h2 className="font-playfair text-2xl font-bold tracking-tight">
+                Welcome back, <span className="text-[#f6c744]">Thomasian</span>
+              </h2>
+              <p className="text-[10px] font-semibold tracking-[0.2em] text-neutral-400 uppercase">
+                Sign in to your account
+              </p>
+            </div>
           </div>
         </div>
 
         {/* FORM BODY */}
-        <div className="p-8 space-y-5">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">UST Email Address</label>
-            <input type="email" className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-[#f6c744]" placeholder="juan.delacruz.cics@ust.edu.ph" />
+        <div className="bg-white p-7 space-y-4">
+          {/* Email Field */}
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.15em]">UST Email Address</label>
+            <input 
+              type="email" 
+              className="w-full bg-neutral-50 border border-neutral-200 px-4 py-4 text-sm text-black outline-none focus:border-[#f6c744] focus:bg-white transition-all placeholder:text-neutral-300" 
+              placeholder="juan.delacruz.cics@ust.edu.ph" 
+            />
           </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Password</label>
-            <input type="password" className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-[#f6c744]" placeholder="••••••••" />
+
+          {/* Password Field */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.15em]">Password</label>
+              <button className="text-[9px] font-bold text-[#c49600] hover:text-black transition-colors uppercase tracking-widest">Forgot Password?</button>
+            </div>
+            
+            <div className="relative group">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                className="w-full bg-neutral-50 border border-neutral-200 px-4 py-4 pr-12 text-sm text-black outline-none focus:border-[#f6c744] focus:bg-white transition-all placeholder:text-neutral-300" 
+                placeholder="••••••••" 
+              />
+              
+              {/* Show/Hide Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black transition-colors"
+              >
+                {showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9.88 9.88L12 12l2.12 2.12M14.2 14.2l3.4 3.4M10.4 4.4L12 4c7 0 10 8 10 8a20.2 20.2 0 01-2.9 4.6M8.6 19.4L3 24M4 12c0-8 10-8 10-8M1 1l22 22"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
-          <button className="w-full bg-black py-4 text-[11px] font-black uppercase tracking-[0.2em] text-white hover:bg-[#f6c744] hover:text-black transition-all">
+
+          {/* Sign In Button */}
+          <button className="relative w-full group overflow-hidden bg-[#f6c744] py-4 text-[12px] font-black uppercase tracking-[0.25em] text-black transition-all hover:bg-[#e3b832] hover:text-black shadow-lg active:scale-[0.98]">
             Sign In
           </button>
         </div>
 
-        {/* FOOTER - THE SECTION TO CHECK */}
-        <div className="border-t border-neutral-100 bg-neutral-50 px-8 py-5 text-center">
-          <p className="text-[11px] text-neutral-500 font-medium">
+        {/* FOOTER */}
+        <div className="bg-neutral-50 px-8 py-4 text-center border-t border-neutral-100">
+          <p className="text-[11px] text-neutral-500 font-medium tracking-wide">
             Don't have an account?{" "}
             <button 
               type="button"
-              onClick={() => {
-                console.log("Switching to Register..."); // Debugging line
-                onSwitchToRegister();
-              }}
-              className="font-bold text-[#c49600] underline hover:text-black transition-colors"
+              onClick={onSwitchToRegister}
+              className="font-black text-[#c49600] hover:text-black transition-colors underline underline-offset-4 decoration-1"
             >
               Sign up
             </button>

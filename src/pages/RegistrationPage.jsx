@@ -4,7 +4,7 @@ export default function RegistrationPage({ isOpen, onClose }) {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    role: "", // student or teacher
+    role: "", 
     firstName: "",
     lastName: "",
     email: "",
@@ -21,189 +21,113 @@ export default function RegistrationPage({ isOpen, onClose }) {
 
   const updateFields = (fields) => setFormData((prev) => ({ ...prev, ...fields }));
 
-  const handleInterestToggle = (interest) => {
-    setFormData(prev => ({
-      ...prev,
-      interests: prev.interests.includes(interest)
-        ? prev.interests.filter(i => i !== interest)
-        : [...prev.interests, interest]
-    }));
-  };
-
   const colleges = ["Engineering", "Nursing", "CICS", "Arts & Letters", "Commerce", "Medicine", "Civil Law", "Fine Arts", "Sciences", "Pharmacy"];
-  const interests = ["Academic", "Sports", "Arts", "Religious", "Career", "Student Life"];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 font-inter">
-      <div className="relative w-full max-w-[420px] bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden rounded-sm">
+      <div className="relative w-full max-w-[440px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] animate-in fade-in zoom-in-95 duration-200 overflow-hidden rounded-sm">
         
         {/* HEADER */}
-        <div className="relative bg-[#0f0f0f] p-5 text-white">
-          <button onClick={onClose} className="absolute right-4 top-4 text-neutral-500 hover:text-white transition-colors z-20">
+        <div className="relative bg-[#0f0f0f] p-6 text-white">
+          <button onClick={onClose} className="absolute right-5 top-5 text-neutral-500 hover:text-[#f6c744] transition-all hover:rotate-90 duration-300 z-20">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
           </button>
-          <div className="relative z-10">
-            <h2 className="font-playfair text-xl font-bold leading-tight">Create your <span className="text-[#f6c744]">Thomasian</span> account</h2>
-            <p className="text-[9px] font-medium tracking-widest text-neutral-400 uppercase">AY 2025–2026</p>
+          <div className="relative z-10 flex items-center gap-4">
+            <img src="/images/Logo 2.svg" alt="UST Logo" className="h-10 w-10 object-contain" />
+            <div>
+              <h2 className="font-playfair text-xl font-bold leading-tight">Join <span className="text-[#f6c744]">Gatherings</span></h2>
+              <p className="text-[9px] font-medium tracking-[0.2em] text-neutral-400 uppercase">Step {step} of 3 • Registration</p>
+            </div>
           </div>
         </div>
 
-        {/* STEPPER */}
-        <div className="flex bg-[#1a1a1a] px-6 py-2.5 items-center border-t border-[#f6c744]/30">
+        {/* STEPPER BAR */}
+        <div className="flex bg-[#1a1a1a] px-8 py-2 items-center border-t border-white/5">
           {[1, 2, 3].map((num) => (
             <React.Fragment key={num}>
-              <div className={`flex items-center gap-2 ${step === num ? 'text-white' : 'text-neutral-500'}`}>
-                <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black ${step === num ? 'bg-[#f6c744] text-black' : 'bg-neutral-800 text-neutral-500'}`}>{num}</span>
-                <span className="text-[9px] font-black uppercase tracking-tighter">{num === 1 ? 'Account' : num === 2 ? 'Profile' : 'Confirm'}</span>
+              <div className="flex items-center gap-2">
+                <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black transition-colors ${step >= num ? 'bg-[#f6c744] text-black' : 'bg-neutral-800 text-neutral-500'}`}>{num}</span>
               </div>
-              {num < 3 && <div className="mx-3 h-[1px] flex-1 bg-white/10" />}
+              {num < 3 && <div className={`mx-2 h-[1px] flex-1 transition-colors ${step > num ? 'bg-[#f6c744]/50' : 'bg-white/10'}`} />}
             </React.Fragment>
           ))}
         </div>
 
-        {/* CONTENT AREA (Scrollable to keep card small) */}
-        <div className="p-6 max-h-[50vh] overflow-y-auto custom-scrollbar space-y-4">
-          
-          {/* STEP 1: ACCOUNT */}
+        {/* CONTENT AREA */}
+        <div className="p-8 max-h-[420px] overflow-y-auto custom-scrollbar bg-white">
           {step === 1 && (
-            <div className="space-y-4 animate-in fade-in">
+            <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="flex gap-3">
-                <button 
-                  onClick={() => updateFields({ role: "student" })}
-                  className={`flex-1 py-3 border-2 transition-all flex flex-col items-center gap-1 ${formData.role === 'student' ? 'border-[#f6c744] bg-[#f6c744]/5' : 'border-neutral-100 opacity-50'}`}
-                >
-                  <span className="text-xl">🎓</span>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-black">Student</span>
-                </button>
-                <button 
-                  onClick={() => updateFields({ role: "teacher" })}
-                  className={`flex-1 py-3 border-2 transition-all flex flex-col items-center gap-1 ${formData.role === 'teacher' ? 'border-[#f6c744] bg-[#f6c744]/5' : 'border-neutral-100 opacity-50'}`}
-                >
-                  <span className="text-xl">👨‍🏫</span>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-black">Teacher</span>
-                </button>
+                {['student', 'teacher'].map((r) => (
+                  <button 
+                    key={r}
+                    onClick={() => updateFields({ role: r })}
+                    className={`flex-1 py-4 border-2 transition-all flex flex-col items-center gap-1 rounded-sm ${formData.role === r ? 'border-[#f6c744] bg-[#f6c744]/5 text-black' : 'border-neutral-100 text-neutral-400 hover:border-neutral-200'}`}
+                  >
+                    <span className="text-xl">{r === 'student' ? '🎓' : '👨‍🏫'}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">{r}</span>
+                  </button>
+                ))}
               </div>
-
               {formData.role && (
-                <div className="space-y-3 pt-2 animate-in slide-in-from-top-2">
+                <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-neutral-400 uppercase">First Name *</label>
-                      <input type="text" value={formData.firstName} onChange={e => updateFields({firstName: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-3 py-2 text-xs outline-none focus:border-[#f6c744]" placeholder="Juan" />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-neutral-400 uppercase">Last Name *</label>
-                      <input type="text" value={formData.lastName} onChange={e => updateFields({lastName: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-3 py-2 text-xs outline-none focus:border-[#f6c744]" placeholder="dela Cruz" />
-                    </div>
+                    <input type="text" onChange={e => updateFields({firstName: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 text-xs outline-none focus:border-[#f6c744]" placeholder="First Name" />
+                    <input type="text" onChange={e => updateFields({lastName: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 text-xs outline-none focus:border-[#f6c744]" placeholder="Last Name" />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-neutral-400 uppercase">UST Email *</label>
-                    <input type="email" value={formData.email} onChange={e => updateFields({email: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-3 py-2 text-xs outline-none focus:border-[#f6c744]" placeholder="juan.delacruz.cics@ust.edu.ph" />
-                  </div>
-                  <div className="space-y-1 relative">
-                    <label className="text-[10px] font-bold text-neutral-400 uppercase">Password *</label>
-                    <input type={showPassword ? "text" : "password"} value={formData.password} onChange={e => updateFields({password: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-3 py-2 text-xs outline-none focus:border-[#f6c744]" placeholder="••••••••" />
-                    <button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 bottom-2 text-[10px] font-bold text-neutral-400 hover:text-black">{showPassword ? "Hide" : "Show"}</button>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-neutral-400 uppercase">Confirm Password *</label>
-                    <input type="password" value={formData.confirmPassword} onChange={e => updateFields({confirmPassword: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-3 py-2 text-xs outline-none focus:border-[#f6c744]" placeholder="••••••••" />
+                  <input type="email" onChange={e => updateFields({email: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 text-xs outline-none focus:border-[#f6c744]" placeholder="UST Email Address" />
+                  <div className="relative">
+                    <input type={showPassword ? "text" : "password"} onChange={e => updateFields({password: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 pr-12 text-xs outline-none focus:border-[#f6c744]" placeholder="Password" />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#c49600] uppercase">{showPassword ? "Hide" : "Show"}</button>
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* STEP 2: PROFILE */}
           {step === 2 && (
-            <div className="space-y-4 animate-in fade-in">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-neutral-400 uppercase">{formData.role === 'student' ? 'Student Number *' : 'Employee Number *'}</label>
-                <input type="text" value={formData.idNumber} onChange={e => updateFields({idNumber: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-3 py-2 text-xs outline-none focus:border-[#f6c744]" placeholder="2021123456" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-neutral-400 uppercase">Year Level *</label>
-                  <select value={formData.yearLevel} onChange={e => updateFields({yearLevel: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-3 py-2 text-xs outline-none">
-                    <option disabled>Select year</option>
-                    <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
-                  </select>
-                </div>
-
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-neutral-400 uppercase">College *</label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {colleges.map(c => (
-                    <button key={c} onClick={() => updateFields({college: c})} className={`text-[9px] font-bold py-1.5 border transition-all ${formData.college === c ? 'bg-black text-white border-black' : 'bg-white text-neutral-400 border-neutral-100 hover:border-[#f6c744]'}`}>{c}</button>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-neutral-400 uppercase">Interests</label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {interests.map((interest) => (
-                    <button
-                      key={interest}
-                      onClick={() => handleInterestToggle(interest)}
-                      className={`text-[9px] font-bold py-1.5 border transition-all ${
-                        formData.interests.includes(interest)
-                          ? "bg-[#f6c744] text-black border-[#f6c744]"
-                          : "bg-white text-neutral-400 border-neutral-100 hover:border-[#f6c744]"
-                      }`}
-                    >
-                      {interest}
-                    </button>
-                  ))}
-                </div>
+            <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2">
+              <input type="text" onChange={e => updateFields({idNumber: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 text-xs outline-none focus:border-[#f6c744]" placeholder="ID Number" />
+              <select onChange={e => updateFields({yearLevel: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 text-xs outline-none focus:border-[#f6c744] appearance-none">
+                <option disabled selected>Select Year Level</option>
+                <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
+              </select>
+              <div className="grid grid-cols-2 gap-2">
+                {colleges.map(c => (
+                  <button key={c} onClick={() => updateFields({college: c})} className={`text-[9px] font-bold py-2 border rounded-sm transition-all ${formData.college === c ? 'bg-black text-white border-black' : 'bg-white text-neutral-400 border-neutral-100'}`}>{c}</button>
+                ))}
               </div>
             </div>
           )}
 
-          {/* STEP 3: CONFIRM */}
           {step === 3 && (
-            <div className="space-y-5 animate-in fade-in text-center">
-              <div className="space-y-3">
-                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Choose an Avatar</p>
-                <div className="flex justify-center gap-3">
-                  {['🐯', '📚', '🎓', '⚡', '🌟'].map(e => (
-                    <button key={e} onClick={() => updateFields({avatar: e})} className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-lg transition-all ${formData.avatar === e ? 'border-[#f6c744] bg-[#f6c744]/10' : 'border-neutral-100 hover:border-neutral-200'}`}>{e}</button>
-                  ))}
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+              <div className="bg-neutral-900 p-5 rounded-sm relative overflow-hidden">
+                <p className="text-[9px] font-black text-[#f6c744] uppercase tracking-widest mb-3 border-b border-white/10 pb-1">Verified Thomasian Identity</p>
+                <div className="space-y-2 text-[11px] text-white/80">
+                  <div className="flex justify-between"><span>Name</span><span className="font-bold text-white">{formData.firstName} {formData.lastName}</span></div>
+                  <div className="flex justify-between"><span>Email</span><span className="font-bold text-white">{formData.email}</span></div>
                 </div>
               </div>
-              <div className="bg-[#fefcf5] border border-[#f6c744]/20 p-4 text-left rounded-sm">
-                <p className="text-[9px] font-black text-[#c49600] uppercase tracking-widest mb-2 border-b border-[#f6c744]/10 pb-1">Account Summary</p>
-                <div className="space-y-1 text-[11px]">
-                  <div className="flex justify-between"><span className="text-neutral-400">Name:</span><span className="font-bold">{formData.firstName} {formData.lastName}</span></div>
-                  <div className="flex justify-between"><span className="text-neutral-400">Email:</span><span className="font-bold truncate max-w-[180px]">{formData.email}</span></div>
-                  <div className="flex justify-between"><span className="text-neutral-400">College:</span><span className="font-bold">{formData.college}</span></div>
-                  <div className="flex justify-between"><span className="text-neutral-400">ID No:</span><span className="font-bold">{formData.idNumber}</span></div>
-                </div>
-              </div>
-              <div className="space-y-2 text-left">
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="checkbox" className="accent-black h-3 w-3" />
-                  <span className="text-[10px] text-neutral-500 group-hover:text-black transition-colors">I agree to the <span className="underline font-bold">Terms & Conditions</span></span>
-                </label>
-              </div>
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input type="checkbox" className="mt-1 accent-black h-3 w-3" />
+                <span className="text-[10px] leading-relaxed text-neutral-500">I certify that I am a bona fide student/faculty of UST and agree to the Data Privacy Agreement.</span>
+              </label>
             </div>
           )}
         </div>
 
         {/* FOOTER */}
-        <div className="flex items-center justify-between border-t border-neutral-100 bg-neutral-50 px-6 py-4">
-          <button 
-            onClick={() => step > 1 ? setStep(step - 1) : onClose()} 
-            className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black transition-colors"
-          >
-            {step === 1 ? "Cancel" : "← Back"}
+        <div className="flex items-center justify-between border-t border-neutral-100 bg-neutral-50 px-8 py-5">
+          <button onClick={() => step > 1 ? setStep(step - 1) : onClose()} className="text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:text-black">
+            {step === 1 ? "Cancel" : "Back"}
           </button>
+          
           <button 
-            disabled={step === 1 && (!formData.role || !formData.email)}
             onClick={() => step < 3 ? setStep(step + 1) : onClose()} 
-            className="bg-black px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white hover:bg-[#f6c744] hover:text-black transition-all flex items-center gap-2"
+            className="bg-[#f6c744] px-10 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] text-black hover:bg-[#e3b832] transition-all shadow-xl active:scale-[0.98] flex items-center gap-2"
           >
-            {step === 3 ? "Create Account" : "Continue"} <span>→</span>
+            {step === 3 ? "Complete Registration" : "Next Step"} <span>→</span>
           </button>
         </div>
       </div>
