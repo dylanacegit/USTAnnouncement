@@ -141,7 +141,7 @@ export default function RegistrationPage({ isOpen, onClose }) {
           <div className="relative z-10 flex items-center gap-4">
             <img src="/images/Logo 2.svg" alt="UST Logo" className="h-10 w-10 object-contain" />
             <div>
-              <h2 className="font-playfair text-xl font-bold leading-tight">Join <span className="text-[#f6c744]">Gatherings</span></h2>
+              <h2 className="font-playfair text-xl font-bold leading-tight">Join <span className="text-[#f6c744]">Golden Gatherings</span></h2>
               <p className="text-[9px] font-medium tracking-[0.2em] text-neutral-400 uppercase">Step {step} of 3 • Registration</p>
             </div>
           </div>
@@ -184,7 +184,15 @@ export default function RegistrationPage({ isOpen, onClose }) {
                   <input type="email" value={formData.email} onChange={e => updateFields({email: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 text-xs outline-none focus:border-[#f6c744]" placeholder="UST Email Address" />
                   <div className="relative">
                     <input type={showPassword ? "text" : "password"} value={formData.password} onChange={e => updateFields({password: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 pr-12 text-xs outline-none focus:border-[#f6c744]" placeholder="Password" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#c49600] uppercase">{showPassword ? "Hide" : "Show"}</button>
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#c49600] uppercase">{showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9.88 9.88L12 12l2.12 2.12M14.2 14.2l3.4 3.4M10.4 4.4L12 4c7 0 10 8 10 8a20.2 20.2 0 01-2.9 4.6M8.6 19.4L3 24M4 12c0-8 10-8 10-8M1 1l22 22"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}</button>
                   </div>
                 </div>
               )}
@@ -192,51 +200,141 @@ export default function RegistrationPage({ isOpen, onClose }) {
           )}
 
           {step === 2 && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2">
-              <input type="text" value={formData.idNumber} onChange={e => updateFields({idNumber: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 text-xs outline-none focus:border-[#f6c744]" placeholder="ID Number" />
-              <select value={formData.yearLevel} onChange={e => updateFields({yearLevel: e.target.value})} className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 text-xs outline-none focus:border-[#f6c744] appearance-none">
-                <option disabled>Select Year Level</option>
-                <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
-              </select>
-              <div className="grid grid-cols-2 gap-2">
-                {colleges.map(c => (
-                  <button key={c} onClick={() => updateFields({college: c})} className={`text-[9px] font-bold py-2 border rounded-sm transition-all ${formData.college === c ? 'bg-black text-white border-black' : 'bg-white text-neutral-400 border-neutral-100'}`}>{c}</button>
-                ))}
+            <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              
+              {/* ID Number Input */}
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.15em]">Student Information</label>
+                <input 
+                  type="text" 
+                  value={formData.idNumber} 
+                  onChange={e => updateFields({idNumber: e.target.value})} 
+                  className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 text-xs outline-none focus:border-[#f6c744] focus:bg-white transition-all placeholder:text-neutral-300 rounded-sm text-black" 
+                  placeholder="ID Number" 
+                />
               </div>
+
+              {/* Custom Styled Year Level Dropdown */}
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.15em]">Year Level</label>
+                <div className="relative w-full">
+                  <select 
+                    value={formData.yearLevel || "Select Year Level"} 
+                    onChange={e => updateFields({yearLevel: e.target.value})} 
+                    className="w-full bg-neutral-50 border border-neutral-200 px-4 py-3 pr-10 text-xs text-black outline-none focus:border-[#f6c744] focus:bg-white transition-all cursor-pointer rounded-sm appearance-none [&::-ms-expand]:hidden"
+                    style={{ WebkitAppearance: 'none', MozAppearance: 'none' }} // Hard reset for stubborn browsers
+                  >
+                    <option disabled value="Select Year Level">Select Year Level</option>
+                    <option value="1st Year">1st Year</option>
+                    <option value="2nd Year">2nd Year</option>
+                    <option value="3rd Year">3rd Year</option>
+                    <option value="4th Year">4th Year</option>
+                  </select>
+                  
+                  {/* Custom Chevron Arrow Overlay */}
+                  <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* College Buttons Layout */}
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.15em]">College / Faculty</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {colleges.map(c => (
+                    <button 
+                      key={c} 
+                      type="button"
+                      onClick={() => updateFields({college: c})} 
+                      className={`text-[9px] font-black py-3 border rounded-sm tracking-wider transition-all uppercase ${
+                        formData.college === c 
+                          ? 'bg-[#0f0f0f] text-[#f6c744] border-black shadow-md' 
+                          : 'bg-neutral-50 text-neutral-400 border-neutral-200 hover:border-neutral-300 hover:bg-white'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
             </div>
           )}
 
           {step === 3 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-              <div className="bg-neutral-900 p-5 rounded-sm relative overflow-hidden">
-                <p className="text-[9px] font-black text-[#f6c744] uppercase tracking-widest mb-3 border-b border-white/10 pb-1">Verified Thomasian Identity</p>
-                <div className="space-y-2 text-[11px] text-white/80">
-                  <div className="flex justify-between"><span>Name</span><span className="font-bold text-white">{formData.firstName} {formData.lastName}</span></div>
-                  <div className="flex justify-between"><span>Email</span><span className="font-bold text-white">{formData.email}</span></div>
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              
+              {/* ACCOUNT SUMMARY BOX */}
+              <div className="bg-[#fffdf2] border border-[#f6c744]/40 p-6 rounded-sm space-y-4">
+                <h3 className="text-[10px] font-black text-[#c49600] uppercase tracking-[0.2em] border-b border-[#f6c744]/20 pb-2">
+                  Account Summary
+                </h3>
+                
+                <div className="space-y-2.5 font-inter text-[11px] text-neutral-500">
+                  <div className="flex justify-between items-baseline gap-4">
+                    <span className="font-medium text-neutral-400">Name</span>
+                    <span className="font-semibold text-neutral-800 text-right">{formData.firstName} {formData.lastName}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-baseline gap-4">
+                    <span className="font-medium text-neutral-400">Email</span>
+                    <span className="font-semibold text-neutral-800 break-all text-right">{formData.email}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-baseline gap-4">
+                    <span className="font-medium text-neutral-400">Student no.</span>
+                    <span className="font-semibold text-neutral-800 text-right">{formData.idNumber || "—"}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-baseline gap-4">
+                    <span className="font-medium text-neutral-400">College</span>
+                    <span className="font-semibold text-neutral-800 text-right">{formData.college || "—"}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-baseline gap-4">
+                    <span className="font-medium text-neutral-400">Year level</span>
+                    <span className="font-semibold text-neutral-800 text-right">{formData.yearLevel || "—"}</span>
+                  </div>
                 </div>
               </div>
-              <label className="flex items-start gap-3 cursor-pointer group">
-                <input type="checkbox" checked={certified} onChange={e => setCertified(e.target.checked)} className="mt-1 accent-black h-3 w-3" />
-                <span className="text-[10px] leading-relaxed text-neutral-500">I certify that I am a bona fide student/faculty of UST and agree to the Data Privacy Agreement.</span>
-              </label>
-            </div>
-          )}
 
-          {(error || success) && (
-            <div className="mt-5 space-y-3">
-              <p className={`text-[11px] font-semibold leading-relaxed ${error ? "text-red-600" : "text-emerald-700"}`}>
-                {error || success}
-              </p>
-              {formData.email.trim().toLowerCase().endsWith("@ust.edu.ph") && (
-                <button
-                  type="button"
-                  onClick={handleResendVerification}
-                  disabled={isResending}
-                  className="text-[10px] font-black uppercase tracking-widest text-[#c49600] hover:text-black disabled:text-neutral-400"
-                >
-                  {isResending ? "Sending..." : "Resend Verification Email"}
-                </button>
-              )}
+              {/* CHECKBOXES SECTION */}
+              <div className="space-y-3.5 pt-2">
+                
+                {/* 1. Terms and Privacy Checkbox */}
+                <label className="flex items-start gap-3 cursor-pointer group select-none">
+                  <input 
+                    required
+                    type="checkbox" 
+                    checked={certified} 
+                    onChange={e => setCertified(e.target.checked)} 
+                    className="mt-0.5 accent-black h-3.5 w-3.5 border-neutral-300 rounded-sm cursor-pointer" 
+                  />
+                  <span className="text-[11px] font-medium leading-relaxed text-neutral-500 group-hover:text-neutral-800 transition-colors">
+                    I agree to the{" "}
+                    <a href="/terms" target="_blank" rel="noreferrer" className="font-bold text-[#c49600] underline underline-offset-2 hover:text-black">Terms of Use</a>
+                    {" "}and{" "}
+                    <a href="/privacy" target="_blank" rel="noreferrer" className="font-bold text-[#c49600] underline underline-offset-2 hover:text-black">Privacy Policy</a>
+                    {" "}of the UST Events Portal.
+                  </span>
+                </label>
+
+                {/* 2. Marketing / Reminders Checkbox */}
+                <label className="flex items-start gap-3 cursor-pointer group select-none">
+                  <input 
+                    type="checkbox" 
+                    defaultChecked
+                    className="mt-0.5 accent-black h-3.5 w-3.5 border-neutral-300 rounded-sm cursor-pointer" 
+                  />
+                  <span className="text-[11px] font-medium leading-relaxed text-neutral-500 group-hover:text-neutral-800 transition-colors">
+                    Send me event reminders and announcements via email.
+                  </span>
+                </label>
+                
+              </div>
             </div>
           )}
         </div>

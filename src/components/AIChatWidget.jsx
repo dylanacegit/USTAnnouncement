@@ -204,21 +204,20 @@ Try asking:
       )}
 
       {open && (
-        <section className="fixed inset-x-3 bottom-20 z-[99] flex h-[min(720px,calc(100svh-96px))] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:inset-x-auto sm:right-7 sm:bottom-24 sm:w-[460px] md:w-[480px]">
-          <header className="flex h-16 shrink-0 items-center justify-between border-b border-neutral-200 px-4 sm:h-20 sm:px-6">
+        <section className="fixed inset-x-3 bottom-20 z-[99] flex h-[min(680px,calc(100svh-96px))] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:inset-x-auto sm:right-7 sm:bottom-24 sm:w-[360px] md:w-[380px]">
+          <header className="flex h-16 shrink-0 items-center justify-between border-b border-neutral-200 bg-[#f6c744] px-4 sm:h-20 sm:px-6">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="relative">
+              <div className="relative h-10 w-10 sm:h-11 sm:w-11 rounded-full overflow-hidden flex items-center justify-center bg-[#f6c744]">
                 <img
                   src="/images/tiggy-head.png"
                   alt="Tiggy"
-                  className="h-10 w-10 shrink-0"
+                  className="h-full w-full object-cover object-center scale-110 translate-y-[1px]"
                 />
-                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500" />
               </div>
 
               <div className="min-w-0">
                 <h4 className="text-base font-bold text-black">Tiggy</h4>
-                <p className="truncate text-xs text-neutral-500 sm:text-sm">
+                <p className="truncate text-xs text-black/70 sm:text-sm">
                   UST events and announcements assistant
                 </p>
               </div>
@@ -228,7 +227,7 @@ Try asking:
               {messages.length > 0 && (
                 <button
                   onClick={clearChat}
-                  className="text-xs font-semibold text-neutral-500 hover:text-black"
+                  className="text-xs font-semibold text-black/60 hover:text-black"
                 >
                   Clear
                 </button>
@@ -236,7 +235,7 @@ Try asking:
 
               <button
                 onClick={toggleChat}
-                className="grid h-9 w-9 place-items-center rounded-full text-2xl leading-none text-neutral-500 hover:bg-neutral-100 hover:text-black"
+                className="grid h-9 w-9 place-items-center rounded-full text-2xl leading-none text-black/60 hover:bg-black/10 hover:text-black"
                 aria-label="Close chat"
               >
                 ×
@@ -245,26 +244,36 @@ Try asking:
           </header>
 
           <main className="flex-1 space-y-4 overflow-y-auto bg-neutral-50 p-4 sm:p-5">
+            <div className="text-center my-2">
+              <span className="text-[11px] font-bold tracking-wider text-neutral-400 uppercase bg-neutral-200/50 px-3 py-1 rounded-full">
+                Today
+              </span>
+            </div>
+
             {messages.length === 0 ? (
               <>
-                <div className="rounded-3xl bg-white p-4 text-sm leading-7 text-neutral-700 shadow-sm sm:p-5">
-                  <p className="font-bold text-black">👋 Hi, Thomasian!</p>
+                <div className="rounded-3xl bg-[#f6c744] p-4 text-sm leading-7 text-black shadow-sm sm:p-5">
+                  <p className="font-bold">Hi, Thomasian!</p>
                   <p className="mt-2">
-                    I can help you search for event dates, venues,
-                    announcements, organizers, and schedules.
+                    I'm <strong className="font-bold">Tiggy</strong>, your Golden Gatherings assistant. Ask me about events, venues, announcements, organizers, and schedules.
                   </p>
                 </div>
 
-                <div className="grid gap-2">
-                  {suggestionPrompts.map((prompt) => (
-                    <button
-                      key={prompt}
-                      onClick={() => handleAsk(prompt)}
-                      className="rounded-2xl border border-[#f6c744] bg-white px-4 py-3 text-left text-xs font-semibold text-black transition hover:bg-[#f6c744]"
-                    >
-                      {prompt}
-                    </button>
-                  ))}
+                <div className="pt-2">
+                  <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-3 pl-1">
+                    Quick Questions
+                  </p>
+                  <div className="grid gap-2">
+                    {suggestionPrompts.map((prompt) => (
+                      <button
+                        key={prompt}
+                        onClick={() => handleAsk(prompt)}
+                        className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-left text-sm font-medium text-neutral-800 transition shadow-sm hover:border-[#f6c744] hover:bg-[#f6c744]/5"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </>
             ) : (
@@ -352,39 +361,80 @@ Try asking:
             </div>
           )}
 
+          {/* REVISED COMPACT COMPONENT FOOTER STYLE */}
           <footer className="shrink-0 border-t border-neutral-200 bg-white p-3 sm:p-4">
-            <textarea
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask about events, dates, venues..."
-              className="h-14 w-full resize-none rounded-2xl border border-neutral-300 p-3 text-sm outline-none transition focus:border-[#f6c744] sm:h-20 sm:p-4"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask about events, dates, venues..."
+                className="h-12 flex-1 rounded-xl border border-neutral-200 bg-neutral-50 px-4 text-sm outline-none transition focus:border-neutral-300 focus:bg-white"
+              />
 
-            <button
-              onClick={() => handleAsk()}
-              disabled={loading || !question.trim()}
-              className="mt-3 h-11 w-full rounded-full bg-[#f6c744] text-sm font-bold text-black transition hover:bg-[#e3b832] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? "Searching..." : "Ask Tiggy"}
-            </button>
+              <button
+                onClick={() => handleAsk()}
+                disabled={loading || !question.trim()}
+                className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#f6c744] text-black transition hover:bg-[#e3b832] disabled:cursor-not-allowed disabled:opacity-60"
+                aria-label="Send message"
+              >
+                {loading ? (
+                  <svg className="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="18" 
+                    height="18" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                    className="translate-x-[1px]"
+                  >
+                    <path d="m22 2-7 20-4-9-9-4Z"/>
+                    <path d="M22 2 11 13"/>
+                  </svg>
+                )}
+              </button>
+            </div>
           </footer>
         </section>
       )}
 
+      {/* COMPACT FLOATING TOGGLE BUTTON CONFIG */}
       <button
         onClick={toggleChat}
-        className="fixed bottom-5 right-5 z-[100] grid h-14 w-14 place-items-center rounded-full bg-[#f6c744] text-xl text-black shadow-2xl transition hover:scale-105 sm:bottom-7 sm:right-7 sm:h-16 sm:w-16"
+        className="fixed bottom-5 right-5 z-[100] grid h-14 w-14 place-items-center rounded-full bg-[#f6c744] text-black shadow-2xl transition hover:scale-105 sm:bottom-7 sm:right-7 sm:h-16 sm:w-16"
         aria-label="Open Tiggy chat"
       >
         {open ? (
-          <span className="text-3xl leading-none">⌄</span>
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="24" 
+            height="24" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
         ) : (
-          <img
-            src="/images/tiggy-head.png"
-            alt="Tiggy"
-            className="h-9 w-9 sm:h-10 sm:w-10"
-          />
+          <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full overflow-hidden flex items-center justify-center bg-[#f6c744]">
+            <img
+              src="/images/tiggy-head.png"
+              alt="Tiggy"
+              className="h-full w-full object-cover object-center scale-110 translate-y-[1px]"
+            />
+          </div>
         )}
 
         {!open && unreadCount > 0 && (
@@ -394,7 +444,7 @@ Try asking:
         )}
 
         {!open && showWelcomeBubble && unreadCount === 0 && !hasOpenedOnce && (
-          <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-red-600" />
+          <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-red-600 border-2 border-[#f6c744]" />
         )}
       </button>
     </>
