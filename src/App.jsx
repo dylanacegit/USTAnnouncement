@@ -19,17 +19,18 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { AuthProvider } from "./context/AuthContext";
 
-// 1. Layout for the User side (includes Header and Footer)
+// Layout for the User side (includes Header, Footer, and the AI widget)
 function UserLayout() {
   return (
-    <>
+    <div className="flex min-h-screen flex-col bg-[#f5f5f3]">
       <Header />
-      <main className="min-h-screen">
+      {/* flex-grow ensures the footer stays stuck to the absolute bottom on short pages */}
+      <main className="flex-grow">
         <Outlet />
       </main>
       <AIChatWidget />
       <Footer />
-    </>
+    </div>
   );
 }
 
@@ -39,31 +40,38 @@ export default function App() {
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
+          
+          {/* ==================== USER SYSTEM AREA ==================== */}
           <Route path="/" element={<UserLayout />}>
+            {/* Public Access Sub-Routes */}
             <Route index element={<Home />} />
             <Route path="events" element={<Events />} />
             <Route path="events/:eventId" element={<Events />} />
             <Route path="announcements" element={<Announcements />} />
             <Route path="about" element={<About />} />
+
+            {/* Protected User Sub-Routes (Now cleanly wrapped inside your UserLayout!) */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="profile" element={<UserProfile />} />
+            </Route>
           </Route>
 
+          {/* ==================== SYSTEM UTILITY AREA ==================== */}
+          {/* Standing alone completely without the user layout framework templates */}
           <Route path="/verify-email/:token" element={<VerifyEmail />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<UserProfile />} />
-          </Route>
-
+          {/* ==================== ADMINISTRATIVE CONSOLE ==================== */}
           <Route element={<ProtectedRoute adminOnly />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="events" element={<ManageEvents />} />
               <Route path="announcements" element={<ManageAnnouncements />} />
-
               <Route path="accounts" element={<ManageAccounts />} />
               <Route path="settings" element={<Settings />} />
             </Route>
           </Route>
+
         </Routes>
       </BrowserRouter>
     </AuthProvider>

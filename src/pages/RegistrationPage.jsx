@@ -20,6 +20,7 @@ const initialForm = {
   lastName: "",
   email: "",
   password: "",
+  confirmPassword: "", // TRACK CONfIRM PASSWORD
   idNumber: "",
   yearLevel: "Select year",
   college: "",
@@ -69,7 +70,8 @@ export default function RegistrationPage({ isOpen, onClose, onSwitchToLogin }) {
         !formData.firstName ||
         !formData.lastName ||
         !formData.email ||
-        !formData.password
+        !formData.password ||
+        !formData.confirmPassword
       ) {
         return "Please complete all fields before continuing.";
       }
@@ -80,6 +82,11 @@ export default function RegistrationPage({ isOpen, onClose, onSwitchToLogin }) {
 
       if (formData.password.length < 8) {
         return "Password must be at least 8 characters long.";
+      }
+
+      /* STRICT PASSWORD MATCH VALIDATION */
+      if (formData.password !== formData.confirmPassword) {
+        return "Passwords do not match. Please verify your credentials.";
       }
     }
 
@@ -238,11 +245,26 @@ export default function RegistrationPage({ isOpen, onClose, onSwitchToLogin }) {
                     <input value={formData.lastName} onChange={(event) => updateFields({ lastName: event.target.value })} className="w-full border border-neutral-200 bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-[#f6c744]" placeholder="Last Name" />
                   </div>
                   <input type="email" value={formData.email} onChange={(event) => updateFields({ email: event.target.value })} className="w-full border border-neutral-200 bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-[#f6c744]" placeholder="UST Email Address" />
+                  
+                  {/* MAIN PASSWORD FIELD */}
                   <div className="relative">
                     <input type={showPassword ? "text" : "password"} value={formData.password} onChange={(event) => updateFields({ password: event.target.value })} className="w-full border border-neutral-200 bg-neutral-50 px-4 py-3 pr-12 text-xs outline-none focus:border-[#f6c744]" placeholder="Password" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#c49600]" aria-label={showPassword ? "Hide password" : "Show password"}>
-                      {showPassword ? "Hide" : "Show"}
+                      {showPassword ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M9.88 9.88L12 12l2.12 2.12M14.2 14.2l3.4 3.4M10.4 4.4L12 4c7 0 10 8 10 8a20.2 20.2 0 01-2.9 4.6M8.6 19.4L3 24M4 12c0-8 10-8 10-8M1 1l22 22"/><circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      )}
                     </button>
+                  </div>
+
+                  {/* SECURE CONFIRM PASSWORD FIELD */}
+                  <div className="relative">
+                    <input type={showPassword ? "text" : "password"} value={formData.confirmPassword} onChange={(event) => updateFields({ confirmPassword: event.target.value })} className="w-full border border-neutral-200 bg-neutral-50 px-4 py-3 pr-12 text-xs outline-none focus:border-[#f6c744]" placeholder="Confirm Password" />
                   </div>
                 </div>
               )}
@@ -344,7 +366,7 @@ export default function RegistrationPage({ isOpen, onClose, onSwitchToLogin }) {
             {step === 1 ? "Cancel" : "Back"}
           </button>
           <button onClick={handleNext} disabled={isSubmitting || isResending || Boolean(success)} className="flex items-center gap-2 bg-[#f6c744] px-8 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-[#e3b832] disabled:cursor-not-allowed disabled:opacity-60">
-            {isSubmitting ? "Submitting..." : step === 3 ? "Complete Registration" : "Next Step"} <span>-&gt;</span>
+            {isSubmitting ? "Submitting..." : step === 3 ? "Complete Registration" : "Next Step"}
           </button>
         </div>
       </div>
