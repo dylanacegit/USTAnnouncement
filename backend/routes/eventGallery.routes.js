@@ -5,6 +5,7 @@ const { requireAuth } = require("../middleware/auth.middleware");
 const {
   createEventGalleryItem,
   getEventGalleryItems,
+  getRecentEventGalleryItems,
 } = require("../services/eventGallery.service");
 const { isValidObjectId } = require("../utils/validators");
 
@@ -70,6 +71,21 @@ function buildGalleryPayload(body, user) {
     },
   };
 }
+
+router.get("/", async (req, res) => {
+  try {
+    const requestedLimit = Number.parseInt(req.query.limit, 10);
+    const limit = Number.isFinite(requestedLimit)
+      ? Math.min(Math.max(requestedLimit, 1), 12)
+      : 6;
+    const items = await getRecentEventGalleryItems(limit);
+
+    res.json(items);
+  } catch (error) {
+    console.error("GET /api/event-gallery error:", error);
+    res.status(500).json({ message: "Failed to fetch recent event highlights." });
+  }
+});
 
 router.get("/:eventId", async (req, res) => {
   try {

@@ -12,6 +12,17 @@ async function getEventGalleryItems(eventId) {
     .toArray();
 }
 
+async function getRecentEventGalleryItems(limit = 6) {
+  const db = await connectDB();
+
+  return db
+    .collection(COLLECTION)
+    .find({})
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .toArray();
+}
+
 async function createEventGalleryItem(galleryData) {
   const db = await connectDB();
   const now = new Date();
@@ -29,4 +40,5 @@ async function createEventGalleryItem(galleryData) {
 module.exports = {
   createEventGalleryItem,
   getEventGalleryItems,
+  getRecentEventGalleryItems,
 };

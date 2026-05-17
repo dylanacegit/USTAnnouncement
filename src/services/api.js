@@ -72,6 +72,10 @@ export function getEventGallery(eventId) {
   return request(`/api/event-gallery/${eventId}`);
 }
 
+export function getRecentEventGallery(limit = 6) {
+  return request(`/api/event-gallery?limit=${encodeURIComponent(limit)}`);
+}
+
 export function createEventGalleryItem(eventId, galleryData) {
   return request(`/api/event-gallery/${eventId}`, {
     method: "POST",
