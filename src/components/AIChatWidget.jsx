@@ -207,19 +207,11 @@ Try asking:
         <section className="fixed inset-x-3 bottom-20 z-[99] flex h-[min(680px,calc(100svh-96px))] flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:inset-x-auto sm:right-7 sm:bottom-24 sm:w-[360px] md:w-[380px]">
           <header className="flex h-16 shrink-0 items-center justify-between border-b border-neutral-200 bg-[#f6c744] px-4 sm:h-20 sm:px-6">
             <div className="flex min-w-0 items-center gap-3">
-<<<<<<< HEAD
-              <div className="relative h-10 w-10 sm:h-11 sm:w-11 rounded-full overflow-hidden flex items-center justify-center bg-[#f6c744]">
-                <img
-                  src="/images/tiggy-head.png"
-                  alt="Tiggy"
-                  className="h-full w-full object-cover object-center scale-110 translate-y-[1px]"
-=======
               <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#f6c744] sm:h-11 sm:w-11">
                 <img
                   src="/images/tiggy-head.png"
                   alt="Tiggy"
                   className="h-full w-full translate-y-[1px] scale-110 object-cover object-center"
->>>>>>> e59ce8f (Add bookmarks announcements updates and event gallery)
                 />
               </div>
 
@@ -252,13 +244,8 @@ Try asking:
           </header>
 
           <main className="flex-1 space-y-4 overflow-y-auto bg-neutral-50 p-4 sm:p-5">
-<<<<<<< HEAD
-            <div className="text-center my-2">
-              <span className="text-[11px] font-bold tracking-wider text-neutral-400 uppercase bg-neutral-200/50 px-3 py-1 rounded-full">
-=======
             <div className="my-2 text-center">
               <span className="rounded-full bg-neutral-200/50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
->>>>>>> e59ce8f (Add bookmarks announcements updates and event gallery)
                 Today
               </span>
             </div>
@@ -273,11 +260,7 @@ Try asking:
                 </div>
 
                 <div className="pt-2">
-<<<<<<< HEAD
-                  <p className="text-[11px] font-bold text-neutral-400 uppercase tracking-widest mb-3 pl-1">
-=======
                   <p className="mb-3 pl-1 text-[11px] font-bold uppercase tracking-widest text-neutral-400">
->>>>>>> e59ce8f (Add bookmarks announcements updates and event gallery)
                     Quick Questions
                   </p>
                   <div className="grid gap-2">
@@ -285,11 +268,7 @@ Try asking:
                       <button
                         key={prompt}
                         onClick={() => handleAsk(prompt)}
-<<<<<<< HEAD
-                        className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-left text-sm font-medium text-neutral-800 transition shadow-sm hover:border-[#f6c744] hover:bg-[#f6c744]/5"
-=======
                         className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-left text-sm font-medium text-neutral-800 shadow-sm transition hover:border-[#f6c744] hover:bg-[#f6c744]/5"
->>>>>>> e59ce8f (Add bookmarks announcements updates and event gallery)
                       >
                         {prompt}
                       </button>
@@ -401,27 +380,6 @@ Try asking:
                 aria-label="Send message"
               >
                 {loading ? (
-<<<<<<< HEAD
-                  <svg className="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : (
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width="18" 
-                    height="18" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2.5" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                    className="translate-x-[1px]"
-                  >
-                    <path d="m22 2-7 20-4-9-9-4Z"/>
-                    <path d="M22 2 11 13"/>
-=======
                   <svg className="h-5 w-5 animate-spin text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -441,7 +399,6 @@ Try asking:
                   >
                     <path d="m22 2-7 20-4-9-9-4Z" />
                     <path d="M22 2 11 13" />
->>>>>>> e59ce8f (Add bookmarks announcements updates and event gallery)
                   </svg>
                 )}
               </button>
@@ -457,27 +414,6 @@ Try asking:
         aria-label="Open Tiggy chat"
       >
         {open ? (
-<<<<<<< HEAD
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="24" 
-            height="24" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2.5" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-          >
-            <path d="m6 9 6 6 6-6"/>
-          </svg>
-        ) : (
-          <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full overflow-hidden flex items-center justify-center bg-[#f6c744]">
-            <img
-              src="/images/tiggy-head.png"
-              alt="Tiggy"
-              className="h-full w-full object-cover object-center scale-110 translate-y-[1px]"
-=======
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -497,7 +433,6 @@ Try asking:
               src="/images/tiggy-head.png"
               alt="Tiggy"
               className="h-full w-full translate-y-[1px] scale-110 object-cover object-center"
->>>>>>> e59ce8f (Add bookmarks announcements updates and event gallery)
             />
           </div>
         )}
@@ -509,11 +444,7 @@ Try asking:
         )}
 
         {!open && showWelcomeBubble && unreadCount === 0 && !hasOpenedOnce && (
-<<<<<<< HEAD
-          <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full bg-red-600 border-2 border-[#f6c744]" />
-=======
           <span className="absolute -right-1 -top-1 h-4 w-4 rounded-full border-2 border-[#f6c744] bg-red-600" />
->>>>>>> e59ce8f (Add bookmarks announcements updates and event gallery)
         )}
       </button>
     </>
