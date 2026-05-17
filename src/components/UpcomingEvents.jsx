@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { getEvents } from "../services/api";
+import BookmarkButton from "./BookmarkButton";
 import {
   formatDateRange,
   getItemImage,
@@ -100,7 +101,7 @@ export default function UpcomingEvents() {
           Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className="min-w-full border border-neutral-100 bg-white p-4 shadow-sm sm:min-w-[calc(50%-8px)] lg:min-w-[calc(25%-12px)]"
+              className="flex-none basis-full border border-neutral-100 bg-white p-4 shadow-sm sm:basis-[calc((100%_-_1rem)/2)] lg:basis-[calc((100%_-_2rem)/3)] xl:basis-[calc((100%_-_3rem)/4)]"
             >
               <div className="aspect-video animate-pulse bg-neutral-200" />
               <div className="mt-4 h-3 w-20 animate-pulse bg-neutral-200" />
@@ -118,26 +119,26 @@ export default function UpcomingEvents() {
         {!loading && events.map((event) => (
           <div
             key={event._id || event.title}
-            className="group flex min-w-full flex-col bg-white border border-neutral-100 shadow-sm transition-all border-t-[3px] border-t-[#f6c744] sm:min-w-[calc(50%-8px)] lg:min-w-[calc(25%-12px)]"
+            className="group flex min-h-[365px] flex-none basis-full flex-col border border-neutral-100 border-t-[3px] border-t-[#f6c744] bg-white shadow-sm transition-all sm:basis-[calc((100%_-_1rem)/2)] lg:basis-[calc((100%_-_2rem)/3)] xl:basis-[calc((100%_-_3rem)/4)]"
             style={{ scrollSnapAlign: "start" }}
           >
-            {/* Image: Video aspect ratio + Hover effects */}
-            <div className="relative aspect-video overflow-hidden bg-neutral-200">
+            <div className="relative aspect-video shrink-0 overflow-hidden bg-neutral-200">
               <img
                 src={getItemImage(event)}
                 className="h-full w-full object-cover grayscale-[10%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
                 alt={event.title}
               />
+              <BookmarkButton eventId={event._id} className="absolute right-3 top-3" />
             </div>
 
-            <div className="p-4 flex-1 flex flex-col">
+            <div className="flex flex-1 flex-col p-4">
               <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400">
-                {event.category}
+                {event.category || "Event"}
               </span>
               <h3 className="mt-1.5 font-playfair text-[13px] font-bold leading-tight h-8 line-clamp-2 text-neutral-900 group-hover:text-[#c49600] transition-colors">
                 {event.title}
               </h3>
-              <div className="mt-3 text-[10px] text-neutral-500">
+              <div className="mt-3 min-h-10 text-[10px] text-neutral-500">
                 <p className="truncate italic">
                   {event.location || event.venue || "Venue TBA"}
                 </p>
@@ -145,7 +146,7 @@ export default function UpcomingEvents() {
                   {formatDateRange(event)}
                 </p>
               </div>
-              <button className="mt-4 w-full bg-[#f6c744] py-2 text-[8px] font-black uppercase tracking-widest text-black hover:bg-[#e3b832] transition-colors">
+              <button className="mt-auto w-full bg-[#f6c744] py-2 text-[8px] font-black uppercase tracking-widest text-black hover:bg-[#e3b832] transition-colors">
                 View
               </button>
             </div>

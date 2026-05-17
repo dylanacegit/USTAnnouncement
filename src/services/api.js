@@ -68,6 +68,17 @@ export function deleteEvent(eventId) {
   });
 }
 
+export function getEventGallery(eventId) {
+  return request(`/api/event-gallery/${eventId}`);
+}
+
+export function createEventGalleryItem(eventId, galleryData) {
+  return request(`/api/event-gallery/${eventId}`, {
+    method: "POST",
+    body: JSON.stringify(galleryData),
+  });
+}
+
 export function getAnnouncements() {
   return request("/api/announcements");
 }
@@ -93,6 +104,13 @@ export function updateAnnouncementStatus(announcementId, status) {
   });
 }
 
+export function updateAnnouncementFeatured(announcementId, isAdminFeatured) {
+  return request(`/api/announcements/${announcementId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ isAdminFeatured }),
+  });
+}
+
 export function deleteAnnouncement(announcementId) {
   return request(`/api/announcements/${announcementId}`, {
     method: "DELETE",
@@ -105,6 +123,13 @@ export function getEventAnnouncements(eventTitle) {
 
 export function getAccounts() {
   return request("/api/accounts");
+}
+
+export function createAccount(accountData) {
+  return request("/api/accounts", {
+    method: "POST",
+    body: JSON.stringify(accountData),
+  });
 }
 
 export function updateAccountStatus(accountId, status) {
@@ -134,6 +159,22 @@ export function deleteAccount(accountId) {
   });
 }
 
+export function getBookmarks() {
+  return request("/api/bookmarks");
+}
+
+export function addBookmark(eventId) {
+  return request(`/api/bookmarks/${eventId}`, {
+    method: "POST",
+  });
+}
+
+export function removeBookmark(eventId) {
+  return request(`/api/bookmarks/${eventId}`, {
+    method: "DELETE",
+  });
+}
+
 export function registerUser(registrationData) {
   return request("/api/auth/register", {
     method: "POST",
@@ -152,6 +193,20 @@ export function loginUser(credentials) {
   return request("/api/auth/login", {
     method: "POST",
     body: JSON.stringify(credentials),
+  });
+}
+
+export function forgotPassword(email) {
+  return request("/api/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function resetPassword(token, password) {
+  return request(`/api/auth/reset-password/${encodeURIComponent(token)}`, {
+    method: "POST",
+    body: JSON.stringify({ password }),
   });
 }
 

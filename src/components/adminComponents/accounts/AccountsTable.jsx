@@ -12,12 +12,25 @@ export default function AccountsTable({
   totalAccounts,
   totalPages,
   pageSize,
+  onCreateAccount,
   onToggleArchive,
   onUpdateDepartment,
 }) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [departmentDraft, setDepartmentDraft] = useState("");
+  const [createDraft, setCreateDraft] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    role: "user",
+    occupation: "student",
+    department: "",
+    studentOrEmployeeNumber: "",
+    yearLevel: "",
+  });
   const [updatingId, setUpdatingId] = useState(null);
   const [formError, setFormError] = useState("");
 
@@ -43,6 +56,42 @@ export default function AccountsTable({
     setSelectedAccount(null);
     setDepartmentDraft("");
     setFormError("");
+  };
+
+  const updateCreateDraft = (field, value) => {
+    setCreateDraft((current) => ({ ...current, [field]: value }));
+    setFormError("");
+  };
+
+  const closeCreateForm = () => {
+    setIsCreating(false);
+    setFormError("");
+    setCreateDraft({
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      role: "user",
+      occupation: "student",
+      department: "",
+      studentOrEmployeeNumber: "",
+      yearLevel: "",
+    });
+  };
+
+  const handleCreateSubmit = async (event) => {
+    event.preventDefault();
+
+    try {
+      setUpdatingId("create");
+      setFormError("");
+      await onCreateAccount(createDraft);
+      closeCreateForm();
+    } catch (error) {
+      setFormError(error.message || "Failed to create account.");
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
   const handleToggleArchive = async (account) => {
@@ -155,7 +204,13 @@ export default function AccountsTable({
         </div>
 
         <div className="grid grid-cols-2 gap-2 sm:flex">
-          <button className="h-8 rounded-md border border-gray-700 px-3 text-xs font-bold transition-colors hover:bg-black hover:text-white sm:h-9 sm:px-4">
+          <button
+            onClick={() => {
+              setIsCreating((current) => !current);
+              closeDepartmentForm();
+            }}
+            className="h-8 rounded-md border border-gray-700 px-3 text-xs font-bold transition-colors hover:bg-black hover:text-white sm:h-9 sm:px-4"
+          >
             Create
           </button>
 
@@ -174,6 +229,38 @@ export default function AccountsTable({
           </button>
         </div>
       </div>
+
+      {isCreating && (
+        <form
+          onSubmit={handleCreateSubmit}
+          className="mb-3 rounded-xl border border-yellow-200 bg-yellow-50/60 p-3 sm:mb-4 sm:p-4"
+        >
+          <div className="grid gap-3 lg:grid-cols-4">
+            <input value={createDraft.firstName} onChange={(e) => updateCreateDraft("firstName", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="First name" />
+            <input value={createDraft.lastName} onChange={(e) => updateCreateDraft("lastName", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="Last name" />
+            <input type="email" value={createDraft.email} onChange={(e) => updateCreateDraft("email", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="UST email" />
+            <input type="password" value={createDraft.password} onChange={(e) => updateCreateDraft("password", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="Temporary password" />
+            <select value={createDraft.role} onChange={(e) => updateCreateDraft("role", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500">
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+            <select value={createDraft.occupation} onChange={(e) => updateCreateDraft("occupation", e.target.value)} disabled={createDraft.role === "admin"} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500 disabled:bg-gray-100">
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+            </select>
+            <input value={createDraft.department} onChange={(e) => updateCreateDraft("department", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="Department" />
+            <input value={createDraft.studentOrEmployeeNumber} onChange={(e) => updateCreateDraft("studentOrEmployeeNumber", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="ID number" />
+            <input value={createDraft.yearLevel} onChange={(e) => updateCreateDraft("yearLevel", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="Year level" />
+          </div>
+          {formError && <p className="mt-3 text-xs font-semibold text-red-600">{formError}</p>}
+          <div className="mt-3 flex justify-end gap-2">
+            <button type="button" onClick={closeCreateForm} className="h-9 rounded-lg border border-gray-300 px-4 text-xs font-bold text-gray-700">Cancel</button>
+            <button type="submit" disabled={updatingId === "create"} className="h-9 rounded-lg bg-black px-4 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-60">
+              {updatingId === "create" ? "Creating..." : "Create Account"}
+            </button>
+          </div>
+        </form>
+      )}
 
       {isEditing && selectedAccount && (
         <form

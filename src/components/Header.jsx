@@ -1,8 +1,18 @@
+<<<<<<< HEAD
 import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import RegistrationPage from "../pages/RegistrationPage"; 
 import LoginModal from "../components/LoginModal";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
+=======
+import { useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import RegistrationPage from "../pages/RegistrationPage";
+import LoginModal from "../components/LoginModal";
+import ForgotPasswordModal from "../components/ForgotPasswordModal";
+import ProfileMenu from "../components/ProfileMenu";
+import { useAuth } from "../context/AuthContext";
+>>>>>>> e59ce8f (Add bookmarks announcements updates and event gallery)
 
 /**
  * Header Component
@@ -10,6 +20,10 @@ import ForgotPasswordModal from "../components/ForgotPasswordModal";
  */
 export default function Header() {
   const navigate = useNavigate();
+<<<<<<< HEAD
+=======
+  const { isAdmin, isAuthenticated, signOut, user } = useAuth();
+>>>>>>> e59ce8f (Add bookmarks announcements updates and event gallery)
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -58,6 +72,14 @@ export default function Header() {
     setIsLoginOpen(true);
   };
 
+<<<<<<< HEAD
+=======
+  const handleLogout = () => {
+    signOut();
+    navigate("/");
+  };
+
+>>>>>>> e59ce8f (Add bookmarks announcements updates and event gallery)
   return (
     <>
       <header className="sticky top-0 z-50 w-full bg-[#070707] border-b border-white/10 h-16">
@@ -97,14 +119,21 @@ export default function Header() {
 
           {/* ACTION BUTTONS / AUTH FLOW SYSTEM */}
           <div className="flex items-center gap-3 sm:gap-5 z-50">
+<<<<<<< HEAD
             {isLoggedIn ? (
               <>
                 {/* 1. BOOKMARKS LINK */}
                 <NavLink to="/bookmarks" className="text-white hover:text-[#f6c744] transition-colors">
+=======
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3">
+                <NavLink to="/events?bookmarks=bookmarked" className="text-white hover:text-[#f6c744] transition-colors">
+>>>>>>> e59ce8f (Add bookmarks announcements updates and event gallery)
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:w-5 sm:h-5">
                     <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
                   </svg>
                 </NavLink>
+<<<<<<< HEAD
                 
                 {/* 2. PROFILE ROUTE LINK */}
                 <button 
@@ -122,6 +151,23 @@ export default function Header() {
               <button
                 onClick={() => setIsLoginOpen(true)}
                 className="bg-[#f6c744] hover:bg-[#e3b832] text-black font-inter font-black uppercase tracking-widest text-[10px] px-5 py-2.5 rounded-sm transition-all shadow-md active:scale-[0.97]"
+=======
+                {isAdmin && (
+                  <NavLink
+                    to="/admin"
+                    className="text-[10px] font-black uppercase tracking-[0.18em] text-[#f6c744] hover:text-white"
+                  >
+                    Admin
+                  </NavLink>
+                )}
+                <ProfileMenu user={user} onLogout={handleLogout} />
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsLoginOpen(true)}
+                className="rounded-sm bg-[#f6c744] px-5 py-2.5 font-inter text-[10px] font-black uppercase tracking-widest text-black shadow-md transition-all hover:bg-[#e3b832] active:scale-[0.97]"
+                aria-label="Login"
+>>>>>>> e59ce8f (Add bookmarks announcements updates and event gallery)
               >
                 Sign In
               </button>

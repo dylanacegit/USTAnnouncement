@@ -1,7 +1,11 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { loginUser, resendVerification } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onForgotPassword }) {
+  const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,9 +22,9 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onForg
 
     try {
       const result = await loginUser({ email, password });
-      localStorage.setItem("authToken", result.token);
-      localStorage.setItem("authUser", JSON.stringify(result.user));
+      signIn(result.token, result.user);
       onClose();
+      navigate(result.redirectTo || (result.user?.role === "admin" ? "/admin" : "/"));
     } catch (requestError) {
       setError(requestError.message || "Sign in failed. Please try again.");
     } finally {

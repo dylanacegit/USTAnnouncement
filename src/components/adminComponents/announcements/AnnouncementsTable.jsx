@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FiArchive, FiEdit2, FiRotateCcw, FiTrash2 } from "react-icons/fi";
+import { FiArchive, FiEdit2, FiRotateCcw, FiStar, FiTrash2 } from "react-icons/fi";
 import AdminTable from "../AdminTable";
 import Badge from "../Badge";
 
@@ -14,6 +14,7 @@ export default function AnnouncementsTable({
   totalPages,
   pageSize,
   onToggleArchive,
+  onToggleFeatured,
   onDeleteAnnouncement,
   onViewAnnouncement,
   onEditAnnouncement,
@@ -80,6 +81,15 @@ export default function AnnouncementsTable({
     try {
       setUpdatingId(getId(announcement));
       await onDeleteAnnouncement(announcement);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleToggleFeatured = async (announcement) => {
+    try {
+      setUpdatingId(getId(announcement));
+      await onToggleFeatured(announcement);
     } finally {
       setUpdatingId(null);
     }
@@ -232,6 +242,24 @@ export default function AnnouncementsTable({
                   ) : (
                     <div className="flex justify-end gap-2">
                       <IconButton
+                        label={
+                          announcement.isAdminFeatured
+                            ? "Remove pinned announcement"
+                            : "Pin as featured announcement"
+                        }
+                        tone={announcement.isAdminFeatured ? "black" : "yellow"}
+                        onClick={(clickEvent) => {
+                          stopActionClick(clickEvent);
+                          handleToggleFeatured(announcement);
+                        }}
+                        disabled={updatingId === getId(announcement)}
+                      >
+                        <FiStar
+                          size={16}
+                          className={announcement.isAdminFeatured ? "fill-current" : ""}
+                        />
+                      </IconButton>
+                      <IconButton
                         label="Edit announcement"
                         tone="yellow"
                         onClick={(clickEvent) => {
@@ -335,6 +363,24 @@ export default function AnnouncementsTable({
                       ) : (
                         <div className="flex gap-2">
                           <IconButton
+                            label={
+                              announcement.isAdminFeatured
+                                ? "Remove pinned announcement"
+                                : "Pin as featured announcement"
+                            }
+                            tone={announcement.isAdminFeatured ? "black" : "yellow"}
+                            onClick={(clickEvent) => {
+                              stopActionClick(clickEvent);
+                              handleToggleFeatured(announcement);
+                            }}
+                            disabled={updatingId === getId(announcement)}
+                          >
+                            <FiStar
+                              size={16}
+                              className={announcement.isAdminFeatured ? "fill-current" : ""}
+                            />
+                          </IconButton>
+                          <IconButton
                             label="Edit announcement"
                             tone="yellow"
                             onClick={(clickEvent) => {
@@ -405,6 +451,7 @@ function IconButton({ label, tone, disabled = false, onClick, children }) {
     green: "border-green-500 text-green-700 hover:bg-green-50",
     red: "border-red-500 text-red-600 hover:bg-red-50",
     yellow: "border-yellow-500 text-yellow-700 hover:bg-yellow-50",
+    black: "border-gray-900 bg-black text-yellow-300 hover:bg-gray-800",
   };
 
   return (

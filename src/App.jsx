@@ -13,13 +13,11 @@ import ManageAccounts from "./pages/adminPages/ManageAccounts";
 import Settings from "./pages/adminPages/Settings";
 import About from "./pages/About";
 import VerifyEmail from "./pages/VerifyEmail";
-function PlaceholderPage({ title }) {
-  return (
-    <div className="min-h-screen bg-[#070707] p-10">
-      <h1 className="font-serif text-4xl font-bold text-white">{title}</h1>
-    </div>
-  );
-}
+import ResetPassword from "./pages/ResetPassword";
+import UserProfile from "./pages/UserProfile";
+import ProtectedRoute from "./components/ProtectedRoute";
+import ScrollToTop from "./components/ScrollToTop";
+import { AuthProvider } from "./context/AuthContext";
 
 // 1. Layout for the User side (includes Header and Footer)
 function UserLayout() {
@@ -37,32 +35,37 @@ function UserLayout() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* =========================================
-            USER SIDE (With Header & Footer)
-            ========================================= */}
-        <Route path="/" element={<UserLayout />}>
-          <Route index element={<Home />} />
-          <Route path="events" element={<Events />} />
-          <Route path="announcements" element={<Announcements />} />
-          <Route path="about" element={<About />} />
-        </Route>
+    <AuthProvider>
+      <BrowserRouter>
+        <ScrollToTop />
+        <Routes>
+          <Route path="/" element={<UserLayout />}>
+            <Route index element={<Home />} />
+            <Route path="events" element={<Events />} />
+            <Route path="events/:eventId" element={<Events />} />
+            <Route path="announcements" element={<Announcements />} />
+            <Route path="about" element={<About />} />
+          </Route>
 
-        <Route path="/verify-email/:token" element={<VerifyEmail />} />
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-        {/* =========================================
-            ADMIN SIDE (Sidebar only, NO Header/Footer)
-            ========================================= */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="events" element={<ManageEvents />} />
-          <Route path="announcements" element={<ManageAnnouncements />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<UserProfile />} />
+          </Route>
 
-          <Route path="accounts" element={<ManageAccounts />} />
-          <Route path="settings" element={<Settings />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+          <Route element={<ProtectedRoute adminOnly />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="events" element={<ManageEvents />} />
+              <Route path="announcements" element={<ManageAnnouncements />} />
+
+              <Route path="accounts" element={<ManageAccounts />} />
+              <Route path="settings" element={<Settings />} />
+            </Route>
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

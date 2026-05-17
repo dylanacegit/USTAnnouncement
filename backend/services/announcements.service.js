@@ -83,6 +83,39 @@ async function updateAnnouncementStatus(announcementId, status) {
   return db.collection("announcements").findOne({ _id: announcementId });
 }
 
+async function updateAnnouncementFeatured(announcementId, isAdminFeatured) {
+  const db = await connectDB();
+  const now = new Date();
+
+  if (isAdminFeatured) {
+    await db.collection("announcements").updateMany(
+      { _id: { $ne: announcementId } },
+      {
+        $set: {
+          isAdminFeatured: false,
+          updatedBy: "Admin",
+          updatedAt: now,
+        },
+      }
+    );
+  }
+
+  const result = await db.collection("announcements").updateOne(
+    { _id: announcementId },
+    {
+      $set: {
+        isAdminFeatured,
+        updatedBy: "Admin",
+        updatedAt: now,
+      },
+    }
+  );
+
+  if (result.matchedCount === 0) return null;
+
+  return db.collection("announcements").findOne({ _id: announcementId });
+}
+
 async function deleteAnnouncement(announcementId) {
   const db = await connectDB();
   const result = await db
@@ -99,5 +132,6 @@ module.exports = {
   getEventAnnouncements,
   getPublishedAnnouncements,
   updateAnnouncement,
+  updateAnnouncementFeatured,
   updateAnnouncementStatus,
 };

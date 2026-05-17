@@ -17,6 +17,7 @@ import {
   getAccounts,
   updateAccountProfile,
 } from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 const emptyProfile = {
   firstName: "",
@@ -51,14 +52,6 @@ const settingsTabs = [
     icon: FiLock,
   },
 ];
-
-function getStoredAdmin() {
-  try {
-    return JSON.parse(sessionStorage.getItem("adminUser")) || null;
-  } catch {
-    return null;
-  }
-}
 
 function formatDate(date) {
   if (!date) return "Not available";
@@ -110,6 +103,7 @@ function ComingSoonPanel({ tab }) {
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { signOut, user } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [activeTab, setActiveTab] = useState("profile");
@@ -127,14 +121,12 @@ export default function Settings() {
       try {
         const data = await getAccounts();
         const accountList = Array.isArray(data) ? data : data.accounts || [];
-        const storedAdmin = getStoredAdmin();
-
         const currentAccount =
           accountList.find(
             (account) =>
-              account._id === storedAdmin?._id ||
-              account._id === storedAdmin?.id ||
-              account.email === storedAdmin?.email
+              account._id === user?.id ||
+              account.id === user?.id ||
+              account.email === user?.email
           ) ||
           accountList.find(
             (account) =>
@@ -163,7 +155,7 @@ export default function Settings() {
     };
 
     loadProfile();
-  }, []);
+  }, [user]);
 
   const fullName = useMemo(() => {
     if (!selectedAccount) return "Admin Profile";
@@ -211,14 +203,6 @@ export default function Settings() {
         )
       );
 
-      const storedAdmin = getStoredAdmin();
-      if (storedAdmin) {
-        sessionStorage.setItem(
-          "adminUser",
-          JSON.stringify({ ...storedAdmin, ...updatedAccount })
-        );
-      }
-
       setMessage("Profile details updated.");
     } catch (saveError) {
       setError(saveError.message || "Failed to update profile.");
@@ -234,9 +218,8 @@ export default function Settings() {
       setDeleting(true);
       setError("");
       await deleteAccount(selectedAccount._id);
-      sessionStorage.removeItem("adminToken");
-      sessionStorage.removeItem("adminUser");
-      navigate("/login");
+      signOut();
+      navigate("/");
     } catch (deleteError) {
       setError(deleteError.message || "Failed to delete account.");
       setDeleting(false);

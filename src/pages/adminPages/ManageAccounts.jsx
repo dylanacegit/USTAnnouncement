@@ -4,6 +4,7 @@ import AccountStats from "../../components/adminComponents/accounts/AccountStats
 import AccountFilters from "../../components/adminComponents/accounts/AccountFilters";
 import AccountsTable from "../../components/adminComponents/accounts/AccountsTable";
 import {
+  createAccount,
   getAccounts,
   updateAccountDepartment,
   updateAccountStatus,
@@ -127,6 +128,12 @@ export default function ManageAccounts() {
     );
   };
 
+  const handleCreateAccount = async (accountData) => {
+    const createdAccount = await createAccount(accountData);
+
+    setAccounts((current) => [createdAccount, ...current]);
+  };
+
   const filteredAccounts = useMemo(() => {
     let result = [...accountsForActiveTab];
 
@@ -233,6 +240,7 @@ export default function ManageAccounts() {
         pageSize={ACCOUNTS_PER_PAGE}
         onToggleArchive={handleToggleArchive}
         onUpdateDepartment={handleUpdateDepartment}
+        onCreateAccount={handleCreateAccount}
       />
     </div>
   );

@@ -10,6 +10,7 @@ import {
   deleteAnnouncement,
   getAnnouncements,
   updateAnnouncement,
+  updateAnnouncementFeatured,
   updateAnnouncementStatus,
 } from "../../services/api";
 
@@ -109,6 +110,35 @@ export default function ManageAnnouncements() {
           : item
       )
     );
+  };
+
+  const handleToggleFeatured = async (announcement) => {
+    const updatedAnnouncement = await updateAnnouncementFeatured(
+      announcement._id,
+      !announcement.isAdminFeatured
+    );
+
+    setAnnouncements((current) =>
+      current.map((item) => {
+        if (item._id === updatedAnnouncement._id) {
+          return { ...item, ...updatedAnnouncement };
+        }
+        if (updatedAnnouncement.isAdminFeatured) {
+          return { ...item, isAdminFeatured: false };
+        }
+        return item;
+      })
+    );
+    setSelectedAnnouncement((current) => {
+      if (!current) return current;
+      if (current._id === updatedAnnouncement._id) {
+        return { ...current, ...updatedAnnouncement };
+      }
+      if (updatedAnnouncement.isAdminFeatured) {
+        return { ...current, isAdminFeatured: false };
+      }
+      return current;
+    });
   };
 
   const handleCreateAnnouncement = async (announcementData) => {
@@ -265,6 +295,7 @@ export default function ManageAnnouncements() {
         totalPages={totalPages}
         pageSize={ANNOUNCEMENTS_PER_PAGE}
         onToggleArchive={handleToggleArchive}
+        onToggleFeatured={handleToggleFeatured}
         onDeleteAnnouncement={handleDeleteAnnouncement}
         onViewAnnouncement={setSelectedAnnouncement}
         onEditAnnouncement={setEditingAnnouncement}

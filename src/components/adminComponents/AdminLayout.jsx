@@ -7,6 +7,8 @@ import { IoDocumentTextOutline, IoPersonOutline } from "react-icons/io5";
 import { FiLogOut } from "react-icons/fi";
 import { useEffect, useMemo, useState } from "react";
 import { getAccounts, getAnnouncements, getEvents } from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
+import ProfileMenu from "../ProfileMenu";
 
 const SEARCH_LIMIT_PER_GROUP = 4;
 
@@ -120,6 +122,7 @@ function SearchDropdown({
 }
 
 export default function AdminLayout() {
+  const { signOut, user } = useAuth();
   const [isSideBarOpen, setIsSideBarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -134,10 +137,13 @@ export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("adminToken");
-    sessionStorage.removeItem("adminUser");
-    navigate("/login");
+  const handleLogout = ({ confirm = false } = {}) => {
+    if (confirm && !window.confirm("Are you sure you want to log out?")) {
+      return;
+    }
+
+    signOut();
+    navigate("/");
   };
 
   const loadSearchData = async () => {
@@ -482,7 +488,7 @@ export default function AdminLayout() {
         {/* Logout */}
         <div className="p-4 border-t border-gray-800">
           <button
-            onClick={handleLogout}
+            onClick={() => handleLogout({ confirm: true })}
             className="flex items-center gap-3 px-3 py-2 text-red-500 hover:bg-gray-800 hover:text-red-400 rounded-lg w-full transition-colors"
           >
             <FiLogOut size={20} />
@@ -570,9 +576,7 @@ export default function AdminLayout() {
               <IoMdNotifications size={22} />
               <span className="absolute top-0 right-0 w-2 h-2 bg-yellow-500 rounded-full"></span>
             </button>
-            <div className="w-8 h-8 rounded-full bg-yellow-600 flex items-center justify-center text-sm font-bold text-black">
-              AD
-            </div>
+            <ProfileMenu user={user} onLogout={() => handleLogout()} />
           </div>
         </header>
 

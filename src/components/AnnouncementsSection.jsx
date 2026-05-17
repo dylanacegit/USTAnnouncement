@@ -65,8 +65,7 @@ export default function AnnouncementsSection() {
   };
 
   const handleViewRedirect = () => {
-    // Navigates to the full page and passes the 'selected' item as state
-    navigate("/announcements", { state: { featuredAnnouncement: selected } });
+    navigate("/announcements", { state: { selectedAnnouncement: selected } });
   };
 
   const formatDateParts = (dateString) => {

@@ -1,4 +1,6 @@
 const connectDB = require("../db");
+const { createAdminManagedUser } = require("./auth.service");
+const { getEffectiveRole, getOccupation } = require("../utils/auth");
 
 function toDashboardAccount(user) {
   return {
@@ -7,9 +9,10 @@ function toDashboardAccount(user) {
     lastName: user.last_name,
     email: user.email,
     department: user.faculty,
-    role: user.role,
+    role: getEffectiveRole(user),
+    occupation: getOccupation(user),
     status: user.account_status || "active",
-    createdBy: "Registration",
+    createdBy: user.created_by || "Registration",
     createdAt: user.created_at,
     updatedBy: user.updated_by,
     updatedAt: user.updated_at,
@@ -41,6 +44,11 @@ async function getAllAccounts() {
   return users.map(toDashboardAccount);
 }
 
+async function createAccount(accountData) {
+  const user = await createAdminManagedUser(accountData);
+  return toDashboardAccount(user);
+}
+
 async function updateAccount(accountId, updates) {
   const db = await connectDB();
   const mappedUpdates = mapAccountUpdates(updates);
@@ -65,6 +73,7 @@ async function deleteAccount(accountId) {
 }
 
 module.exports = {
+  createAccount,
   deleteAccount,
   getAllAccounts,
   updateAccount,

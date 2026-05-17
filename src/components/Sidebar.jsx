@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAnnouncements, getEvents } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import {
   formatDisplayDate,
+  formatDateRange,
   getPublishedItems,
 } from "../utils/contentFormatters";
 
@@ -15,6 +17,7 @@ function getEventStartDateTime(event) {
 }
 
 export default function Sidebar() {
+  const { bookmarkIds, isAuthenticated } = useAuth();
   const [events, setEvents] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -70,6 +73,13 @@ export default function Sidebar() {
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 3);
   }, [announcements]);
+
+  const bookmarkedEvents = useMemo(() => {
+    return events
+      .filter((event) => bookmarkIds.includes(event._id))
+      .sort((a, b) => getEventStartDateTime(a) - getEventStartDateTime(b))
+      .slice(0, 5);
+  }, [bookmarkIds, events]);
 
   useEffect(() => {
     if (!nextEvent) {
@@ -162,7 +172,7 @@ export default function Sidebar() {
               <Link
                 key={item._id || item.title}
                 to="/announcements"
-                state={{ featuredAnnouncement: item }}
+                state={{ selectedAnnouncement: item }}
                 className="group block border border-neutral-100 bg-white p-3 text-left transition-all hover:bg-black/5 sm:border-0 sm:bg-transparent sm:py-4 sm:first:pt-0"
               >
                 <span className="text-[10px] font-black uppercase tracking-[0.32em] text-[#f6c744]">
@@ -181,11 +191,56 @@ export default function Sidebar() {
       </section>
 
       <section>
+        <div className="mb-4 flex items-end justify-between gap-3 border-b-2 border-[#f6c744] pb-3">
+          <h3 className="text-left font-serif text-xl font-bold">
+            Bookmarks
+          </h3>
+          {isAuthenticated && bookmarkedEvents.length > 0 && (
+            <Link
+              to="/events?bookmarks=bookmarked"
+              className="text-[9px] font-black uppercase tracking-widest text-[#c49600] hover:underline"
+            >
+              View All
+            </Link>
+          )}
+        </div>
+
+        {!isAuthenticated ? (
+          <p className="py-2 text-sm text-black/50">
+            Sign in to save and view bookmarked events.
+          </p>
+        ) : loading ? (
+          <p className="py-2 text-sm text-black/50">Loading bookmarks...</p>
+        ) : bookmarkedEvents.length === 0 ? (
+          <p className="py-2 text-sm text-black/50">No bookmarked events yet.</p>
+        ) : (
+          <div className="grid gap-2">
+            {bookmarkedEvents.map((event) => (
+              <Link
+                key={event._id || event.title}
+                to={`/events/${event._id}`}
+                state={{ selectedEvent: event, primeEventsBack: true }}
+                className="group block border-b border-neutral-200 py-3 transition-colors hover:border-[#f6c744]"
+              >
+                <p className="line-clamp-2 text-sm font-semibold leading-relaxed text-black/80 group-hover:text-black">
+                  {event.title}
+                </p>
+                <small className="mt-2 block text-xs text-black/40">
+                  {formatDateRange(event)}
+                </small>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
         <h3 className="mb-4 border-b-2 border-[#f6c744] pb-3 text-left font-serif text-xl font-bold">
           Quick Access
         </h3>
         <div className="flex flex-col">
           <QuickAccessLink label="Events" to="/events" />
+          <QuickAccessLink label="Bookmarked Events" to="/events?bookmarks=bookmarked" />
           <QuickAccessLink label="Latest Announcements" to="/announcements" />
           <a
             href="https://myusteportal.ust.edu.ph/"

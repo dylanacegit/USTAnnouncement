@@ -47,6 +47,53 @@ function getVerificationEmailHtml({ firstName, verifyUrl }) {
   `;
 }
 
+function getPasswordResetEmailHtml({ firstName, resetUrl }) {
+  return `
+    <!doctype html>
+    <html>
+      <body style="margin:0;background:#f5f5f5;font-family:Arial,sans-serif;color:#1f1f1f;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:32px 16px;">
+          <tr>
+            <td align="center">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #e8e0c2;">
+                <tr>
+                  <td style="background:#111111;padding:28px 32px;border-bottom:4px solid #f6c744;">
+                    <h1 style="margin:0;color:#ffffff;font-size:24px;line-height:1.25;">Golden Gatherings</h1>
+                    <p style="margin:8px 0 0;color:#f6c744;font-size:12px;letter-spacing:2px;text-transform:uppercase;">University of Santo Tomas</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:32px;">
+                    <h2 style="margin:0 0 12px;font-size:20px;color:#111111;">Reset your password</h2>
+                    <p style="margin:0 0 18px;font-size:15px;line-height:1.6;">Hi ${firstName},</p>
+                    <p style="margin:0 0 24px;font-size:15px;line-height:1.6;">
+                      Use the button below to set a new password for your Golden Gatherings account.
+                    </p>
+                    <p style="margin:0 0 28px;">
+                      <a href="${resetUrl}" style="display:inline-block;background:#f6c744;color:#111111;text-decoration:none;font-weight:700;padding:14px 22px;border-radius:2px;letter-spacing:1px;text-transform:uppercase;font-size:12px;">
+                        Reset Password
+                      </a>
+                    </p>
+                    <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#555555;">
+                      This password reset link expires in 30 minutes. If the button does not work, copy this link into your browser:
+                    </p>
+                    <p style="margin:0;word-break:break-all;font-size:12px;line-height:1.6;color:#7a5b00;">${resetUrl}</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:20px 32px;background:#faf8ef;color:#6b6250;font-size:12px;line-height:1.5;">
+                    If you did not request a password reset, you can safely ignore this message.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+  `;
+}
+
 function createTransporter() {
   const emailPass = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s/g, "") : "";
   const hasEmailCredentials =
@@ -90,8 +137,6 @@ async function sendVerificationEmail({ to, firstName, token }) {
   const verifyUrl = `${clientUrl}/verify-email/${token}`;
 
   console.info("[email] Sending verification email started", { to });
-  console.info("[email] Verification token:", token);
-  console.info("[email] Verification URL:", verifyUrl);
 
   try {
     const transporter = createTransporter();
@@ -117,6 +162,35 @@ async function sendVerificationEmail({ to, firstName, token }) {
     return info;
   } catch (error) {
     console.error("[email] Verification email failed:", error);
+    throw error;
+  }
+}
+
+async function sendPasswordResetEmail({ to, firstName, token }) {
+  const clientUrl = process.env.CLIENT_URL || process.env.CLIENT_ORIGIN || "http://localhost:5173";
+  const resetUrl = `${clientUrl}/reset-password/${token}`;
+
+  console.info("[email] Sending password reset email started", { to });
+
+  try {
+    const transporter = createTransporter();
+    const info = await transporter.sendMail({
+      from: `"Golden Gatherings UST" <${process.env.EMAIL_USER}>`,
+      to,
+      subject: "Reset your Golden Gatherings password",
+      html: getPasswordResetEmailHtml({ firstName, resetUrl }),
+    });
+
+    console.info("[email] Password reset email sent successfully", {
+      to,
+      messageId: info.messageId,
+      accepted: info.accepted,
+      rejected: info.rejected,
+    });
+
+    return info;
+  } catch (error) {
+    console.error("[email] Password reset email failed:", error);
     throw error;
   }
 }
@@ -154,6 +228,7 @@ async function sendTestEmail({ to }) {
 }
 
 module.exports = {
+  sendPasswordResetEmail,
   sendTestEmail,
   sendVerificationEmail,
 };

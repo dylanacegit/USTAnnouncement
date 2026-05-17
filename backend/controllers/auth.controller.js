@@ -4,11 +4,17 @@ const {
   createUser,
   deleteUnverifiedUser,
   findUserByEmail,
+  resetPasswordByToken,
+  updatePasswordResetToken,
   updateVerificationToken,
   verifyUserByToken,
 } = require("../services/auth.service");
-const { sendTestEmail, sendVerificationEmail } = require("../services/email.service");
-const { generateVerificationToken, sanitizeUser } = require("../utils/auth");
+const {
+  sendPasswordResetEmail,
+  sendTestEmail,
+  sendVerificationEmail,
+} = require("../services/email.service");
+const { generateVerificationToken, getEffectiveRole, sanitizeUser } = require("../utils/auth");
 
 function ensureJwtSecret() {
   if (!process.env.JWT_SECRET) {
@@ -57,7 +63,8 @@ async function register(req, res) {
 
     const verificationToken = generateVerificationToken();
     createdUser = await createUser({
-      role: req.body.role.trim().toLowerCase(),
+      role: "user",
+      occupation: req.body.occupation.trim().toLowerCase(),
       firstName: req.body.firstName.trim(),
       lastName: req.body.lastName.trim(),
       email,
@@ -112,7 +119,9 @@ async function resendVerification(req, res) {
     const user = await findUserByEmail(email);
 
     if (!user) {
-      return res.status(404).json({ message: "No account was found for that UST email." });
+      return res.status(404).json({
+        message: "No pending registration was found for that UST email. Please complete registration first.",
+      });
     }
 
     if (user.is_verified) {
@@ -214,11 +223,16 @@ async function login(req, res) {
       return res.status(403).json({ message: "Please verify your UST email before signing in." });
     }
 
+    if ((user.account_status || "active") !== "active") {
+      return res.status(403).json({ message: "This account is archived. Please contact an administrator." });
+    }
+
+    const sanitizedUser = sanitizeUser(user);
     const token = jwt.sign(
       {
         id: user._id.toString(),
         email: user.email,
-        role: user.role,
+        role: getEffectiveRole(user),
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
@@ -227,7 +241,8 @@ async function login(req, res) {
     return res.json({
       message: "Login successful.",
       token,
-      user: sanitizeUser(user),
+      user: sanitizedUser,
+      redirectTo: sanitizedUser.role === "admin" ? "/admin" : "/",
     });
   } catch (error) {
     console.error("POST /api/auth/login error:", error);
@@ -235,10 +250,63 @@ async function login(req, res) {
   }
 }
 
+async function forgotPassword(req, res) {
+  try {
+    const email = req.body.email.trim().toLowerCase();
+    const user = await findUserByEmail(email);
+
+    if (!user) {
+      return res.json({
+        message: "If an account exists for that UST email, a reset link has been sent.",
+      });
+    }
+
+    if ((user.account_status || "active") !== "active") {
+      return res.status(403).json({ message: "This account is archived. Please contact an administrator." });
+    }
+
+    const resetToken = generateVerificationToken();
+    const userWithResetToken = await updatePasswordResetToken(user._id, resetToken);
+
+    await sendPasswordResetEmail({
+      to: userWithResetToken.email,
+      firstName: userWithResetToken.first_name,
+      token: resetToken,
+    });
+
+    return res.json({
+      message: "If an account exists for that UST email, a reset link has been sent.",
+    });
+  } catch (error) {
+    console.error("POST /api/auth/forgot-password error:", error);
+    return res.status(502).json({ message: "Password reset email could not be sent. Please try again later." });
+  }
+}
+
+async function resetPassword(req, res) {
+  try {
+    const user = await resetPasswordByToken(req.params.token, req.body.password);
+
+    if (!user) {
+      return res.status(400).json({ message: "Password reset link is invalid or expired." });
+    }
+
+    return res.json({
+      message: "Password updated successfully. You can now sign in.",
+      user: sanitizeUser(user),
+    });
+  } catch (error) {
+    console.error("POST /api/auth/reset-password/:token error:", error);
+    return res.status(500).json({ message: "Failed to reset password." });
+  }
+}
+
 module.exports = {
+  forgotPassword,
   login,
   register,
   resendVerification,
+  resetPassword,
   testEmail,
   verifyEmail,
 };

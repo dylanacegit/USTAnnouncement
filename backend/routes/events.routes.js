@@ -12,6 +12,7 @@ const {
   isValidObjectId,
   toObjectId,
 } = require("../utils/validators");
+const { requireAdmin, requireAuth } = require("../middleware/auth.middleware");
 
 const router = express.Router();
 const MAX_IMAGE_LENGTH = 2.75 * 1024 * 1024;
@@ -180,7 +181,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, requireAdmin, async (req, res) => {
   try {
     const { payload, error } = buildEventPayload(req.body, "createdBy");
 
@@ -195,7 +196,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -220,7 +221,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { status, isFeatured } = req.body;
@@ -258,7 +259,7 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 

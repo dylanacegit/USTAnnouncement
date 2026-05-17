@@ -5,6 +5,7 @@ const {
   getAllAnnouncements,
   getEventAnnouncements,
   updateAnnouncement,
+  updateAnnouncementFeatured,
   updateAnnouncementStatus,
 } = require("../services/announcements.service");
 const {
@@ -12,6 +13,7 @@ const {
   isValidObjectId,
   toObjectId,
 } = require("../utils/validators");
+const { requireAdmin, requireAuth } = require("../middleware/auth.middleware");
 
 const router = express.Router();
 const MAX_IMAGE_LENGTH = 2.75 * 1024 * 1024;
@@ -115,7 +117,7 @@ router.get("/event/:eventTitle", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", requireAuth, requireAdmin, async (req, res) => {
   try {
     const { payload, error } = buildAnnouncementPayload(req.body, "createdBy");
 
@@ -133,7 +135,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -158,13 +160,26 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { isAdminFeatured, status } = req.body;
 
     if (!isValidObjectId(id)) {
       return res.status(400).json({ message: "Invalid announcement ID." });
+    }
+
+    if (typeof isAdminFeatured === "boolean") {
+      const updatedAnnouncement = await updateAnnouncementFeatured(
+        toObjectId(id),
+        isAdminFeatured
+      );
+
+      if (!updatedAnnouncement) {
+        return res.status(404).json({ message: "Announcement not found." });
+      }
+
+      return res.json(updatedAnnouncement);
     }
 
     if (!isAllowedValue(status, ["published", "archived"])) {
@@ -187,7 +202,7 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAuth, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 

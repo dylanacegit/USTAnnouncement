@@ -6,6 +6,8 @@ const authRoutes = require("./routes/auth.routes");
 const accountsRoutes = require("./routes/accounts.routes");
 const aiRoutes = require("./routes/ai.routes");
 const announcementsRoutes = require("./routes/announcements.routes");
+const bookmarksRoutes = require("./routes/bookmarks.routes");
+const eventGalleryRoutes = require("./routes/eventGallery.routes");
 const eventsRoutes = require("./routes/events.routes");
 const { testEmail } = require("./controllers/auth.controller");
 
@@ -32,9 +34,11 @@ app.get("/", (req, res) => {
 app.get("/api/test-email", testEmail);
 
 app.use("/api/events", eventsRoutes);
+app.use("/api/event-gallery", eventGalleryRoutes);
 app.use("/api/announcements", announcementsRoutes);
 app.use("/api/accounts", accountsRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/bookmarks", bookmarksRoutes);
 app.use("/api/ai", aiLimiter, aiRoutes);
 
 app.use((error, req, res, next) => {
