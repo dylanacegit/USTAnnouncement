@@ -47,7 +47,7 @@ export default function FilterDropdown({ label, value, onChange, options }) {
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 right-0 top-[calc(100%+0.4rem)] z-50 overflow-hidden rounded-xl border border-gray-200 bg-white p-1 shadow-xl">
+        <div className="absolute right-0 top-[calc(100%+0.4rem)] z-50 w-max min-w-full max-w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-gray-200 bg-white p-1 shadow-xl">
           <div className="max-h-56 overflow-y-auto">
             {options.map((option) => {
               const isSelected = option.value === value;
@@ -60,13 +60,15 @@ export default function FilterDropdown({ label, value, onChange, options }) {
                     onChange(option.value);
                     setIsOpen(false);
                   }}
-                  className={`block w-full rounded-lg px-3 py-2 text-left text-xs font-semibold transition-colors sm:text-sm ${
+                  className={`block w-full rounded-lg px-3 py-2 text-left text-xs font-semibold leading-snug transition-colors sm:text-sm ${
                     isSelected
                       ? "bg-black text-white"
                       : "text-gray-700 hover:bg-yellow-50 hover:text-gray-950"
                   }`}
                 >
-                  {option.label}
+                  <span className="block whitespace-normal break-words">
+                    {option.label}
+                  </span>
                 </button>
               );
             })}

@@ -9,11 +9,17 @@ import {
   updateAccountDepartment,
   updateAccountStatus,
 } from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
+import {
+  withCreatedAttribution,
+  withUpdatedAttribution,
+} from "../../utils/adminAttribution";
 
 const ACCOUNTS_PER_PAGE = 10;
 
 export default function ManageAccounts() {
   const location = useLocation();
+  const { user } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [activeTab, setActiveTab] = useState("active");
   const [searchTerm, setSearchTerm] = useState("");
@@ -106,7 +112,11 @@ export default function ManageAccounts() {
   const handleToggleArchive = async (account) => {
     const nextStatus =
       account.status?.toLowerCase() === "archived" ? "active" : "archived";
-    const updatedAccount = await updateAccountStatus(account._id, nextStatus);
+    const updatedAccount = await updateAccountStatus(
+      account._id,
+      nextStatus,
+      withUpdatedAttribution({}, user)
+    );
 
     setAccounts((current) =>
       current.map((item) =>
@@ -118,7 +128,8 @@ export default function ManageAccounts() {
   const handleUpdateDepartment = async (account, department) => {
     const updatedAccount = await updateAccountDepartment(
       account._id,
-      department
+      department,
+      withUpdatedAttribution({}, user)
     );
 
     setAccounts((current) =>
@@ -129,7 +140,9 @@ export default function ManageAccounts() {
   };
 
   const handleCreateAccount = async (accountData) => {
-    const createdAccount = await createAccount(accountData);
+    const createdAccount = await createAccount(
+      withCreatedAttribution(accountData, user)
+    );
 
     setAccounts((current) => [createdAccount, ...current]);
   };
@@ -150,7 +163,10 @@ export default function ManageAccounts() {
           account.email?.toLowerCase().includes(keyword) ||
           account.department?.toLowerCase().includes(keyword) ||
           account.role?.toLowerCase().includes(keyword) ||
-          account.createdBy?.toLowerCase().includes(keyword)
+          account.createdBy?.toLowerCase().includes(keyword) ||
+          account.createdByEmail?.toLowerCase().includes(keyword) ||
+          account.updatedBy?.toLowerCase().includes(keyword) ||
+          account.updatedByEmail?.toLowerCase().includes(keyword)
         );
       });
     }

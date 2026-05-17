@@ -216,7 +216,7 @@ export default function GalleryApprovals() {
             type="button"
             onClick={() => loadItems({ silent: true })}
             disabled={loading || refreshing || reviewing}
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-black text-white transition-colors hover:bg-gray-900 disabled:cursor-not-allowed disabled:opacity-50"
+            className="grid h-12 w-12 shrink-0 place-items-center bg-transparent text-yellow-600 transition-colors hover:text-yellow-700 disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Refresh pending photos"
             title="Refresh pending photos"
           >

@@ -13,12 +13,17 @@ import {
   updateAnnouncementFeatured,
   updateAnnouncementStatus,
 } from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
+import {
+  withCreatedAttribution,
+  withUpdatedAttribution,
+} from "../../utils/adminAttribution";
 
 const ANNOUNCEMENTS_PER_PAGE = 10;
-const CURRENT_ADMIN_NAME = "Admin";
 
 export default function ManageAnnouncements() {
   const location = useLocation();
+  const { user } = useAuth();
   const [announcements, setAnnouncements] = useState([]);
   const [activeTab, setActiveTab] = useState("published");
   const [searchTerm, setSearchTerm] = useState("");
@@ -100,7 +105,8 @@ export default function ManageAnnouncements() {
         : "archived";
     const updatedAnnouncement = await updateAnnouncementStatus(
       announcement._id,
-      nextStatus
+      nextStatus,
+      withUpdatedAttribution({}, user)
     );
 
     setAnnouncements((current) =>
@@ -115,7 +121,8 @@ export default function ManageAnnouncements() {
   const handleToggleFeatured = async (announcement) => {
     const updatedAnnouncement = await updateAnnouncementFeatured(
       announcement._id,
-      !announcement.isAdminFeatured
+      !announcement.isAdminFeatured,
+      withUpdatedAttribution({}, user)
     );
 
     setAnnouncements((current) =>
@@ -142,10 +149,9 @@ export default function ManageAnnouncements() {
   };
 
   const handleCreateAnnouncement = async (announcementData) => {
-    const createdAnnouncement = await createAnnouncement({
-      ...announcementData,
-      createdBy: CURRENT_ADMIN_NAME,
-    });
+    const createdAnnouncement = await createAnnouncement(
+      withCreatedAttribution(announcementData, user)
+    );
 
     setAnnouncements((current) => [createdAnnouncement, ...current]);
     setActiveTab("published");
@@ -155,10 +161,7 @@ export default function ManageAnnouncements() {
   const handleUpdateAnnouncement = async (announcementData) => {
     const updatedAnnouncement = await updateAnnouncement(
       editingAnnouncement._id,
-      {
-        ...announcementData,
-        updatedBy: CURRENT_ADMIN_NAME,
-      }
+      withUpdatedAttribution(announcementData, user)
     );
 
     setAnnouncements((current) =>
@@ -200,18 +203,23 @@ export default function ManageAnnouncements() {
           announcement.type?.toLowerCase().includes(keyword) ||
           announcement.caption?.toLowerCase().includes(keyword) ||
           announcement.content?.toLowerCase().includes(keyword) ||
-          announcement.createdBy?.toLowerCase().includes(keyword)
+          announcement.createdBy?.toLowerCase().includes(keyword) ||
+          announcement.createdByEmail?.toLowerCase().includes(keyword) ||
+          announcement.updatedBy?.toLowerCase().includes(keyword) ||
+          announcement.updatedByEmail?.toLowerCase().includes(keyword)
         );
       });
     }
 
     if (typeFilter !== "all") {
-      result = result.filter((announcement) => announcement.type === typeFilter);
+      result = result.filter(
+        (announcement) => normalizeOption(announcement.type) === typeFilter
+      );
     }
 
     if (categoryFilter !== "all") {
       result = result.filter(
-        (announcement) => announcement.category === categoryFilter
+        (announcement) => normalizeOption(announcement.category) === categoryFilter
       );
     }
 
@@ -328,6 +336,14 @@ export default function ManageAnnouncements() {
 
 function uniqueOptions(items, getValue) {
   return Array.from(
-    new Set(items.map((item) => getValue(item)?.trim()).filter(Boolean))
+    new Set(
+      items
+        .map((item) => normalizeOption(getValue(item)))
+        .filter(Boolean)
+    )
   ).sort((a, b) => a.localeCompare(b));
+}
+
+function normalizeOption(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
 }

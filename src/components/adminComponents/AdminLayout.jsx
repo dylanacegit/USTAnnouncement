@@ -3,7 +3,13 @@ import { IoMdMenu, IoMdSearch, IoMdNotifications } from "react-icons/io";
 import { CiCalendar, CiSettings } from "react-icons/ci";
 import { TfiAnnouncement } from "react-icons/tfi";
 import { AiOutlineAppstore } from "react-icons/ai";
-import { IoDocumentTextOutline, IoImageOutline, IoPersonOutline, IoScanOutline } from "react-icons/io5";
+import {
+  IoCheckmarkDoneOutline,
+  IoDocumentTextOutline,
+  IoImagesOutline,
+  IoPersonOutline,
+  IoScanOutline,
+} from "react-icons/io5";
 import { FiLogOut } from "react-icons/fi";
 import { useEffect, useMemo, useState } from "react";
 import { getAccounts, getAnnouncements, getEvents } from "../../services/api";
@@ -347,9 +353,21 @@ export default function AdminLayout() {
           badge: 4,
         },
         {
+          name: "Accounts",
+          path: "/admin/accounts",
+          icon: <IoPersonOutline />,
+          badge: 10,
+        },
+        {
+          name: "Event Gallery",
+          path: "/admin/event-gallery",
+          icon: <IoImagesOutline />,
+          badge: null,
+        },
+        {
           name: "Photo Approvals",
           path: "/admin/gallery-approvals",
-          icon: <IoImageOutline />,
+          icon: <IoCheckmarkDoneOutline />,
           badge: null,
         },
         {
@@ -363,12 +381,6 @@ export default function AdminLayout() {
           path: "/admin/logs",
           icon: <IoDocumentTextOutline />,
           badge: 4,
-        },
-        {
-          name: "Accounts",
-          path: "/admin/accounts",
-          icon: <IoPersonOutline />,
-          badge: 10,
         },
       ],
     },
@@ -393,6 +405,7 @@ export default function AdminLayout() {
       "/admin/events": "Events",
       "/admin/announcements": "Announcements",
       "/admin/gallery-approvals": "Photo Approvals",
+      "/admin/event-gallery": "Event Gallery",
       "/admin/vision-ai": "Vision AI",
       "/admin/logs": "Logs",
       "/admin/accounts": "Accounts",
@@ -410,7 +423,7 @@ export default function AdminLayout() {
     }
   };
   return (
-    <div className="flex h-screen  overflow-hidden font-sans">
+    <div className="admin-shell flex h-screen overflow-hidden">
       {/* SIDEBAR (Dark Theme) */}
       {/* --- MOBILE OVERLAY --- */}
       {/* This darkens the background on small screens when the sidebar is open */}
@@ -437,7 +450,7 @@ export default function AdminLayout() {
             isSideBarOpen ? "justify-start" : "justify-center"
           }`}
         >
-          <div className="text-yellow font-serif font-bold text-xl flex min-w-0 items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3 text-xl font-bold text-yellow">
             <img
               src="/images/Logo 2.svg"
               alt="Golden Gatherings Logo"
@@ -522,7 +535,7 @@ export default function AdminLayout() {
             >
               <IoMdMenu size={22} />
             </button>
-            <h1 className="truncate font-serif text-lg font-medium tracking-wide sm:text-xl">
+            <h1 className="truncate font-playfair text-lg font-bold tracking-wide sm:text-xl">
               {/* Dynamic Title based on route or fixed for now */}
               {getTitle()}
             </h1>

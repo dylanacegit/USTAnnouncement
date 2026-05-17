@@ -48,17 +48,17 @@ export function updateEvent(eventId, eventData) {
   });
 }
 
-export function updateEventStatus(eventId, status) {
+export function updateEventStatus(eventId, status, attribution = {}) {
   return request(`/api/events/${eventId}`, {
     method: "PATCH",
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, ...attribution }),
   });
 }
 
-export function updateEventFeatured(eventId, isFeatured) {
+export function updateEventFeatured(eventId, isFeatured, attribution = {}) {
   return request(`/api/events/${eventId}`, {
     method: "PATCH",
-    body: JSON.stringify({ isFeatured }),
+    body: JSON.stringify({ isFeatured, ...attribution }),
   });
 }
 
@@ -74,6 +74,17 @@ export function getEventGallery(eventId) {
 
 export function getGalleryReviewItems() {
   return request("/api/event-gallery/admin/review");
+}
+
+export function getApprovedGalleryItems() {
+  return request("/api/event-gallery/admin/approved");
+}
+
+export function deleteApprovedGalleryItems(ids) {
+  return request("/api/event-gallery/admin/approved/delete", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
 }
 
 export function reviewGalleryItem(itemId, action, reason = "") {
@@ -119,17 +130,17 @@ export function updateAnnouncement(announcementId, announcementData) {
   });
 }
 
-export function updateAnnouncementStatus(announcementId, status) {
+export function updateAnnouncementStatus(announcementId, status, attribution = {}) {
   return request(`/api/announcements/${announcementId}`, {
     method: "PATCH",
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, ...attribution }),
   });
 }
 
-export function updateAnnouncementFeatured(announcementId, isAdminFeatured) {
+export function updateAnnouncementFeatured(announcementId, isAdminFeatured, attribution = {}) {
   return request(`/api/announcements/${announcementId}`, {
     method: "PATCH",
-    body: JSON.stringify({ isAdminFeatured }),
+    body: JSON.stringify({ isAdminFeatured, ...attribution }),
   });
 }
 
@@ -154,17 +165,17 @@ export function createAccount(accountData) {
   });
 }
 
-export function updateAccountStatus(accountId, status) {
+export function updateAccountStatus(accountId, status, attribution = {}) {
   return request(`/api/accounts/${accountId}`, {
     method: "PATCH",
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, ...attribution }),
   });
 }
 
-export function updateAccountDepartment(accountId, department) {
+export function updateAccountDepartment(accountId, department, attribution = {}) {
   return request(`/api/accounts/${accountId}`, {
     method: "PATCH",
-    body: JSON.stringify({ department }),
+    body: JSON.stringify({ department, ...attribution }),
   });
 }
 

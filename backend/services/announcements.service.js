@@ -46,6 +46,13 @@ async function createAnnouncement(announcementData) {
   return db.collection("announcements").findOne({ _id: result.insertedId });
 }
 
+function buildAuditFields(actor) {
+  return {
+    updatedBy: actor?.name || "Admin",
+    updatedByEmail: actor?.email || "",
+  };
+}
+
 async function updateAnnouncement(announcementId, announcementData) {
   const db = await connectDB();
 
@@ -64,7 +71,7 @@ async function updateAnnouncement(announcementId, announcementData) {
   return db.collection("announcements").findOne({ _id: announcementId });
 }
 
-async function updateAnnouncementStatus(announcementId, status) {
+async function updateAnnouncementStatus(announcementId, status, actor) {
   const db = await connectDB();
 
   const result = await db.collection("announcements").updateOne(
@@ -72,7 +79,7 @@ async function updateAnnouncementStatus(announcementId, status) {
     {
       $set: {
         status,
-        updatedBy: "Admin",
+        ...buildAuditFields(actor),
         updatedAt: new Date(),
       },
     }
@@ -83,9 +90,10 @@ async function updateAnnouncementStatus(announcementId, status) {
   return db.collection("announcements").findOne({ _id: announcementId });
 }
 
-async function updateAnnouncementFeatured(announcementId, isAdminFeatured) {
+async function updateAnnouncementFeatured(announcementId, isAdminFeatured, actor) {
   const db = await connectDB();
   const now = new Date();
+  const auditFields = buildAuditFields(actor);
 
   if (isAdminFeatured) {
     await db.collection("announcements").updateMany(
@@ -93,7 +101,7 @@ async function updateAnnouncementFeatured(announcementId, isAdminFeatured) {
       {
         $set: {
           isAdminFeatured: false,
-          updatedBy: "Admin",
+          ...auditFields,
           updatedAt: now,
         },
       }
@@ -105,7 +113,7 @@ async function updateAnnouncementFeatured(announcementId, isAdminFeatured) {
     {
       $set: {
         isAdminFeatured,
-        updatedBy: "Admin",
+        ...auditFields,
         updatedAt: now,
       },
     }

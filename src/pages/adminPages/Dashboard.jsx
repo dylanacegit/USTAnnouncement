@@ -145,7 +145,7 @@ export default function Dashboard() {
                 <p className="text-[8px] font-black uppercase leading-tight tracking-[0.12em] text-gray-500 sm:text-[10px] sm:tracking-[0.18em]">
                   {stat.title}
                 </p>
-                <p className="mt-2 font-playfair text-2xl font-bold leading-none text-gray-950 sm:mt-3 sm:text-5xl">
+                <p className="admin-number mt-2 text-2xl font-black leading-none text-gray-950 sm:mt-3 sm:text-5xl">
                   {stat.value}
                 </p>
                 <p className="mt-2 line-clamp-2 text-[10px] font-bold leading-tight text-green-600 sm:mt-3 sm:text-sm">
@@ -337,7 +337,7 @@ function FocusItem({ label, value, caption }) {
       <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-400">
         {label}
       </p>
-      <p className="mt-2 font-playfair text-3xl font-bold text-gray-950">
+      <p className="admin-number mt-2 text-3xl font-black text-gray-950">
         {value}
       </p>
       <p className="mt-1 text-xs font-semibold text-gray-500">{caption}</p>

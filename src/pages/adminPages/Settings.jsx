@@ -18,6 +18,7 @@ import {
   updateAccountProfile,
 } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import PersonCell from "../../components/adminComponents/PersonCell";
 
 const emptyProfile = {
   firstName: "",
@@ -69,7 +70,7 @@ function DetailItem({ label, value }) {
       <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-400">
         {label}
       </p>
-      <p className="mt-1 text-sm font-semibold text-gray-900">{value}</p>
+      <div className="mt-1 text-sm font-semibold text-gray-900">{value}</div>
     </div>
   );
 }
@@ -405,7 +406,12 @@ export default function Settings() {
                 <DetailItem label="Role" value={selectedAccount.role || "Admin"} />
                 <DetailItem
                   label="Created By"
-                  value={selectedAccount.createdBy || "System"}
+                  value={
+                    <PersonCell
+                      name={selectedAccount.createdBy || "System"}
+                      email={selectedAccount.createdByEmail}
+                    />
+                  }
                 />
                 <DetailItem
                   label="Created At"

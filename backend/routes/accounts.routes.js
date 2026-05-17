@@ -13,6 +13,7 @@ const {
   normalizeRequiredText,
   toObjectId,
 } = require("../utils/validators");
+const { getUserAttribution } = require("../utils/attribution");
 
 const router = express.Router();
 
@@ -68,6 +69,7 @@ router.post("/", async (req, res) => {
     }
     if (!normalizedDepartment) return res.status(400).json({ message: "Department is required." });
 
+    const admin = getUserAttribution(req, "Admin");
     const account = await createAccount({
       role: normalizedRole,
       occupation: normalizedRole === "admin" ? "" : normalizedOccupation,
@@ -79,7 +81,8 @@ router.post("/", async (req, res) => {
       yearLevel: String(yearLevel || "").trim(),
       faculty: normalizedDepartment,
       accountStatus: "active",
-      createdBy: req.user?.email || "Admin",
+      createdBy: admin.name,
+      createdByEmail: admin.email,
     });
 
     res.status(201).json(account);
@@ -102,8 +105,10 @@ router.patch("/:id", async (req, res) => {
       return res.status(400).json({ message: "Invalid account ID." });
     }
 
+    const admin = getUserAttribution(req, "Admin");
     const updates = {
-      updatedBy: "Admin",
+      updatedBy: admin.name,
+      updatedByEmail: admin.email,
       updatedAt: new Date(),
     };
 
@@ -155,7 +160,7 @@ router.patch("/:id", async (req, res) => {
       updates.email = normalizedEmail;
     }
 
-    if (Object.keys(updates).length === 2) {
+    if (Object.keys(updates).length === 3) {
       return res.status(400).json({ message: "No account updates provided." });
     }
 

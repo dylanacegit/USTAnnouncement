@@ -5,7 +5,9 @@ const { requireAdmin, requireAuth } = require("../middleware/auth.middleware");
 const {
   approveEventGalleryItem,
   createEventGalleryItem,
+  deleteApprovedEventGalleryItems,
   declineAndDeleteEventGalleryItem,
+  getApprovedEventGalleryItems,
   getEventGalleryItems,
   getGalleryReviewItems,
   getRecentEventGalleryItems,
@@ -140,6 +142,42 @@ router.get("/admin/review", requireAuth, requireAdmin, async (req, res) => {
   } catch (error) {
     console.error("GET /api/event-gallery/admin/review error:", error);
     res.status(500).json({ message: "Failed to load gallery approvals." });
+  }
+});
+
+router.get("/admin/approved", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const items = await getApprovedEventGalleryItems();
+
+    res.json(items);
+  } catch (error) {
+    console.error("GET /api/event-gallery/admin/approved error:", error);
+    res.status(500).json({ message: "Failed to load approved gallery photos." });
+  }
+});
+
+router.post("/admin/approved/delete", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
+
+    if (ids.length === 0) {
+      return res.status(400).json({ message: "Select at least one photo to delete." });
+    }
+
+    const invalidId = ids.find((id) => !isValidObjectId(id));
+
+    if (invalidId) {
+      return res.status(400).json({ message: "Invalid gallery photo ID." });
+    }
+
+    const result = await deleteApprovedEventGalleryItems(
+      ids.map((id) => new ObjectId(id))
+    );
+
+    res.json({ deletedCount: result.deletedCount || 0 });
+  } catch (error) {
+    console.error("POST /api/event-gallery/admin/approved/delete error:", error);
+    res.status(500).json({ message: "Failed to delete gallery photos." });
   }
 });
 

@@ -6,6 +6,7 @@ import {
   CiLocationOn,
   CiUser,
 } from "react-icons/ci";
+import PersonCell from "../PersonCell";
 
 export default function EventModal({ isOpen, onClose, event }) {
   if (!isOpen) return null;
@@ -79,8 +80,25 @@ export default function EventModal({ isOpen, onClose, event }) {
                 Record
               </p>
               <div className="mt-3 grid gap-2 text-xs text-gray-600 sm:grid-cols-2">
-                <Meta label="Created By" value={event.createdBy || "System"} />
+                <Meta
+                  label="Created By"
+                  value={
+                    <PersonCell
+                      name={event.createdBy || "System"}
+                      email={event.createdByEmail}
+                    />
+                  }
+                />
                 <Meta label="Created At" value={formatDate(event.createdAt)} />
+                <Meta
+                  label="Updated By"
+                  value={
+                    <PersonCell
+                      name={event.updatedBy || event.createdBy || "System"}
+                      email={event.updatedByEmail || event.createdByEmail}
+                    />
+                  }
+                />
                 <Meta label="Updated At" value={formatDate(event.updatedAt)} />
                 <Meta label="Status" value={event.status || "Published"} />
               </div>
@@ -118,7 +136,7 @@ function Meta({ label, value }) {
   return (
     <div>
       <span className="font-bold text-gray-400">{label}</span>
-      <p className="mt-0.5 font-semibold text-gray-800">{value}</p>
+      <div className="mt-0.5 font-semibold text-gray-800">{value}</div>
     </div>
   );
 }

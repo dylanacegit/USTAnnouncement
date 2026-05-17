@@ -18,7 +18,7 @@ export default function StatCard({
           {title}
         </p>
         <h3
-          className={`${valueClassName || "text-sm sm:text-xl lg:text-3xl"} font-serif font-bold text-gray-900 sm:mt-1`}
+          className={`${valueClassName || "text-sm sm:text-xl lg:text-3xl"} admin-number font-black text-gray-900 sm:mt-1`}
         >
           {value}
         </h3>

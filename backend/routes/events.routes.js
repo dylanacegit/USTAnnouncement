@@ -13,6 +13,7 @@ const {
   toObjectId,
 } = require("../utils/validators");
 const { requireAdmin, requireAuth } = require("../middleware/auth.middleware");
+const { getUserAttribution } = require("../utils/attribution");
 
 const router = express.Router();
 const MAX_IMAGE_LENGTH = 2.75 * 1024 * 1024;
@@ -187,7 +188,14 @@ router.post("/", requireAuth, requireAdmin, async (req, res) => {
 
     if (error) return res.status(400).json({ message: error });
 
-    const event = await createEvent({ ...payload, updatedBy: payload.createdBy });
+    const admin = getUserAttribution(req, "Admin");
+    const event = await createEvent({
+      ...payload,
+      createdBy: admin.name,
+      createdByEmail: admin.email,
+      updatedBy: admin.name,
+      updatedByEmail: admin.email,
+    });
 
     res.status(201).json(event);
   } catch (error) {
@@ -208,7 +216,12 @@ router.put("/:id", requireAuth, requireAdmin, async (req, res) => {
 
     if (error) return res.status(400).json({ message: error });
 
-    const updatedEvent = await updateEvent(toObjectId(id), payload);
+    const admin = getUserAttribution(req, "Admin");
+    const updatedEvent = await updateEvent(toObjectId(id), {
+      ...payload,
+      updatedBy: admin.name,
+      updatedByEmail: admin.email,
+    });
 
     if (!updatedEvent) {
       return res.status(404).json({ message: "Event not found." });
@@ -241,9 +254,17 @@ router.patch("/:id", requireAuth, requireAdmin, async (req, res) => {
         return res.status(400).json({ message: "Invalid event status." });
       }
 
-      updatedEvent = await updateEventStatus(toObjectId(id), status);
+      updatedEvent = await updateEventStatus(
+        toObjectId(id),
+        status,
+        getUserAttribution(req, "Admin")
+      );
     } else if (isFeatured !== undefined) {
-      updatedEvent = await updateEventFeatured(toObjectId(id), Boolean(isFeatured));
+      updatedEvent = await updateEventFeatured(
+        toObjectId(id),
+        Boolean(isFeatured),
+        getUserAttribution(req, "Admin")
+      );
     } else {
       return res.status(400).json({ message: "No event update provided." });
     }

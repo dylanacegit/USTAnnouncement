@@ -49,6 +49,7 @@ async function createUser(userData) {
     verification_token: userData.verificationToken,
     verification_token_expires_at: userData.verificationToken ? getVerificationExpiresAt() : undefined,
     created_by: userData.createdBy || "Registration",
+    created_by_email: userData.createdByEmail || "",
     created_at: now,
   };
 
@@ -67,6 +68,7 @@ async function createAdminManagedUser(userData) {
     isVerified: true,
     verificationToken: null,
     createdBy: userData.createdBy || "Admin",
+    createdByEmail: userData.createdByEmail || "",
   });
 }
 
@@ -100,6 +102,7 @@ async function ensureSeedAdmin() {
     faculty: process.env.ADMIN_DEPARTMENT || "Administration",
     accountStatus: "active",
     createdBy: "System Seed",
+    createdByEmail: email,
   });
 }
 

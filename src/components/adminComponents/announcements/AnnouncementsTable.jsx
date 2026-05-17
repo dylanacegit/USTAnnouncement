@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FiArchive, FiEdit2, FiRotateCcw, FiStar, FiTrash2 } from "react-icons/fi";
 import AdminTable from "../AdminTable";
 import Badge from "../Badge";
+import PersonCell from "../PersonCell";
 
 export default function AnnouncementsTable({
   announcements,
@@ -200,16 +201,35 @@ export default function AnnouncementsTable({
                     {announcement.eventTitle || "General announcement"}
                   </p>
                 </div>
-                <Badge type={announcement.category}>
+                <Badge type={announcement.category} variant="neutral">
                   {announcement.category || "N/A"}
                 </Badge>
               </div>
               <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                 <Info label="Type" value={announcement.type || "N/A"} />
                 <Info label="Category" value={announcement.category || "N/A"} />
-                <Info label="Created By" value={announcement.createdBy || "System"} />
+                <Info
+                  label="Created By"
+                  value={
+                    <PersonCell
+                      name={announcement.createdBy || "System"}
+                      email={announcement.createdByEmail}
+                    />
+                  }
+                />
                 <Info label="Created At" value={formatDate(announcement.createdAt)} />
-                <Info label="Updated By" value={getUpdatedBy(announcement)} />
+                <Info
+                  label="Updated By"
+                  value={
+                    <PersonCell
+                      name={getUpdatedBy(announcement)}
+                      email={
+                        announcement.updatedByEmail ||
+                        announcement.createdByEmail
+                      }
+                    />
+                  }
+                />
                 <Info label="Updated At" value={formatDate(getUpdatedAt(announcement))} />
               </dl>
               {isEditing && (
@@ -317,18 +337,27 @@ export default function AnnouncementsTable({
                     {announcement.eventTitle || "N/A"}
                   </td>
                   <td className="px-6 py-5">
-                    <Badge type={announcement.category}>
+                    <Badge type={announcement.category} variant="neutral">
                       {announcement.category || "N/A"}
                     </Badge>
                   </td>
-                  <td className="px-6 py-5 text-sm text-gray-600">
-                    {announcement.createdBy || "System"}
+                  <td className="px-6 py-5">
+                    <PersonCell
+                      name={announcement.createdBy || "System"}
+                      email={announcement.createdByEmail}
+                    />
                   </td>
                   <td className="px-6 py-5 text-sm text-gray-600">
                     {formatDate(announcement.createdAt)}
                   </td>
-                  <td className="px-6 py-5 text-sm text-gray-600">
-                    {getUpdatedBy(announcement)}
+                  <td className="px-6 py-5">
+                    <PersonCell
+                      name={getUpdatedBy(announcement)}
+                      email={
+                        announcement.updatedByEmail ||
+                        announcement.createdByEmail
+                      }
+                    />
                   </td>
                   <td className="px-6 py-5 text-sm text-gray-600">
                     {formatDate(getUpdatedAt(announcement))}
@@ -423,7 +452,7 @@ function Info({ label, value }) {
       <dt className="font-black uppercase tracking-[0.14em] text-gray-400">
         {label}
       </dt>
-      <dd className="mt-0.5 truncate text-gray-700">{value}</dd>
+      <dd className="mt-0.5 min-w-0 text-gray-700">{value}</dd>
     </div>
   );
 }

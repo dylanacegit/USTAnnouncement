@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FiArchive, FiEdit2, FiRotateCcw, FiStar, FiTrash2 } from "react-icons/fi";
 import AdminTable from "../AdminTable";
 import Badge from "../Badge";
+import PersonCell from "../PersonCell";
 
 export default function EventsTable({
   events,
@@ -57,7 +58,7 @@ export default function EventsTable({
   const getDate = (event) => event.startDate || event.date;
   const getVenue = (event) => event.location || event.venue || "N/A";
   const getId = (event) => event._id || event.id;
-  const getCreatedBy = (event) => event.createdBy || event.organizer || "System";
+  const getCreatedBy = (event) => event.createdBy || "System";
   const getCreatedAt = (event) => event.createdAt || event.updatedAt;
   const getUpdatedBy = (event) => event.updatedBy || event.createdBy || "System";
   const getUpdatedAt = (event) => event.updatedAt || event.createdAt;
@@ -218,14 +219,32 @@ export default function EventsTable({
                     {getVenue(event)}
                   </p>
                 </div>
-                <Badge type={event.category}>{event.category || "N/A"}</Badge>
+                <Badge type={event.category} variant="neutral">
+                  {event.category || "N/A"}
+                </Badge>
               </div>
               <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
                 <Info label="Schedule" value={getScheduleLength(event)} />
                 <Info label="Date" value={formatDate(getDate(event))} />
-                <Info label="Created By" value={getCreatedBy(event)} />
+                <Info
+                  label="Created By"
+                  value={
+                    <PersonCell
+                      name={getCreatedBy(event)}
+                      email={event.createdByEmail}
+                    />
+                  }
+                />
                 <Info label="Created At" value={formatDate(getCreatedAt(event))} />
-                <Info label="Updated By" value={getUpdatedBy(event)} />
+                <Info
+                  label="Updated By"
+                  value={
+                    <PersonCell
+                      name={getUpdatedBy(event)}
+                      email={event.updatedByEmail || event.createdByEmail}
+                    />
+                  }
+                />
                 <Info label="Updated At" value={formatDate(getUpdatedAt(event))} />
               </dl>
               {isEditing && (
@@ -333,16 +352,24 @@ export default function EventsTable({
                     {getVenue(event)}
                   </td>
                   <td className="px-6 py-5">
-                    <Badge type={event.category}>{event.category || "N/A"}</Badge>
+                    <Badge type={event.category} variant="neutral">
+                      {event.category || "N/A"}
+                    </Badge>
                   </td>
-                  <td className="px-6 py-5 text-sm text-gray-600">
-                    {getCreatedBy(event)}
+                  <td className="px-6 py-5">
+                    <PersonCell
+                      name={getCreatedBy(event)}
+                      email={event.createdByEmail}
+                    />
                   </td>
                   <td className="px-6 py-5 text-sm text-gray-600">
                     {formatDate(getCreatedAt(event))}
                   </td>
-                  <td className="px-6 py-5 text-sm text-gray-600">
-                    {getUpdatedBy(event)}
+                  <td className="px-6 py-5">
+                    <PersonCell
+                      name={getUpdatedBy(event)}
+                      email={event.updatedByEmail || event.createdByEmail}
+                    />
                   </td>
                   <td className="px-6 py-5 text-sm text-gray-600">
                     {formatDate(getUpdatedAt(event))}
@@ -437,7 +464,7 @@ function Info({ label, value }) {
       <dt className="font-black uppercase tracking-[0.14em] text-gray-400">
         {label}
       </dt>
-      <dd className="mt-0.5 truncate text-gray-700">{value}</dd>
+      <dd className="mt-0.5 min-w-0 text-gray-700">{value}</dd>
     </div>
   );
 }

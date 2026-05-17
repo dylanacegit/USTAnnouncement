@@ -13,11 +13,17 @@ import {
   updateEventFeatured,
   updateEventStatus,
 } from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
+import {
+  withCreatedAttribution,
+  withUpdatedAttribution,
+} from "../../utils/adminAttribution";
 
 const EVENTS_PER_PAGE = 10;
 
 export default function ManageEvents() {
   const location = useLocation();
+  const { user } = useAuth();
   const [events, setEvents] = useState([]);
   const [activeTab, setActiveTab] = useState("published");
   const [searchTerm, setSearchTerm] = useState("");
@@ -93,7 +99,11 @@ export default function ManageEvents() {
   const handleToggleArchive = async (event) => {
     const nextStatus =
       event.status?.toLowerCase() === "archived" ? "published" : "archived";
-    const updatedEvent = await updateEventStatus(event._id, nextStatus);
+    const updatedEvent = await updateEventStatus(
+      event._id,
+      nextStatus,
+      withUpdatedAttribution({}, user)
+    );
 
     setEvents((current) =>
       current.map((item) =>
@@ -103,7 +113,11 @@ export default function ManageEvents() {
   };
 
   const handleToggleFeatured = async (event) => {
-    const updatedEvent = await updateEventFeatured(event._id, !event.isFeatured);
+    const updatedEvent = await updateEventFeatured(
+      event._id,
+      !event.isFeatured,
+      withUpdatedAttribution({}, user)
+    );
 
     setEvents((current) =>
       current.map((item) => {
@@ -121,7 +135,7 @@ export default function ManageEvents() {
   };
 
   const handleCreateEvent = async (eventData) => {
-    const createdEvent = await createEvent(eventData);
+    const createdEvent = await createEvent(withCreatedAttribution(eventData, user));
 
     setEvents((current) => [createdEvent, ...current]);
     setActiveTab("published");
@@ -129,7 +143,10 @@ export default function ManageEvents() {
   };
 
   const handleUpdateEvent = async (eventData) => {
-    const updatedEvent = await updateEvent(editingEvent._id, eventData);
+    const updatedEvent = await updateEvent(
+      editingEvent._id,
+      withUpdatedAttribution(eventData, user)
+    );
 
     setEvents((current) =>
       current.map((item) =>
@@ -162,18 +179,23 @@ export default function ManageEvents() {
           venue.toLowerCase().includes(keyword) ||
           event.organizer?.toLowerCase().includes(keyword) ||
           event.createdBy?.toLowerCase().includes(keyword) ||
+          event.createdByEmail?.toLowerCase().includes(keyword) ||
+          event.updatedBy?.toLowerCase().includes(keyword) ||
+          event.updatedByEmail?.toLowerCase().includes(keyword) ||
           event.description?.toLowerCase().includes(keyword)
         );
       });
     }
 
     if (categoryFilter !== "all") {
-      result = result.filter((event) => event.category === categoryFilter);
+      result = result.filter(
+        (event) => normalizeOption(event.category) === categoryFilter
+      );
     }
 
     if (venueFilter !== "all") {
       result = result.filter(
-        (event) => (event.location || event.venue) === venueFilter
+        (event) => normalizeOption(event.location || event.venue) === venueFilter
       );
     }
 
@@ -278,6 +300,14 @@ export default function ManageEvents() {
 
 function uniqueOptions(items, getValue) {
   return Array.from(
-    new Set(items.map((item) => getValue(item)?.trim()).filter(Boolean))
+    new Set(
+      items
+        .map((item) => normalizeOption(getValue(item)))
+        .filter(Boolean)
+    )
   ).sort((a, b) => a.localeCompare(b));
+}
+
+function normalizeOption(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
 }

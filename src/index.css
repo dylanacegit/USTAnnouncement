@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -25,6 +25,20 @@ body {
   color: #111111;
   overflow-x: hidden;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.admin-shell,
+.admin-shell button,
+.admin-shell input,
+.admin-shell select,
+.admin-shell textarea {
+  font-family: "Inter", Arial, Helvetica, sans-serif;
+}
+
+.admin-number {
+  font-family: "Inter", Arial, Helvetica, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
 #root {

@@ -6,6 +6,7 @@ import {
   IoMegaphoneOutline,
   IoPersonOutline,
 } from "react-icons/io5";
+import PersonCell from "../PersonCell";
 
 export default function AnnouncementModal({ isOpen, onClose, announcement }) {
   if (!isOpen) return null;
@@ -82,12 +83,39 @@ export default function AnnouncementModal({ isOpen, onClose, announcement }) {
               <InfoItem
                 icon={IoPersonOutline}
                 label="Created By"
-                value={announcement.createdBy || "System"}
+                value={
+                  <PersonCell
+                    name={announcement.createdBy || "System"}
+                    email={announcement.createdByEmail}
+                  />
+                }
               />
               <InfoItem
                 icon={IoCalendarOutline}
                 label="Created At"
                 value={formatDate(announcement.createdAt)}
+              />
+              <InfoItem
+                icon={IoPersonOutline}
+                label="Updated By"
+                value={
+                  <PersonCell
+                    name={
+                      announcement.updatedBy ||
+                      announcement.createdBy ||
+                      "System"
+                    }
+                    email={
+                      announcement.updatedByEmail ||
+                      announcement.createdByEmail
+                    }
+                  />
+                }
+              />
+              <InfoItem
+                icon={IoCalendarOutline}
+                label="Updated At"
+                value={formatDate(announcement.updatedAt)}
               />
             </div>
 
@@ -121,9 +149,9 @@ function InfoItem({ icon: Icon, label, value }) {
           {label}
         </span>
       </div>
-      <p className="mt-2 text-xs font-bold leading-snug text-gray-900">
+      <div className="mt-2 text-xs font-bold leading-snug text-gray-900">
         {value}
-      </p>
+      </div>
     </div>
   );
 }

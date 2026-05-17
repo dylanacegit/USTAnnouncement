@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { FiArchive, FiEdit2, FiRotateCcw } from "react-icons/fi";
 import AdminTable from "../AdminTable";
 import Badge from "../Badge";
+import PersonCell from "../PersonCell";
 
 export default function AccountsTable({
   accounts,
@@ -341,7 +343,9 @@ export default function AccountsTable({
                     {account.email}
                   </p>
                 </div>
-                <Badge type={account.role}>{account.role || "N/A"}</Badge>
+                <Badge type={account.role} variant="role">
+                  {account.role || "N/A"}
+                </Badge>
               </div>
 
               <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
@@ -365,8 +369,11 @@ export default function AccountsTable({
                   <dt className="font-black uppercase tracking-[0.14em] text-gray-400">
                     Created By
                   </dt>
-                  <dd className="mt-0.5 truncate text-gray-700">
-                    {account.createdBy || "System"}
+                  <dd className="mt-0.5 min-w-0 text-gray-700">
+                    <PersonCell
+                      name={account.createdBy || "System"}
+                      email={account.createdByEmail}
+                    />
                   </dd>
                 </div>
                 <div>
@@ -381,8 +388,11 @@ export default function AccountsTable({
                   <dt className="font-black uppercase tracking-[0.14em] text-gray-400">
                     Updated By
                   </dt>
-                  <dd className="mt-0.5 truncate text-gray-700">
-                    {getUpdatedBy(account)}
+                  <dd className="mt-0.5 min-w-0 text-gray-700">
+                    <PersonCell
+                      name={getUpdatedBy(account)}
+                      email={account.updatedByEmail || account.createdByEmail}
+                    />
                   </dd>
                 </div>
                 <div>
@@ -398,31 +408,33 @@ export default function AccountsTable({
               {isEditing && (
                 <div className="mt-3">
                   {activeTab === "archived" ? (
-                    <button
-                      onClick={() => handleToggleArchive(account)}
-                      disabled={updatingId === account._id}
-                      className="h-8 w-full rounded-md border border-green-500 px-3 text-xs font-bold text-green-700 transition-colors hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {updatingId === account._id ? "Updating..." : "Unarchive"}
-                    </button>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-2">
-                      <button className="h-8 rounded-md border border-blue-500 px-2 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-50">
-                        View
-                      </button>
-                      <button
-                        onClick={() => openDepartmentForm(account)}
-                        className="h-8 rounded-md border border-yellow-500 px-2 text-xs font-bold text-yellow-700 transition-colors hover:bg-yellow-50"
-                      >
-                        Edit
-                      </button>
-                      <button
+                    <div className="flex justify-end">
+                      <IconButton
+                        label="Unarchive account"
+                        tone="green"
                         onClick={() => handleToggleArchive(account)}
                         disabled={updatingId === account._id}
-                        className="h-8 rounded-md border border-red-500 px-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        {updatingId === account._id ? "..." : "Archive"}
-                      </button>
+                        <FiRotateCcw size={16} />
+                      </IconButton>
+                    </div>
+                  ) : (
+                    <div className="flex justify-end gap-2">
+                      <IconButton
+                        label="Edit department"
+                        tone="yellow"
+                        onClick={() => openDepartmentForm(account)}
+                      >
+                        <FiEdit2 size={16} />
+                      </IconButton>
+                      <IconButton
+                        label="Archive account"
+                        tone="red"
+                        onClick={() => handleToggleArchive(account)}
+                        disabled={updatingId === account._id}
+                      >
+                        <FiArchive size={16} />
+                      </IconButton>
                     </div>
                   )}
                 </div>
@@ -472,18 +484,26 @@ export default function AccountsTable({
                   </td>
 
                   <td className="px-6 py-5">
-                    <Badge type={account.role}>{account.role || "N/A"}</Badge>
+                    <Badge type={account.role} variant="role">
+                      {account.role || "N/A"}
+                    </Badge>
                   </td>
 
-                  <td className="px-6 py-5 text-sm text-gray-600">
-                    {account.createdBy || "System"}
+                  <td className="px-6 py-5">
+                    <PersonCell
+                      name={account.createdBy || "System"}
+                      email={account.createdByEmail}
+                    />
                   </td>
 
                   <td className="px-6 py-5 text-sm text-gray-600">
                     {formatDate(account.createdAt)}
                   </td>
-                  <td className="px-6 py-5 text-sm text-gray-600">
-                    {getUpdatedBy(account)}
+                  <td className="px-6 py-5">
+                    <PersonCell
+                      name={getUpdatedBy(account)}
+                      email={account.updatedByEmail || account.createdByEmail}
+                    />
                   </td>
                   <td className="px-6 py-5 text-sm text-gray-600">
                     {formatDate(getUpdatedAt(account))}
@@ -492,37 +512,31 @@ export default function AccountsTable({
                   {isEditing && (
                     <td className="px-6 py-5">
                       {activeTab === "archived" ? (
-                        <button
+                        <IconButton
+                          label="Unarchive account"
+                          tone="green"
                           onClick={() => handleToggleArchive(account)}
                           disabled={updatingId === account._id}
-                          className="h-8 rounded-md border border-green-500 px-3 text-xs font-bold text-green-700 transition-colors hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          {updatingId === account._id
-                            ? "Updating..."
-                            : "Unarchive"}
-                        </button>
+                          <FiRotateCcw size={16} />
+                        </IconButton>
                       ) : (
                         <div className="flex gap-2">
-                          <button className="h-8 rounded-md border border-blue-500 px-3 text-xs font-bold text-blue-600 transition-colors hover:bg-blue-50">
-                            View
-                          </button>
-
-                          <button
+                          <IconButton
+                            label="Edit department"
+                            tone="yellow"
                             onClick={() => openDepartmentForm(account)}
-                            className="h-8 rounded-md border border-yellow-500 px-3 text-xs font-bold text-yellow-700 transition-colors hover:bg-yellow-50"
                           >
-                            Edit
-                          </button>
-
-                          <button
+                            <FiEdit2 size={16} />
+                          </IconButton>
+                          <IconButton
+                            label="Archive account"
+                            tone="red"
                             onClick={() => handleToggleArchive(account)}
                             disabled={updatingId === account._id}
-                            className="h-8 rounded-md border border-red-500 px-3 text-xs font-bold text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            {updatingId === account._id
-                              ? "Updating..."
-                              : "Archive"}
-                          </button>
+                            <FiArchive size={16} />
+                          </IconButton>
                         </div>
                       )}
                     </td>
@@ -536,5 +550,26 @@ export default function AccountsTable({
 
       {!loading && <PaginationControls />}
     </section>
+  );
+}
+
+function IconButton({ label, tone, disabled = false, onClick, children }) {
+  const toneClasses = {
+    green: "border-green-500 text-green-700 hover:bg-green-50",
+    red: "border-red-500 text-red-600 hover:bg-red-50",
+    yellow: "border-yellow-500 text-yellow-700 hover:bg-yellow-50",
+  };
+
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={`grid h-9 w-9 place-items-center rounded-md border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${toneClasses[tone]}`}
+    >
+      {children}
+    </button>
   );
 }

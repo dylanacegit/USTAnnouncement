@@ -23,6 +23,16 @@ async function getRecentEventGalleryItems(limit = 6) {
     .toArray();
 }
 
+async function getApprovedEventGalleryItems() {
+  const db = await connectDB();
+
+  return db
+    .collection(COLLECTION)
+    .find({ status: "approved" })
+    .sort({ reviewedAt: -1, createdAt: -1 })
+    .toArray();
+}
+
 async function getGalleryReviewItems() {
   const db = await connectDB();
 
@@ -87,10 +97,25 @@ async function declineAndDeleteEventGalleryItem(itemId, reviewer, reason) {
   };
 }
 
+async function deleteApprovedEventGalleryItems(itemIds) {
+  const db = await connectDB();
+
+  if (!Array.isArray(itemIds) || itemIds.length === 0) {
+    return { deletedCount: 0 };
+  }
+
+  return db.collection(COLLECTION).deleteMany({
+    _id: { $in: itemIds },
+    status: "approved",
+  });
+}
+
 module.exports = {
   approveEventGalleryItem,
   createEventGalleryItem,
+  deleteApprovedEventGalleryItems,
   declineAndDeleteEventGalleryItem,
+  getApprovedEventGalleryItems,
   getEventGalleryItems,
   getGalleryReviewItems,
   getRecentEventGalleryItems,

@@ -14,6 +14,7 @@ const {
   toObjectId,
 } = require("../utils/validators");
 const { requireAdmin, requireAuth } = require("../middleware/auth.middleware");
+const { getUserAttribution } = require("../utils/attribution");
 
 const router = express.Router();
 const MAX_IMAGE_LENGTH = 2.75 * 1024 * 1024;
@@ -123,9 +124,13 @@ router.post("/", requireAuth, requireAdmin, async (req, res) => {
 
     if (error) return res.status(400).json({ message: error });
 
+    const admin = getUserAttribution(req, "Admin");
     const announcement = await createAnnouncement({
       ...payload,
-      updatedBy: payload.createdBy,
+      createdBy: admin.name,
+      createdByEmail: admin.email,
+      updatedBy: admin.name,
+      updatedByEmail: admin.email,
     });
 
     res.status(201).json(announcement);
@@ -147,7 +152,12 @@ router.put("/:id", requireAuth, requireAdmin, async (req, res) => {
 
     if (error) return res.status(400).json({ message: error });
 
-    const updatedAnnouncement = await updateAnnouncement(toObjectId(id), payload);
+    const admin = getUserAttribution(req, "Admin");
+    const updatedAnnouncement = await updateAnnouncement(toObjectId(id), {
+      ...payload,
+      updatedBy: admin.name,
+      updatedByEmail: admin.email,
+    });
 
     if (!updatedAnnouncement) {
       return res.status(404).json({ message: "Announcement not found." });
@@ -172,7 +182,8 @@ router.patch("/:id", requireAuth, requireAdmin, async (req, res) => {
     if (typeof isAdminFeatured === "boolean") {
       const updatedAnnouncement = await updateAnnouncementFeatured(
         toObjectId(id),
-        isAdminFeatured
+        isAdminFeatured,
+        getUserAttribution(req, "Admin")
       );
 
       if (!updatedAnnouncement) {
@@ -188,7 +199,8 @@ router.patch("/:id", requireAuth, requireAdmin, async (req, res) => {
 
     const updatedAnnouncement = await updateAnnouncementStatus(
       toObjectId(id),
-      status
+      status,
+      getUserAttribution(req, "Admin")
     );
 
     if (!updatedAnnouncement) {

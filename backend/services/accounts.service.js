@@ -13,8 +13,10 @@ function toDashboardAccount(user) {
     occupation: getOccupation(user),
     status: user.account_status || "active",
     createdBy: user.created_by || "Registration",
+    createdByEmail: user.created_by_email || "",
     createdAt: user.created_at,
     updatedBy: user.updated_by,
+    updatedByEmail: user.updated_by_email || "",
     updatedAt: user.updated_at,
     isVerified: Boolean(user.is_verified),
     studentOrEmployeeNumber: user.student_employee_number,
@@ -31,6 +33,9 @@ function mapAccountUpdates(updates) {
   if (updates.lastName !== undefined) mappedUpdates.last_name = updates.lastName;
   if (updates.email !== undefined) mappedUpdates.email = updates.email;
   if (updates.updatedBy !== undefined) mappedUpdates.updated_by = updates.updatedBy;
+  if (updates.updatedByEmail !== undefined) {
+    mappedUpdates.updated_by_email = updates.updatedByEmail;
+  }
   if (updates.updatedAt !== undefined) mappedUpdates.updated_at = updates.updatedAt;
 
   return mappedUpdates;

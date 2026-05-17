@@ -46,7 +46,14 @@ async function createEvent(eventData) {
   return db.collection("events").findOne({ _id: result.insertedId });
 }
 
-async function updateEventStatus(eventId, status) {
+function buildAuditFields(actor) {
+  return {
+    updatedBy: actor?.name || "Admin",
+    updatedByEmail: actor?.email || "",
+  };
+}
+
+async function updateEventStatus(eventId, status, actor) {
   const db = await connectDB();
 
   const result = await db.collection("events").updateOne(
@@ -54,7 +61,7 @@ async function updateEventStatus(eventId, status) {
     {
       $set: {
         status,
-        updatedBy: "Admin",
+        ...buildAuditFields(actor),
         updatedAt: new Date(),
       },
     }
@@ -83,9 +90,10 @@ async function updateEvent(eventId, eventData) {
   return db.collection("events").findOne({ _id: eventId });
 }
 
-async function updateEventFeatured(eventId, isFeatured) {
+async function updateEventFeatured(eventId, isFeatured, actor) {
   const db = await connectDB();
   const now = new Date();
+  const auditFields = buildAuditFields(actor);
 
   if (isFeatured) {
     await db.collection("events").updateMany(
@@ -93,7 +101,7 @@ async function updateEventFeatured(eventId, isFeatured) {
       {
         $set: {
           isFeatured: false,
-          updatedBy: "Admin",
+          ...auditFields,
           updatedAt: now,
         },
       }
@@ -105,7 +113,7 @@ async function updateEventFeatured(eventId, isFeatured) {
     {
       $set: {
         isFeatured: Boolean(isFeatured),
-        updatedBy: "Admin",
+        ...auditFields,
         updatedAt: new Date(),
       },
     }
