@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import HomeLayout from "../components/MainLayout";
+import Pagination from "../components/Pagination";
 import FilterDropdown from "../components/adminComponents/FilterDropdown";
 import { getAnnouncements, getEvents } from "../services/api";
 import {
@@ -11,6 +12,7 @@ import {
   matchesSearch,
 } from "../utils/contentFormatters";
 
+const ITEMS_PER_PAGE = 12;
 
 export default function Announcements() {
   const location = useLocation();
@@ -28,6 +30,7 @@ export default function Announcements() {
   const [eventFilter, setEventFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date-desc");
   const [searchInput, setSearchInput] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const searchQuery = new URLSearchParams(location.search).get("search") || "";
 
@@ -156,6 +159,29 @@ export default function Announcements() {
 
     return result;
   }, [activeCategory, activeType, announcements, eventFilter, searchInput, sortBy]);
+
+  const totalAnnouncementPages = Math.ceil(
+    visibleAnnouncements.length / ITEMS_PER_PAGE
+  );
+  const paginatedAnnouncements = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+
+    return visibleAnnouncements.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [currentPage, visibleAnnouncements]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, activeType, eventFilter, searchInput, sortBy]);
+
+  useEffect(() => {
+    if (totalAnnouncementPages > 0 && currentPage > totalAnnouncementPages) {
+      setCurrentPage(totalAnnouncementPages);
+    }
+  }, [currentPage, totalAnnouncementPages]);
+
+  function handlePageChange(page) {
+    setCurrentPage(Math.min(Math.max(page, 1), totalAnnouncementPages));
+  }
 
   const categories = useMemo(() => {
     return [
@@ -534,7 +560,7 @@ export default function Announcements() {
                 )}
 
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {visibleAnnouncements.map((item) => (
+                  {paginatedAnnouncements.map((item) => (
                     <article
                       key={item._id}
                       role="button"
@@ -593,6 +619,12 @@ export default function Announcements() {
                     </article>
                   ))}
                 </div>
+
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalAnnouncementPages}
+                  onPageChange={handlePageChange}
+                />
               </section>
             </>
           )}

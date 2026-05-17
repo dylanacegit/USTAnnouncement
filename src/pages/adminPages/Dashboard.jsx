@@ -8,23 +8,28 @@ import {
 } from "react-icons/io5";
 import { FaPlus } from "react-icons/fa6";
 import { LuText } from "react-icons/lu";
+import { Link } from "react-router-dom";
 import QuickActions from "../../components/adminComponents/QuickActions";
 import Badge from "../../components/adminComponents/Badge";
-import { getAnnouncements, getEvents } from "../../services/api";
-
-const PHOTOS_TO_AUDIT = 45;
+import {
+  getAnnouncements,
+  getEvents,
+  getGalleryReviewItems,
+} from "../../services/api";
 
 export default function Dashboard() {
   const [events, setEvents] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
+  const [photosToAudit, setPhotosToAudit] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        const [eventsData, announcementsData] = await Promise.all([
+        const [eventsData, announcementsData, reviewData] = await Promise.all([
           getEvents(),
           getAnnouncements(),
+          getGalleryReviewItems(),
         ]);
 
         setEvents(Array.isArray(eventsData) ? eventsData : eventsData.events || []);
@@ -33,6 +38,7 @@ export default function Dashboard() {
             ? announcementsData
             : announcementsData.announcements || []
         );
+        setPhotosToAudit(Array.isArray(reviewData) ? reviewData.length : 0);
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
       } finally {
@@ -107,9 +113,10 @@ export default function Dashboard() {
     },
     {
       title: "Photos to Audit",
-      value: PHOTOS_TO_AUDIT,
+      value: loading ? "..." : photosToAudit,
       subtext: "Manual review queue",
       icon: IoImagesOutline,
+      to: "/admin/gallery-approvals",
     },
   ];
 
@@ -129,8 +136,9 @@ export default function Dashboard() {
           const Icon = stat.icon;
 
           return (
-            <article
+            <StatLink
               key={stat.title}
+              to={stat.to}
               className="group flex min-h-24 flex-col justify-between rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-[transform,box-shadow,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-0.5 hover:border-yellow-400 hover:shadow-lg active:translate-y-0 sm:min-h-32 sm:flex-row sm:items-center sm:p-6"
             >
               <div className="min-w-0">
@@ -148,7 +156,7 @@ export default function Dashboard() {
               <div className="mt-2 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-black text-yellow-400 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03] sm:ml-4 sm:mt-0 sm:h-14 sm:w-14">
                 <Icon className="h-4 w-4 sm:h-6 sm:w-6" />
               </div>
-            </article>
+            </StatLink>
           );
         })}
       </section>
@@ -182,7 +190,7 @@ export default function Dashboard() {
             />
             <FocusItem
               label="Audit"
-              value={PHOTOS_TO_AUDIT}
+              value={photosToAudit}
               caption="photos waiting"
             />
           </div>
@@ -248,6 +256,7 @@ export default function Dashboard() {
               icon={IoImagesOutline}
               title="Audit Photos"
               description="Review pending media"
+              to="/admin/gallery-approvals"
             />
           </div>
         </aside>
@@ -308,6 +317,18 @@ export default function Dashboard() {
       </section>
     </div>
   );
+}
+
+function StatLink({ to, className, children }) {
+  if (to) {
+    return (
+      <Link to={to} className={className}>
+        {children}
+      </Link>
+    );
+  }
+
+  return <article className={className}>{children}</article>;
 }
 
 function FocusItem({ label, value, caption }) {

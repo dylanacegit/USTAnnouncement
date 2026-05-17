@@ -30,6 +30,7 @@ function sanitizeUser(user) {
     faculty: user.faculty,
     isVerified: Boolean(user.is_verified),
     status: user.account_status || "active",
+    notificationsEnabled: user.notifications_enabled !== false,
     bookmarkedEventIds: Array.isArray(user.bookmarked_event_ids)
       ? user.bookmarked_event_ids.map((id) => id.toString())
       : [],

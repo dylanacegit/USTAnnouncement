@@ -3,7 +3,7 @@ import { IoMdMenu, IoMdSearch, IoMdNotifications } from "react-icons/io";
 import { CiCalendar, CiSettings } from "react-icons/ci";
 import { TfiAnnouncement } from "react-icons/tfi";
 import { AiOutlineAppstore } from "react-icons/ai";
-import { IoDocumentTextOutline, IoPersonOutline } from "react-icons/io5";
+import { IoDocumentTextOutline, IoImageOutline, IoPersonOutline, IoScanOutline } from "react-icons/io5";
 import { FiLogOut } from "react-icons/fi";
 import { useEffect, useMemo, useState } from "react";
 import { getAccounts, getAnnouncements, getEvents } from "../../services/api";
@@ -347,6 +347,18 @@ export default function AdminLayout() {
           badge: 4,
         },
         {
+          name: "Photo Approvals",
+          path: "/admin/gallery-approvals",
+          icon: <IoImageOutline />,
+          badge: null,
+        },
+        {
+          name: "Vision AI",
+          path: "/admin/vision-ai",
+          icon: <IoScanOutline />,
+          badge: null,
+        },
+        {
           name: "Logs",
           path: "/admin/logs",
           icon: <IoDocumentTextOutline />,
@@ -380,6 +392,8 @@ export default function AdminLayout() {
       "/admin": "Dashboard",
       "/admin/events": "Events",
       "/admin/announcements": "Announcements",
+      "/admin/gallery-approvals": "Photo Approvals",
+      "/admin/vision-ai": "Vision AI",
       "/admin/logs": "Logs",
       "/admin/accounts": "Accounts",
       "/admin/settings": "Settings",

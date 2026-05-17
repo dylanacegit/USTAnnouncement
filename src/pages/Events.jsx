@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import MainLayout from "../components/MainLayout";
 import BookmarkButton from "../components/BookmarkButton";
+import Pagination from "../components/Pagination";
 import FilterDropdown from "../components/adminComponents/FilterDropdown";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -32,6 +33,8 @@ function getFeaturedEvent(events) {
   );
 }
 
+const ITEMS_PER_PAGE = 12;
+
 export default function Events() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -49,6 +52,7 @@ export default function Events() {
   const [bookmarkFilter, setBookmarkFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date-asc");
   const [searchInput, setSearchInput] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const searchQuery = new URLSearchParams(location.search).get("search") || "";
   const bookmarkQuery = new URLSearchParams(location.search).get("bookmarks") || "";
@@ -201,7 +205,11 @@ export default function Events() {
     if (!selectedEvent?._id) return;
 
     const createdItem = await createEventGalleryItem(selectedEvent._id, payload);
-    setGalleryItems((currentItems) => [createdItem, ...currentItems]);
+
+    window.alert(
+      createdItem.message ||
+        "Photo passed Vision AI and is pending admin approval."
+    );
   }
 
   const categories = useMemo(() => {
@@ -258,6 +266,27 @@ export default function Events() {
 
     return result;
   }, [activeCategory, bookmarkFilter, events, isBookmarked, searchTerm, sortBy]);
+
+  const totalEventPages = Math.ceil(visibleEvents.length / ITEMS_PER_PAGE);
+  const paginatedEvents = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+
+    return visibleEvents.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [currentPage, visibleEvents]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, bookmarkFilter, searchTerm, sortBy]);
+
+  useEffect(() => {
+    if (totalEventPages > 0 && currentPage > totalEventPages) {
+      setCurrentPage(totalEventPages);
+    }
+  }, [currentPage, totalEventPages]);
+
+  function handlePageChange(page) {
+    setCurrentPage(Math.min(Math.max(page, 1), totalEventPages));
+  }
 
   const matchingAnnouncements = useMemo(() => {
     if (!searchTerm) return [];
@@ -605,46 +634,54 @@ export default function Events() {
           )}
 
           {!loading && visibleEvents.length > 0 && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-              {visibleEvents.map((event) => (
-                <div
-                  key={event._id || event.title}
-                  className="group flex flex-col border border-neutral-100 border-t-[3px] border-t-[#f6c744] bg-white shadow-sm"
-                >
-                  <div className="relative aspect-video overflow-hidden bg-neutral-200">
-                    <img
-                      src={getItemImage(event)}
-                      className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
-                      alt={event.title}
-                    />
-                    <BookmarkButton
-                      eventId={event._id}
-                      className="absolute right-3 top-3"
-                    />
-                  </div>
-                  <div className="flex flex-1 flex-col p-4">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400">
-                      {event.category || "Event"}
-                    </span>
-                    <h3 className="mt-1.5 h-8 font-playfair text-[13px] font-bold leading-tight line-clamp-2 text-neutral-900 transition-colors group-hover:text-[#c49600]">
-                      {event.title}
-                    </h3>
-                    <div className="mt-3 text-[10px] italic text-neutral-500">
-                      <p className="truncate">
-                        {event.location || event.venue || "Venue TBA"}
-                      </p>
-                      <p className="mt-0.5 truncate">{formatDateRange(event)}</p>
+            <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                {paginatedEvents.map((event) => (
+                  <div
+                    key={event._id || event.title}
+                    className="group flex flex-col border border-neutral-100 border-t-[3px] border-t-[#f6c744] bg-white shadow-sm"
+                  >
+                    <div className="relative aspect-video overflow-hidden bg-neutral-200">
+                      <img
+                        src={getItemImage(event)}
+                        className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+                        alt={event.title}
+                      />
+                      <BookmarkButton
+                        eventId={event._id}
+                        className="absolute right-3 top-3"
+                      />
                     </div>
-                    <button
-                      onClick={() => openEventDetail(event)}
-                      className="mt-4 w-full bg-[#f6c744] py-2 text-[8px] font-black uppercase tracking-widest text-black transition-colors hover:bg-[#e3b832]"
-                    >
-                      View
-                    </button>
+                    <div className="flex flex-1 flex-col p-4">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-neutral-400">
+                        {event.category || "Event"}
+                      </span>
+                      <h3 className="mt-1.5 h-8 font-playfair text-[13px] font-bold leading-tight line-clamp-2 text-neutral-900 transition-colors group-hover:text-[#c49600]">
+                        {event.title}
+                      </h3>
+                      <div className="mt-3 text-[10px] italic text-neutral-500">
+                        <p className="truncate">
+                          {event.location || event.venue || "Venue TBA"}
+                        </p>
+                        <p className="mt-0.5 truncate">{formatDateRange(event)}</p>
+                      </div>
+                      <button
+                        onClick={() => openEventDetail(event)}
+                        className="mt-4 w-full bg-[#f6c744] py-2 text-[8px] font-black uppercase tracking-widest text-black transition-colors hover:bg-[#e3b832]"
+                      >
+                        View
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalEventPages}
+                onPageChange={handlePageChange}
+              />
+            </>
           )}
 
           {!loading && searchTerm && matchingAnnouncements.length > 0 && (

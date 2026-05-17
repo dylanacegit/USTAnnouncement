@@ -72,6 +72,24 @@ export function getEventGallery(eventId) {
   return request(`/api/event-gallery/${eventId}`);
 }
 
+export function getGalleryReviewItems() {
+  return request("/api/event-gallery/admin/review");
+}
+
+export function reviewGalleryItem(itemId, action, reason = "") {
+  return request(`/api/event-gallery/admin/review/${itemId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ action, reason }),
+  });
+}
+
+export function moderateGalleryPreview(image) {
+  return request("/api/event-gallery/moderate-preview", {
+    method: "POST",
+    body: JSON.stringify({ image }),
+  });
+}
+
 export function getRecentEventGallery(limit = 6) {
   return request(`/api/event-gallery?limit=${encodeURIComponent(limit)}`);
 }
@@ -165,6 +183,35 @@ export function deleteAccount(accountId) {
 
 export function getBookmarks() {
   return request("/api/bookmarks");
+}
+
+export function getNotifications() {
+  return request("/api/notifications");
+}
+
+export function markAllNotificationsRead() {
+  return request("/api/notifications/read-all", {
+    method: "PATCH",
+  });
+}
+
+export function markNotificationRead(notificationId) {
+  return request(`/api/notifications/${notificationId}/read`, {
+    method: "PATCH",
+  });
+}
+
+export function clearNotifications() {
+  return request("/api/notifications/clear", {
+    method: "POST",
+  });
+}
+
+export function updateNotificationPreferences(notificationsEnabled) {
+  return request("/api/auth/preferences", {
+    method: "PATCH",
+    body: JSON.stringify({ notificationsEnabled }),
+  });
 }
 
 export function addBookmark(eventId) {

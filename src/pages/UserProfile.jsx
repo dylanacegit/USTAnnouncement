@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { updateNotificationPreferences } from "../services/api";
 
 export default function UserProfile() {
   const navigate = useNavigate();
-  const { signOut, user } = useAuth();
+  const { signOut, updateUser, user } = useAuth();
 
   const handleLogout = () => {
     signOut();
@@ -139,13 +140,17 @@ export default function UserProfile() {
             <div className="space-y-5">
               <SettingToggle 
                 title="Event notifications" 
-                description="Get alerts for new events and RSVPs" 
-                defaultChecked 
+                description="Get alerts when your gallery photos are reviewed"
+                checked={user.notificationsEnabled !== false}
+                onChange={async (checked) => {
+                  const data = await updateNotificationPreferences(checked);
+                  updateUser(data.user);
+                }}
               />
               <SettingToggle 
                 title="Email updates" 
                 description="Receive announcements via your UST email" 
-                defaultChecked 
+                checked
               />
               
               <div className="border-t border-neutral-100 pt-4">
@@ -226,7 +231,17 @@ function PreferenceTag({ label, active = false }) {
   );
 }
 
-function SettingToggle({ title, description, defaultChecked = false }) {
+function SettingToggle({ title, description, checked = false, onChange }) {
+  const handleChange = async (event) => {
+    if (!onChange) return;
+
+    try {
+      await onChange(event.target.checked);
+    } catch (error) {
+      console.error("Failed to update setting:", error);
+    }
+  };
+
   return (
     <div className="flex items-center justify-between gap-4">
       <div>
@@ -236,7 +251,13 @@ function SettingToggle({ title, description, defaultChecked = false }) {
       
       {/* Premium Tailwind Switch Toggle Option */}
       <label className="relative inline-flex cursor-pointer items-center">
-        <input type="checkbox" defaultChecked={defaultChecked} className="peer sr-only" />
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={handleChange}
+          readOnly={!onChange}
+          className="peer sr-only"
+        />
         <div className="h-5 w-9 rounded-full bg-neutral-200 transition-colors after:absolute after:top-[2px] after:left-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:bg-[#f6c744] peer-checked:after:translate-x-full" />
       </label>
     </div>

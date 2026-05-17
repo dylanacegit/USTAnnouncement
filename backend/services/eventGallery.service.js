@@ -7,7 +7,7 @@ async function getEventGalleryItems(eventId) {
 
   return db
     .collection(COLLECTION)
-    .find({ eventId })
+    .find({ eventId, status: "approved" })
     .sort({ createdAt: -1 })
     .toArray();
 }
@@ -17,9 +17,19 @@ async function getRecentEventGalleryItems(limit = 6) {
 
   return db
     .collection(COLLECTION)
-    .find({})
+    .find({ status: "approved" })
     .sort({ createdAt: -1 })
     .limit(limit)
+    .toArray();
+}
+
+async function getGalleryReviewItems() {
+  const db = await connectDB();
+
+  return db
+    .collection(COLLECTION)
+    .find({ status: "pending" })
+    .sort({ createdAt: 1 })
     .toArray();
 }
 
@@ -27,6 +37,8 @@ async function createEventGalleryItem(galleryData) {
   const db = await connectDB();
   const now = new Date();
   const item = {
+    status: "pending",
+    visibility: "hidden",
     ...galleryData,
     createdAt: now,
     updatedAt: now,
@@ -37,8 +49,49 @@ async function createEventGalleryItem(galleryData) {
   return db.collection(COLLECTION).findOne({ _id: result.insertedId });
 }
 
+async function approveEventGalleryItem(itemId, reviewer) {
+  const db = await connectDB();
+  const now = new Date();
+  const result = await db.collection(COLLECTION).findOneAndUpdate(
+    { _id: itemId, status: "pending" },
+    {
+      $set: {
+        status: "approved",
+        visibility: "visible",
+        reviewedAt: now,
+        reviewedBy: reviewer,
+        updatedAt: now,
+      },
+    },
+    { returnDocument: "after" }
+  );
+
+  return result;
+}
+
+async function declineAndDeleteEventGalleryItem(itemId, reviewer, reason) {
+  const db = await connectDB();
+  const item = await db.collection(COLLECTION).findOne({ _id: itemId });
+
+  if (!item) return null;
+
+  await db.collection(COLLECTION).deleteOne({ _id: itemId });
+
+  return {
+    ...item,
+    status: "declined",
+    visibility: "deleted",
+    reviewedAt: new Date(),
+    reviewedBy: reviewer,
+    declineReason: reason,
+  };
+}
+
 module.exports = {
+  approveEventGalleryItem,
   createEventGalleryItem,
+  declineAndDeleteEventGalleryItem,
   getEventGalleryItems,
+  getGalleryReviewItems,
   getRecentEventGalleryItems,
 };

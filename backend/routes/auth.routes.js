@@ -1,5 +1,7 @@
 const express = require("express");
+const { ObjectId } = require("mongodb");
 const { body, param } = require("express-validator");
+const connectDB = require("../db");
 const {
   forgotPassword,
   login,
@@ -9,6 +11,8 @@ const {
   verifyEmail,
 } = require("../controllers/auth.controller");
 const validateRequest = require("../middleware/validate");
+const { requireAuth } = require("../middleware/auth.middleware");
+const { sanitizeUser } = require("../utils/auth");
 
 const router = express.Router();
 
@@ -85,5 +89,29 @@ router.post(
   validateRequest,
   resendVerification
 );
+
+router.patch("/preferences", requireAuth, async (req, res) => {
+  try {
+    const notificationsEnabled = Boolean(req.body.notificationsEnabled);
+    const db = await connectDB();
+
+    await db.collection("users").updateOne(
+      { _id: new ObjectId(req.user.id) },
+      {
+        $set: {
+          notifications_enabled: notificationsEnabled,
+          updated_at: new Date(),
+        },
+      }
+    );
+
+    const user = await db.collection("users").findOne({ _id: new ObjectId(req.user.id) });
+
+    res.json({ user: sanitizeUser(user) });
+  } catch (error) {
+    console.error("PATCH /api/auth/preferences error:", error);
+    res.status(500).json({ message: "Failed to update preferences." });
+  }
+});
 
 module.exports = router;

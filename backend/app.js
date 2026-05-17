@@ -9,6 +9,7 @@ const announcementsRoutes = require("./routes/announcements.routes");
 const bookmarksRoutes = require("./routes/bookmarks.routes");
 const eventGalleryRoutes = require("./routes/eventGallery.routes");
 const eventsRoutes = require("./routes/events.routes");
+const notificationsRoutes = require("./routes/notifications.routes");
 const { testEmail } = require("./controllers/auth.controller");
 
 const app = express();
@@ -39,6 +40,7 @@ app.use("/api/announcements", announcementsRoutes);
 app.use("/api/accounts", accountsRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/bookmarks", bookmarksRoutes);
+app.use("/api/notifications", notificationsRoutes);
 app.use("/api/ai", aiLimiter, aiRoutes);
 
 app.use((error, req, res, next) => {

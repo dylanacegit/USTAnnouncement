@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import RegistrationPage from "../pages/RegistrationPage";
 import LoginModal from "../components/LoginModal";
 import ForgotPasswordModal from "../components/ForgotPasswordModal";
+import NotificationDropdown from "../components/NotificationDropdown";
 import ProfileMenu from "../components/ProfileMenu";
 import { useAuth } from "../context/AuthContext";
 
@@ -82,20 +83,21 @@ export default function Header() {
 
           <div className="z-50 flex items-center gap-3 sm:gap-5">
             {isAuthenticated ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <NavLink
                   to="/events?bookmarks=bookmarked"
-                  className="text-white transition-colors hover:text-[#f6c744]"
+                  className="grid h-9 w-9 place-items-center text-white transition-colors hover:text-[#f6c744]"
                   aria-label="Bookmarked events"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="sm:h-5 sm:w-5">
                     <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
                   </svg>
                 </NavLink>
+                <NotificationDropdown />
                 {isAdmin && (
                   <NavLink
                     to="/admin"
-                    className="text-[10px] font-black uppercase tracking-[0.18em] text-[#f6c744] hover:text-white"
+                    className="hidden text-[10px] font-black uppercase tracking-[0.18em] text-[#f6c744] hover:text-white sm:inline"
                   >
                     Admin
                   </NavLink>

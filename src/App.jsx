@@ -10,6 +10,8 @@ import Dashboard from "./pages/adminPages/Dashboard";
 import ManageEvents from "./pages/adminPages/ManageEvents";
 import ManageAnnouncements from "./pages/adminPages/ManageAnnouncements";
 import ManageAccounts from "./pages/adminPages/ManageAccounts";
+import GalleryApprovals from "./pages/adminPages/GalleryApprovals";
+import VisionAIDemo from "./pages/adminPages/VisionAIDemo";
 import Settings from "./pages/adminPages/Settings";
 import About from "./pages/About";
 import VerifyEmail from "./pages/VerifyEmail";
@@ -67,6 +69,8 @@ export default function App() {
               <Route index element={<Dashboard />} />
               <Route path="events" element={<ManageEvents />} />
               <Route path="announcements" element={<ManageAnnouncements />} />
+              <Route path="gallery-approvals" element={<GalleryApprovals />} />
+              <Route path="vision-ai" element={<VisionAIDemo />} />
               <Route path="accounts" element={<ManageAccounts />} />
               <Route path="settings" element={<Settings />} />
             </Route>

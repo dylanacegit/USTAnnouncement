@@ -60,6 +60,18 @@ export function AuthProvider({ children }) {
     setBookmarkIds([]);
   };
 
+  const updateUser = useCallback((nextUser) => {
+    setUser(nextUser);
+
+    if (nextUser) {
+      localStorage.setItem("authUser", JSON.stringify(nextUser));
+      setBookmarkIds(nextUser.bookmarkedEventIds || []);
+    } else {
+      localStorage.removeItem("authUser");
+      setBookmarkIds([]);
+    }
+  }, []);
+
   const isBookmarked = useCallback((eventId) => {
     return bookmarkIds.includes(eventId);
   }, [bookmarkIds]);
@@ -93,9 +105,10 @@ export function AuthProvider({ children }) {
       signOut,
       token,
       toggleBookmark,
+      updateUser,
       user,
     }),
-    [bookmarkIds, isBookmarked, toggleBookmark, token, user]
+    [bookmarkIds, isBookmarked, toggleBookmark, token, updateUser, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
