@@ -32,15 +32,17 @@ export default function EventModal({ isOpen, onClose, event }) {
         </button>
 
         <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="min-h-64 bg-black p-4 text-white sm:p-5">
+          <div className="flex min-h-64 bg-black p-4 text-white sm:p-5">
             {image ? (
-              <img
-                src={image}
-                alt={event.title}
-                className="h-64 w-full rounded-xl object-cover lg:h-full"
-              />
+              <div className="grid h-72 w-full place-items-center overflow-hidden rounded-xl bg-neutral-950 lg:h-auto lg:min-h-[46rem]">
+                <img
+                  src={image}
+                  alt={event.title}
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
             ) : (
-              <div className="grid h-64 w-full place-items-center rounded-xl bg-gradient-to-br from-neutral-900 to-neutral-700 lg:h-full">
+              <div className="grid h-72 w-full place-items-center rounded-xl bg-gradient-to-br from-neutral-900 to-neutral-700 lg:h-auto lg:min-h-[46rem]">
                 <div className="text-center">
                   <p className="font-playfair text-5xl font-bold text-yellow-400">
                     {(event.title || "E").slice(0, 1)}

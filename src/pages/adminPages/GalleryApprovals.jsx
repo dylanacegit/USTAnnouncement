@@ -325,6 +325,11 @@ export default function GalleryApprovals() {
                     <p className="mt-2 text-[9px] font-semibold uppercase tracking-wider text-gray-400">
                       {formatDate(item.createdAt)}
                     </p>
+                    {item.batchTotal > 1 && (
+                      <p className="mt-2 text-[8px] font-black uppercase tracking-widest text-yellow-700">
+                        Batch {item.batchIndex} of {item.batchTotal}
+                      </p>
+                    )}
                   </div>
                 </button>
               ))}
@@ -427,6 +432,12 @@ function ReviewSpotlight({ item, loading, reviewing, hotkeys, onReview }) {
             <Info label="Submitted by" value={item.submittedByName || "UST user"} />
             <Info label="Email" value={item.submittedByEmail || "Not available"} />
             <Info label="Submitted" value={formatDate(item.createdAt)} />
+            {item.batchTotal > 1 && (
+              <Info
+                label="Batch"
+                value={`Photo ${item.batchIndex} of ${item.batchTotal}`}
+              />
+            )}
             <Info
               label="AI decision"
               value={item.moderation?.reason || "Passed automated moderation."}
