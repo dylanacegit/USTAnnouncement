@@ -1,4 +1,5 @@
 const express = require("express");
+const connectDB = require("../db");
 const {
   createAnnouncement,
   deleteAnnouncement,
@@ -38,13 +39,24 @@ function hasTooLongText(value, maxLength) {
   return value.length > maxLength;
 }
 
+async function hasPublishedEventTitle(eventTitle) {
+  if (!eventTitle) return false;
+
+  const db = await connectDB();
+  const event = await db.collection("events").findOne({
+    title: eventTitle,
+    status: "published",
+  });
+
+  return Boolean(event);
+}
+
 function buildAnnouncementPayload(body, attributionField) {
   const title = cleanText(body.title);
   const content = cleanText(body.content || body.caption);
   const type = cleanText(body.type || "general").toLowerCase();
   const eventTitle = cleanOptionalText(body.eventTitle);
   const category = cleanOptionalText(body.category);
-  const priority = cleanText(body.priority || "medium").toLowerCase();
   const image = cleanOptionalText(body.image || body.imageUrl || body.bannerImage);
   const attribution = cleanOptionalText(body[attributionField]) || "Admin";
 
@@ -68,9 +80,6 @@ function buildAnnouncementPayload(body, attributionField) {
   if (hasTooLongText(category, LIMITS.category)) {
     return { error: "Category must be 80 characters or fewer." };
   }
-  if (!isAllowedValue(priority, ["low", "medium", "high"])) {
-    return { error: "Priority must be low, medium, or high." };
-  }
   if (image && image.length > MAX_IMAGE_LENGTH) {
     return { error: "Announcement photo must be smaller than 2 MB." };
   }
@@ -85,7 +94,6 @@ function buildAnnouncementPayload(body, attributionField) {
       type,
       eventTitle: type === "event" ? eventTitle : "",
       category,
-      priority,
       image,
       [attributionField]: attribution,
     },
@@ -124,6 +132,15 @@ router.post("/", requireAuth, requireAdmin, async (req, res) => {
 
     if (error) return res.status(400).json({ message: error });
 
+    if (
+      payload.type === "event" &&
+      !(await hasPublishedEventTitle(payload.eventTitle))
+    ) {
+      return res.status(400).json({
+        message: "Choose an existing published event for event announcements.",
+      });
+    }
+
     const admin = getUserAttribution(req, "Admin");
     const announcement = await createAnnouncement({
       ...payload,
@@ -149,6 +166,15 @@ router.put("/:id", requireAuth, requireAdmin, async (req, res) => {
     const { payload, error } = buildAnnouncementPayload(req.body, "updatedBy");
 
     if (error) return res.status(400).json({ message: error });
+
+    if (
+      payload.type === "event" &&
+      !(await hasPublishedEventTitle(payload.eventTitle))
+    ) {
+      return res.status(400).json({
+        message: "Choose an existing published event for event announcements.",
+      });
+    }
 
     const admin = getUserAttribution(req, "Admin");
     const updatedAnnouncement = await updateAnnouncement(toObjectId(id), {

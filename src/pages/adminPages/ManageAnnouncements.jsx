@@ -9,6 +9,7 @@ import {
   createAnnouncement,
   deleteAnnouncement,
   getAnnouncements,
+  getEvents,
   updateAnnouncement,
   updateAnnouncementFeatured,
   updateAnnouncementStatus,
@@ -25,6 +26,7 @@ export default function ManageAnnouncements() {
   const location = useLocation();
   const { user } = useAuth();
   const [announcements, setAnnouncements] = useState([]);
+  const [events, setEvents] = useState([]);
   const [activeTab, setActiveTab] = useState("published");
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -39,10 +41,16 @@ export default function ManageAnnouncements() {
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const data = await getAnnouncements();
+        const [announcementData, eventData] = await Promise.all([
+          getAnnouncements(),
+          getEvents(),
+        ]);
         setAnnouncements(
-          Array.isArray(data) ? data : data.announcements || []
+          Array.isArray(announcementData)
+            ? announcementData
+            : announcementData.announcements || []
         );
+        setEvents(Array.isArray(eventData) ? eventData : eventData.events || []);
       } catch (error) {
         console.error("Failed to fetch announcements:", error);
       } finally {
@@ -85,6 +93,14 @@ export default function ManageAnnouncements() {
   const categoryOptions = useMemo(() => {
     return uniqueOptions(announcementsForActiveTab, (item) => item.category);
   }, [announcementsForActiveTab]);
+
+  const publishedEventOptions = useMemo(() => {
+    return events
+      .filter((event) => event.status?.toLowerCase() === "published")
+      .map((event) => event.title)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+  }, [events]);
 
   useEffect(() => {
     if (typeFilter !== "all" && !typeOptions.includes(typeFilter)) {
@@ -314,6 +330,7 @@ export default function ManageAnnouncements() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreateAnnouncement}
+        eventOptions={publishedEventOptions}
       />
 
       <AnnouncementFormModal
@@ -322,6 +339,7 @@ export default function ManageAnnouncements() {
         onClose={() => setEditingAnnouncement(null)}
         onUpdate={handleUpdateAnnouncement}
         announcement={editingAnnouncement}
+        eventOptions={publishedEventOptions}
         mode="edit"
       />
 

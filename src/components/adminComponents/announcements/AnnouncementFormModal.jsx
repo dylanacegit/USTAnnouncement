@@ -14,7 +14,6 @@ const emptyForm = {
   type: "general",
   eventTitle: "",
   category: "",
-  priority: "medium",
   image: "",
 };
 
@@ -25,7 +24,6 @@ function announcementToForm(announcement) {
     type: announcement.type || "general",
     eventTitle: announcement.eventTitle || "",
     category: announcement.category || "",
-    priority: announcement.priority || "medium",
     image:
       announcement.image ||
       announcement.imageUrl ||
@@ -40,6 +38,7 @@ export default function AnnouncementFormModal({
   onCreate,
   onUpdate,
   announcement,
+  eventOptions = [],
   mode = "create",
 }) {
   const isEditMode = mode === "edit";
@@ -50,7 +49,19 @@ export default function AnnouncementFormModal({
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [error, setError] = useState("");
 
-  const errors = useMemo(() => validateForm(form), [form]);
+  const availableEventTitles = useMemo(() => {
+    const options = [...eventOptions];
+
+    if (form.eventTitle && !options.includes(form.eventTitle)) {
+      options.push(form.eventTitle);
+    }
+
+    return options.sort((a, b) => a.localeCompare(b));
+  }, [eventOptions, form.eventTitle]);
+  const errors = useMemo(
+    () => validateForm(form, availableEventTitles),
+    [availableEventTitles, form]
+  );
   const canSubmit = Object.keys(errors).length === 0;
 
   if (!isOpen) return null;
@@ -194,15 +205,14 @@ export default function AnnouncementFormModal({
               />
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <TextField
+                <EventTitleSelect
                   label="Event Title"
                   required={form.type === "event"}
                   disabled={form.type !== "event"}
-                  maxLength={LIMITS.eventTitle}
                   value={form.eventTitle}
+                  options={availableEventTitles}
                   error={fieldError(errors, submitAttempted, "eventTitle")}
                   onChange={(value) => updateField("eventTitle", value)}
-                  placeholder="Related event title"
                 />
                 <TextField
                   label="Category"
@@ -211,19 +221,6 @@ export default function AnnouncementFormModal({
                   error={fieldError(errors, submitAttempted, "category")}
                   onChange={(value) => updateField("category", value)}
                   placeholder="Safety"
-                />
-              </div>
-
-              <div className="max-w-sm">
-                <SelectField
-                  label="Priority"
-                  value={form.priority}
-                  onChange={(value) => updateField("priority", value)}
-                  options={[
-                    { value: "low", label: "Low" },
-                    { value: "medium", label: "Medium" },
-                    { value: "high", label: "High" },
-                  ]}
                 />
               </div>
             </section>
@@ -299,7 +296,7 @@ export default function AnnouncementFormModal({
   );
 }
 
-function validateForm(form) {
+function validateForm(form, eventOptions = []) {
   const errors = {};
 
   requireText(errors, form.title, "title", "Title is required.");
@@ -312,6 +309,12 @@ function validateForm(form) {
       "eventTitle",
       "Event title is required."
     );
+
+    if (eventOptions.length === 0) {
+      errors.eventTitle = "Create or publish an event before linking an announcement.";
+    } else if (form.eventTitle && !eventOptions.includes(form.eventTitle)) {
+      errors.eventTitle = "Choose one of the published events.";
+    }
   }
 
   maxText(errors, form.title, "title", LIMITS.title);
@@ -435,6 +438,38 @@ function SelectField({ label, value, onChange, options, required = false }) {
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
+          </option>
+        ))}
+      </select>
+    </FieldShell>
+  );
+}
+
+function EventTitleSelect({
+  label,
+  value,
+  onChange,
+  options,
+  required = false,
+  disabled = false,
+  error,
+}) {
+  return (
+    <FieldShell label={label} required={required} error={error}>
+      <select
+        value={value}
+        disabled={disabled || options.length === 0}
+        onChange={(event) => onChange(event.target.value)}
+        className={`mt-1 h-12 w-full rounded-xl border bg-white px-4 text-sm font-semibold text-gray-900 outline-none transition-colors focus:border-yellow-500 focus:ring-2 focus:ring-yellow-100 disabled:cursor-not-allowed disabled:bg-gray-100 ${
+          error ? "border-red-400" : "border-gray-200"
+        }`}
+      >
+        <option value="">
+          {options.length === 0 ? "No published events available" : "Select published event"}
+        </option>
+        {options.map((eventTitle) => (
+          <option key={eventTitle} value={eventTitle}>
+            {eventTitle}
           </option>
         ))}
       </select>

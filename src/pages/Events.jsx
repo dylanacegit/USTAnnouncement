@@ -33,6 +33,10 @@ function getFeaturedEvent(events) {
   );
 }
 
+function normalizeTitle(value) {
+  return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
 const ITEMS_PER_PAGE = 12;
 const GALLERY_ITEMS_PER_PAGE = 6;
 
@@ -315,8 +319,8 @@ export default function Events() {
       .slice(0, 3);
     const taggedAnnouncements = announcements
       .filter((announcement) => {
-        const announcementEventTitle = announcement.eventTitle?.trim().toLowerCase();
-        const selectedTitle = selectedEvent.title?.trim().toLowerCase();
+        const announcementEventTitle = normalizeTitle(announcement.eventTitle);
+        const selectedTitle = normalizeTitle(selectedEvent.title);
 
         return announcementEventTitle && selectedTitle && announcementEventTitle === selectedTitle;
       })
@@ -428,7 +432,7 @@ export default function Events() {
               {taggedAnnouncements.length > 0 && (
                 <div>
                   <h2 className="mb-4 border-b border-neutral-100 pb-2 text-[10px] font-black uppercase tracking-widest text-neutral-400">
-                    Tagged Announcements
+                    Related Announcements
                   </h2>
                   <div className="grid gap-3">
                     {taggedAnnouncements.map((announcement) => (
