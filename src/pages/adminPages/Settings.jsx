@@ -4,11 +4,8 @@ import {
   FiAlertTriangle,
   FiCheckCircle,
   FiEdit3,
-  FiLock,
   FiMail,
-  FiMessageSquare,
   FiShield,
-  FiSliders,
   FiTrash2,
   FiUser,
 } from "react-icons/fi";
@@ -27,32 +24,12 @@ const emptyProfile = {
   department: "",
 };
 
-const settingsTabs = [
-  {
-    id: "profile",
-    label: "Profile",
-    description: "Admin identity and contact details",
-    icon: FiUser,
-  },
-  {
-    id: "content",
-    label: "Content Defaults",
-    description: "Publishing rules and default values",
-    icon: FiSliders,
-  },
-  {
-    id: "assistant",
-    label: "AI Assistant",
-    description: "Tiggy behavior and knowledge scope",
-    icon: FiMessageSquare,
-  },
-  {
-    id: "security",
-    label: "Security",
-    description: "Sessions and account protection",
-    icon: FiLock,
-  },
-];
+const LIMITS = {
+  firstName: 60,
+  lastName: 60,
+  email: 120,
+  department: 120,
+};
 
 function formatDate(date) {
   if (!date) return "Not available";
@@ -75,31 +52,35 @@ function DetailItem({ label, value }) {
   );
 }
 
-function ComingSoonPanel({ tab }) {
-  const Icon = tab.icon;
+function validateProfile(profile) {
+  const requiredFields = [
+    ["firstName", "First name"],
+    ["lastName", "Last name"],
+    ["email", "Email address"],
+    ["department", "Department or office"],
+  ];
 
-  return (
-    <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-      <div className="flex max-w-2xl items-start gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-yellow-50 text-yellow-700">
-          <Icon />
-        </div>
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-yellow-700">
-            Coming Next
-          </p>
-          <h2 className="mt-1 font-playfair text-2xl font-bold text-gray-950">
-            {tab.label}
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-gray-600">
-            This tab is reserved for {tab.description.toLowerCase()}. Keeping it
-            visible now gives the Settings page a stable structure as more
-            admin controls are added.
-          </p>
-        </div>
-      </div>
-    </section>
-  );
+  for (const [field, label] of requiredFields) {
+    if (!String(profile[field] || "").trim()) return `${label} is required.`;
+  }
+
+  if (!profile.email.trim().toLowerCase().endsWith("@ust.edu.ph")) {
+    return "A valid UST email is required.";
+  }
+
+  for (const [field, maxLength] of Object.entries(LIMITS)) {
+    if (String(profile[field] || "").length > maxLength) {
+      return `${fieldToLabel(field)} must be ${maxLength} characters or fewer.`;
+    }
+  }
+
+  return "";
+}
+
+function fieldToLabel(field) {
+  return field
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (letter) => letter.toUpperCase());
 }
 
 export default function Settings() {
@@ -107,7 +88,6 @@ export default function Settings() {
   const { signOut, user } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
-  const [activeTab, setActiveTab] = useState("profile");
   const [profile, setProfile] = useState(emptyProfile);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -185,6 +165,12 @@ export default function Settings() {
       return;
     }
 
+    const validationError = validateProfile(profile);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     try {
       setSaving(true);
       setError("");
@@ -234,54 +220,11 @@ export default function Settings() {
           Settings
         </h1>
         <p className="mt-1 text-sm text-gray-500 sm:text-base">
-          Manage account preferences and system controls from one place.
+          Manage your admin profile details.
         </p>
       </div>
 
-      <section className="rounded-lg border border-gray-200 bg-white p-2 shadow-sm">
-        <div className="grid gap-2 md:grid-cols-4">
-          {settingsTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-start gap-3 rounded-lg p-3 text-left transition-all duration-300 ${
-                  isActive
-                    ? "bg-black text-white shadow-sm"
-                    : "text-gray-600 hover:-translate-y-0.5 hover:bg-gray-50 hover:text-gray-950"
-                }`}
-              >
-                <span
-                  className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                    isActive
-                      ? "bg-yellow-400 text-black"
-                      : "bg-yellow-50 text-yellow-700"
-                  }`}
-                >
-                  <Icon />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-black">{tab.label}</span>
-                  <span
-                    className={`mt-1 block text-xs leading-5 ${
-                      isActive ? "text-gray-300" : "text-gray-500"
-                    }`}
-                  >
-                    {tab.description}
-                  </span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      {activeTab === "profile" ? (
-        loading ? (
+      {loading ? (
         <section className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500 shadow-sm">
           Loading profile settings...
         </section>
@@ -324,6 +267,8 @@ export default function Settings() {
                   </span>
                   <input
                     type="text"
+                    required
+                    maxLength={LIMITS.firstName}
                     value={profile.firstName}
                     onChange={(e) =>
                       updateProfileField("firstName", e.target.value)
@@ -338,6 +283,8 @@ export default function Settings() {
                   </span>
                   <input
                     type="text"
+                    required
+                    maxLength={LIMITS.lastName}
                     value={profile.lastName}
                     onChange={(e) =>
                       updateProfileField("lastName", e.target.value)
@@ -353,6 +300,8 @@ export default function Settings() {
                 </span>
                 <input
                   type="email"
+                  required
+                  maxLength={LIMITS.email}
                   value={profile.email}
                   onChange={(e) => updateProfileField("email", e.target.value)}
                   className="h-11 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm outline-none transition-colors focus:border-yellow-500"
@@ -365,6 +314,8 @@ export default function Settings() {
                 </span>
                 <input
                   type="text"
+                  required
+                  maxLength={LIMITS.department}
                   value={profile.department}
                   onChange={(e) =>
                     updateProfileField("department", e.target.value)
@@ -454,9 +405,6 @@ export default function Settings() {
             </section>
           </aside>
         </div>
-        )
-      ) : (
-        <ComingSoonPanel tab={settingsTabs.find((tab) => tab.id === activeTab)} />
       )}
 
       {deleteOpen && (
@@ -479,6 +427,7 @@ export default function Settings() {
 
             <input
               type="text"
+              maxLength={6}
               value={deleteConfirm}
               onChange={(e) => setDeleteConfirm(e.target.value)}
               className="mt-4 h-11 w-full rounded-lg border border-gray-200 px-3 text-sm outline-none transition-colors focus:border-red-500"

@@ -262,6 +262,7 @@ export default function EventGallery() {
           <label className="relative block">
             <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
+              maxLength={80}
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search photos or events"

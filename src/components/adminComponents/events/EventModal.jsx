@@ -103,12 +103,6 @@ export default function EventModal({ isOpen, onClose, event }) {
                 <Meta label="Status" value={event.status || "Published"} />
               </div>
             </div>
-
-            <div className="mt-5 flex justify-end">
-              <button className="h-9 rounded-lg border border-yellow-500 px-5 text-xs font-black uppercase tracking-[0.14em] text-yellow-700 transition-colors hover:bg-yellow-50">
-                Edit
-              </button>
-            </div>
           </div>
         </div>
       </article>

@@ -22,6 +22,16 @@ export default function VisionAIDemo() {
   async function handleImage(file) {
     if (!file) return;
 
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image must be 5 MB or smaller.");
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       setImage(reader.result);
@@ -76,9 +86,9 @@ export default function VisionAIDemo() {
             </div>
           </div>
 
-          <label className="mt-4 grid h-60 cursor-pointer place-items-center rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-center transition-colors hover:border-yellow-500 hover:bg-yellow-50">
+          <label className="mt-4 grid h-80 cursor-pointer place-items-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 text-center transition-colors hover:border-yellow-500 hover:bg-yellow-50">
             {image ? (
-              <img src={image} alt="" className="h-full w-full rounded-lg object-contain" />
+              <img src={image} alt="" className="max-h-full max-w-full rounded-lg object-contain" />
             ) : (
               <span>
                 <FiImage className="mx-auto text-3xl text-gray-300" />
@@ -94,9 +104,9 @@ export default function VisionAIDemo() {
               type="file"
               accept="image/*"
               onChange={(event) => handleImage(event.target.files?.[0])}
-            className="hidden"
-          />
-        </label>
+              className="hidden"
+            />
+          </label>
 
           <button
             type="button"
@@ -190,12 +200,12 @@ export default function VisionAIDemo() {
               <p className="text-center text-sm font-black text-gray-100">
                 {result?.approved ? "Approved Preview" : "Image Preview"}
               </p>
-              <div className="mt-3 grid h-72 place-items-center overflow-hidden rounded-xl bg-black/30">
+              <div className="mt-3 grid h-[26rem] place-items-center overflow-hidden rounded-xl bg-black/30 p-3">
                 {image ? (
                   <img
                     src={image}
                     alt=""
-                    className="h-full w-full object-contain"
+                    className="max-h-full max-w-full rounded-lg object-contain"
                   />
                 ) : (
                   <span className="text-sm text-gray-500">No image selected</span>

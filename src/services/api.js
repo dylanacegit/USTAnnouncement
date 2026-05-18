@@ -225,6 +225,13 @@ export function updateNotificationPreferences(notificationsEnabled) {
   });
 }
 
+export function updateCurrentUserProfile(profile) {
+  return request("/api/auth/profile", {
+    method: "PATCH",
+    body: JSON.stringify(profile),
+  });
+}
+
 export function addBookmark(eventId) {
   return request(`/api/bookmarks/${eventId}`, {
     method: "POST",

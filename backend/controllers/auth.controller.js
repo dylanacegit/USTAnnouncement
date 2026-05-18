@@ -72,6 +72,8 @@ async function register(req, res) {
       studentOrEmployeeNumber: req.body.studentOrEmployeeNumber.trim(),
       yearLevel: req.body.yearLevel.trim(),
       faculty: req.body.faculty.trim(),
+      createdBy: [req.body.firstName.trim(), req.body.lastName.trim()].filter(Boolean).join(" "),
+      createdByEmail: email,
       verificationToken,
     });
 

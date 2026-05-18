@@ -47,10 +47,18 @@ export default function AnnouncementsTable({
       ];
 
   const getId = (announcement) => announcement._id || announcement.id;
+  const hasMeaningfulUpdate = (announcement) => {
+    if (!announcement.updatedBy) return false;
+
+    const createdAt = new Date(announcement.createdAt).valueOf();
+    const updatedAt = new Date(announcement.updatedAt).valueOf();
+
+    return Number.isNaN(createdAt) || Number.isNaN(updatedAt) || updatedAt !== createdAt;
+  };
   const getUpdatedBy = (announcement) =>
-    announcement.updatedBy || announcement.createdBy || "System";
+    hasMeaningfulUpdate(announcement) ? announcement.updatedBy : "";
   const getUpdatedAt = (announcement) =>
-    announcement.updatedAt || announcement.createdAt;
+    hasMeaningfulUpdate(announcement) ? announcement.updatedAt : null;
   const formatDate = (date) => {
     if (!date) return "N/A";
     return new Date(date).toLocaleDateString("en-PH", {
@@ -223,10 +231,8 @@ export default function AnnouncementsTable({
                   value={
                     <PersonCell
                       name={getUpdatedBy(announcement)}
-                      email={
-                        announcement.updatedByEmail ||
-                        announcement.createdByEmail
-                      }
+                      email={announcement.updatedByEmail}
+                      fallback="N/A"
                     />
                   }
                 />
@@ -353,10 +359,8 @@ export default function AnnouncementsTable({
                   <td className="px-6 py-5">
                     <PersonCell
                       name={getUpdatedBy(announcement)}
-                      email={
-                        announcement.updatedByEmail ||
-                        announcement.createdByEmail
-                      }
+                      email={announcement.updatedByEmail}
+                      fallback="N/A"
                     />
                   </td>
                   <td className="px-6 py-5 text-sm text-gray-600">
