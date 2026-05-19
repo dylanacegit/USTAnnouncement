@@ -68,7 +68,7 @@ const teamMembers = [
     photo: "/images/migsphoto.jpg",
     photoPosition: "center 50%",
     description:
-      "Led the visual direction of Golden Gatherings as the team's head of design, primarily designing the whole website in Figma, coding the front end of the user side, and creating the presentation PowerPoint. One difficulty was turning the Figma design into responsive pages while keeping the user experience polished across different screens.",
+      "Led the visual direction of Golden Gatherings as the team's head of design, primarily designing the whole website in Figma, coding the front end of the user side, and creating the presentation PowerPoint. One difficulty was turning the Figma design into responsive pages while keeping the user experience polished across different screens. Also, keeping the consistency of the design while the code was being developed and updated was a challenge that required close collaboration with the team.  ",
     contributions: [
       "Designed the overall website in Figma",
       "Led the team's design direction",
