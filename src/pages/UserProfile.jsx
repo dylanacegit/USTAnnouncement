@@ -1,265 +1,411 @@
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FiEdit2, FiEye, FiEyeOff, FiKey, FiLogOut, FiSave, FiX } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
-import { updateNotificationPreferences } from "../services/api";
+import { forgotPassword, updateCurrentUserProfile } from "../services/api";
+
+function getInitials(user) {
+  return `${user?.firstName?.charAt(0) || ""}${user?.lastName?.charAt(0) || ""}`.toUpperCase() || "U";
+}
+
+function getFullName(user) {
+  return `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Account";
+}
+
+function maskId(value) {
+  if (!value) return "N/A";
+  const text = String(value);
+  if (text.length <= 3) return "***";
+  return `${"*".repeat(Math.max(0, text.length - 3))}${text.slice(-3)}`;
+}
 
 export default function UserProfile() {
   const navigate = useNavigate();
   const { signOut, updateUser, user } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [showIdNumber, setShowIdNumber] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+  const [error, setError] = useState("");
+  const [draft, setDraft] = useState({
+    firstName: "",
+    lastName: "",
+    faculty: "",
+    yearLevel: "",
+  });
 
-  const handleLogout = () => {
+  useEffect(() => {
+    if (!user) return;
+
+    setDraft({
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      faculty: user.faculty || "",
+      yearLevel: user.yearLevel || "",
+    });
+  }, [user]);
+
+  const occupationLabel = useMemo(() => {
+    const occupation = user?.occupation || user?.role || "User";
+    return occupation.charAt(0).toUpperCase() + occupation.slice(1);
+  }, [user]);
+
+  if (!user) return null;
+
+  const handleDraftChange = (field, value) => {
+    setDraft((current) => ({ ...current, [field]: value }));
+    setError("");
+    setSaveMessage("");
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+    setError("");
+    setSaveMessage("");
+  };
+
+  const handleCancel = () => {
+    setDraft({
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      faculty: user.faculty || "",
+      yearLevel: user.yearLevel || "",
+    });
+    setIsEditing(false);
+    setError("");
+  };
+
+  const handleSave = async (event) => {
+    event.preventDefault();
+    setError("");
+    setSaveMessage("");
+
+    if (
+      !draft.firstName.trim() ||
+      !draft.lastName.trim() ||
+      !draft.faculty.trim() ||
+      (user.role !== "admin" && !draft.yearLevel.trim())
+    ) {
+      setError(user.role === "admin" ? "Name and college are required." : "Name, college, and year are required.");
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const result = await updateCurrentUserProfile({
+        firstName: draft.firstName.trim(),
+        lastName: draft.lastName.trim(),
+        faculty: draft.faculty.trim(),
+        yearLevel: draft.yearLevel.trim(),
+      });
+
+      updateUser(result.user);
+      setIsEditing(false);
+      setSaveMessage("Profile saved.");
+    } catch (requestError) {
+      setError(requestError.message || "Profile could not be saved.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const confirmLogout = () => {
     signOut();
     navigate("/");
   };
 
-  // Safe fallback if user state isn't loaded yet
-  if (!user) return null;
-
   return (
-    <div className="min-h-screen bg-[#f5f5f3] px-4 py-8 font-inter text-[#070707] selection:bg-[#f6c744] selection:text-black md:px-8">
-      {/* Page Title Header */}
-      <div className="mx-auto max-w-[1100px] pb-4">
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400">
-          My Account
-        </p>
-        <h1 className="font-playfair text-3xl font-bold tracking-tight text-black">
-          Your Profile
-        </h1>
-      </div>
-
-      {/* Main Two-Column Grid Setup */}
-      <div className="mx-auto grid max-w-[1100px] gap-6 items-start md:grid-cols-2">
-        
-        {/* ==================== LEFT COLUMN ==================== */}
-        <div className="space-y-6">
-          {/* Thomasian Information Card */}
-          <div className="rounded-sm border border-neutral-200 bg-white p-8 shadow-sm">
-            <div className="flex items-center gap-5 border-b border-neutral-100 pb-6">
-              <div className="relative">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#f6c744] text-xl font-black text-black shadow-inner">
-                  {user.firstName?.charAt(0).toUpperCase() || "M"}
-                </div>
-                {/* Active Status Indicator Dot */}
-                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
-              </div>
-              <div>
-                <h2 className="font-playfair text-2xl font-bold tracking-tight text-neutral-900 leading-tight">
-                  {user.firstName || "Migs"} {user.lastName || "Yanto"}
-                </h2>
-                <div className="mt-1.5 inline-block rounded-sm border border-[#c49600]/30 bg-[#fffdf2] px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#c49600]">
-                  Verified User Account
-                </div>
-              </div>
-              <button className="ml-auto rounded-sm border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-500 transition-colors hover:bg-neutral-50">
-                Edit profile
-              </button>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#c49600]">
-                Thomasian Information Profile
-              </h3>
-              <div className="divide-y divide-neutral-100 text-xs">
-                <ProfileRow label="EMAIL ADDRESS" value={user.email || "miguelpaolo.yanto.cics@ust.edu.ph"} breakAll />
-                <ProfileRow 
-                  label="STUDENT / FACULTY ID" 
-                  value={user.idNumber || user.studentOrEmployeeNumber || "2023188724"} 
-                  isId
-                />
-                <ProfileRow 
-                  label="COLLEGE DEPARTMENT" 
-                  value={user.college || user.faculty || "CICS"} 
-                  isBadge
-                />
-                <ProfileRow label="YEAR CLASSIFICATION" value={user.yearLevel || "4th Year"} />
-              </div>
-            </div>
-          </div>
-
-          {/* Grid Container for Event Activity Stats & Upcoming Events Side-by-Side */}
-          <div className="grid gap-6 sm:grid-cols-2">
-            {/* Event Activity Stats Block */}
-            <div className="rounded-sm border border-neutral-200 bg-white p-6 shadow-sm">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#c49600] border-b border-neutral-100 pb-2 mb-4">
-                Event Activity
-              </h3>
-              <div className="space-y-4 text-xs font-medium text-neutral-500">
-                <div className="flex justify-between items-center">
-                  <span>Events RSVP'd</span>
-                  <span className="font-playfair text-xl font-bold text-black">7</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Saved events</span>
-                  <span className="font-playfair text-xl font-bold text-black">3</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Events attended</span>
-                  <span className="font-playfair text-xl font-bold text-black">12</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Upcoming Events Block (Renamed) */}
-            <div className="rounded-sm border border-neutral-200 bg-white p-6 shadow-sm">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#c49600] border-b border-neutral-100 pb-2 mb-4">
-                Upcoming Events
-              </h3>
-              <div className="space-y-4">
-                <UpcomingEventItem title="Thomasian Research Congress" meta="Apr 3 · Main Bldg" />
-                <UpcomingEventItem title="UAAP Cheerdance Competition" meta="Apr 8 · Araneta" />
-                <UpcomingEventItem title="Thomasian Career Fair" meta="Apr 17 · TARC" />
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#f5f5f3] px-4 py-8 font-inter text-[#070707] md:px-8">
+      <div className="mx-auto max-w-4xl space-y-5">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#c49600]">My Account</p>
+          <h1 className="mt-1 font-playfair text-3xl font-bold tracking-tight text-black">Profile</h1>
         </div>
 
-        {/* ==================== RIGHT COLUMN ==================== */}
-        <div className="space-y-6">
-          {/* Preferences Tags Card */}
-          <div className="rounded-sm border border-neutral-200 bg-white p-6 shadow-sm">
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#c49600] border-b border-neutral-100 pb-2 mb-4">
-              Preferences
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              <PreferenceTag label="Academic" active />
-              <PreferenceTag label="Sports" active />
-              <PreferenceTag label="Career" active />
-              <PreferenceTag label="Arts & Culture" />
-              <PreferenceTag label="Religious" />
-              <PreferenceTag label="Student Life" />
-              <button className="rounded-sm border border-dashed border-neutral-300 px-3 py-1 text-xs font-medium text-neutral-400 hover:border-neutral-400 hover:text-neutral-600">
+        <section className="rounded-lg border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="flex flex-col gap-4 border-b border-neutral-100 pb-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-4">
+              <div className="grid h-16 w-16 shrink-0 place-items-center rounded-lg bg-black text-lg font-black text-[#f6c744]">
+                {getInitials(user)}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">
+                  {occupationLabel} Account
+                </p>
+                <h2 className="truncate font-playfair text-2xl font-bold text-neutral-950">
+                  {getFullName(user)}
+                </h2>
+                <p className="mt-1 break-all text-sm font-medium text-neutral-500">{user.email}</p>
+              </div>
+            </div>
+
+            {!isEditing ? (
+              <button
+                type="button"
+                onClick={handleEdit}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-neutral-300 px-4 text-xs font-bold text-neutral-800 transition-colors hover:border-black hover:bg-black hover:text-white"
+              >
+                <FiEdit2 size={15} />
                 Edit
               </button>
-            </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-neutral-300 px-4 text-xs font-bold text-neutral-700 transition-colors hover:bg-neutral-50"
+              >
+                <FiX size={15} />
+                Cancel
+              </button>
+            )}
           </div>
 
-          {/* Account Settings Configuration Card */}
-          <div className="rounded-sm border border-neutral-200 bg-white p-6 shadow-sm">
-            <h3 className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#c49600] border-b border-neutral-100 pb-2 mb-4">
-              Account Settings
-            </h3>
-            <div className="space-y-5">
-              <SettingToggle 
-                title="Event notifications" 
-                description="Get alerts when your gallery photos are reviewed"
-                checked={user.notificationsEnabled !== false}
-                onChange={async (checked) => {
-                  const data = await updateNotificationPreferences(checked);
-                  updateUser(data.user);
-                }}
+          <form onSubmit={handleSave} className="mt-6 space-y-5">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <ProfileField
+                label="First Name"
+                value={draft.firstName}
+                readOnly={!isEditing}
+                onChange={(value) => handleDraftChange("firstName", value)}
               />
-              <SettingToggle 
-                title="Email updates" 
-                description="Receive announcements via your UST email" 
-                checked
+              <ProfileField
+                label="Last Name"
+                value={draft.lastName}
+                readOnly={!isEditing}
+                onChange={(value) => handleDraftChange("lastName", value)}
               />
-              
-              <div className="border-t border-neutral-100 pt-4">
-                <button className="text-left group">
-                  <p className="text-xs font-bold text-neutral-800 group-hover:text-[#c49600] transition-colors">
-                    Change password
-                  </p>
-                  <p className="text-[11px] text-neutral-400 mt-0.5">
-                    Update your account credentials
-                  </p>
-                </button>
-              </div>
             </div>
-          </div>
 
-          {/* Disconnect System Access Action Element */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <ReadOnlyField label="Email Address" value={user.email || "N/A"} />
+              <ReadOnlyField
+                label="ID Number"
+                value={showIdNumber ? user.studentOrEmployeeNumber || "N/A" : maskId(user.studentOrEmployeeNumber)}
+                action={
+                  <button
+                    type="button"
+                    onClick={() => setShowIdNumber((current) => !current)}
+                    className="inline-flex h-8 items-center gap-1 rounded-md border border-neutral-200 px-2 text-[11px] font-bold text-neutral-600 transition-colors hover:border-[#c49600] hover:text-[#c49600]"
+                  >
+                    {showIdNumber ? <FiEyeOff size={13} /> : <FiEye size={13} />}
+                    {showIdNumber ? "Hide" : "Show"}
+                  </button>
+                }
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <ReadOnlyField label="Occupation" value={occupationLabel} />
+              <ProfileField
+                label="College"
+                value={draft.faculty}
+                readOnly={!isEditing}
+                onChange={(value) => handleDraftChange("faculty", value)}
+              />
+              <ProfileField
+                label="Year"
+                value={draft.yearLevel}
+                readOnly={!isEditing}
+                onChange={(value) => handleDraftChange("yearLevel", value)}
+              />
+            </div>
+
+            {(error || saveMessage) && (
+              <p className={`text-sm font-semibold ${error ? "text-red-600" : "text-emerald-700"}`}>
+                {error || saveMessage}
+              </p>
+            )}
+
+            {isEditing && (
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-black px-5 text-sm font-bold text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <FiSave size={16} />
+                {isSaving ? "Saving..." : "Save Changes"}
+              </button>
+            )}
+          </form>
+        </section>
+
+        <section className="grid gap-3 sm:grid-cols-2">
           <button
-            onClick={handleLogout}
-            className="w-full rounded-sm border border-red-200 bg-white py-3.5 text-center text-xs font-bold uppercase tracking-wider text-red-600 transition-all hover:bg-red-50 hover:border-red-300 active:scale-[0.99]"
+            type="button"
+            onClick={() => setShowPasswordModal(true)}
+            className="flex items-center justify-between rounded-lg border border-neutral-200 bg-white p-5 text-left shadow-sm transition-colors hover:border-[#c49600]"
           >
-            Disconnect Account (Logout)
+            <span>
+              <span className="block text-sm font-bold text-neutral-950">Change password</span>
+              <span className="mt-1 block text-xs text-neutral-500">Send a secure reset link to your UST email.</span>
+            </span>
+            <FiKey className="text-[#c49600]" size={20} />
           </button>
-        </div>
 
+          <button
+            type="button"
+            onClick={() => setShowLogoutModal(true)}
+            className="flex items-center justify-between rounded-lg border border-red-100 bg-white p-5 text-left shadow-sm transition-colors hover:border-red-300 hover:bg-red-50"
+          >
+            <span>
+              <span className="block text-sm font-bold text-red-700">Log out</span>
+              <span className="mt-1 block text-xs text-red-500">End this session on the current device.</span>
+            </span>
+            <FiLogOut className="text-red-600" size={20} />
+          </button>
+        </section>
+      </div>
+
+      <PasswordResetModal
+        email={user.email}
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      />
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onCancel={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+      />
+    </div>
+  );
+}
+
+function ProfileField({ label, value, readOnly, onChange }) {
+  return (
+    <label className="block">
+      <span className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-400">{label}</span>
+      <input
+        type="text"
+        value={readOnly ? value || "N/A" : value}
+        readOnly={readOnly}
+        onChange={(event) => onChange(event.target.value)}
+        className={`mt-2 h-12 w-full rounded-md border px-4 text-sm outline-none transition-colors ${
+          readOnly
+            ? "border-neutral-100 bg-neutral-50 text-neutral-700"
+            : "border-neutral-300 bg-white text-black focus:border-[#f6c744]"
+        }`}
+      />
+    </label>
+  );
+}
+
+function ReadOnlyField({ label, value, action }) {
+  return (
+    <div>
+      <div className="flex min-h-8 items-start justify-between gap-2">
+        <span className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-400">{label}</span>
+        {action}
+      </div>
+      <div className="flex min-h-12 items-center rounded-md border border-neutral-100 bg-neutral-50 px-4 text-sm font-medium text-neutral-700">
+        <span className="break-all">{value}</span>
       </div>
     </div>
   );
 }
 
-/* ==================== SUB-COMPONENTS ==================== */
+function PasswordResetModal({ email, isOpen, onClose }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-function ProfileRow({ label, value, breakAll = false, isBadge = false, isId = false }) {
-  if (!value) return null;
+  useEffect(() => {
+    if (!isOpen) {
+      setMessage("");
+      setError("");
+      setIsSubmitting(false);
+    }
+  }, [isOpen]);
 
-  return (
-    <div className="flex items-center justify-between gap-4 py-3.5">
-      <span className="font-bold tracking-wider text-neutral-400 text-[10px]">{label}</span>
-      {isBadge ? (
-        <span className="rounded-sm border border-[#c49600]/30 bg-[#fffdf2] px-2 py-0.5 font-bold tracking-wide text-[#c49600] text-[11px]">
-          {value}
-        </span>
-      ) : (
-        <span className={`text-right text-neutral-800 ${breakAll ? "break-all font-medium" : "font-semibold"} ${isId ? "font-playfair text-sm font-black" : ""}`}>
-          {value}
-        </span>
-      )}
-    </div>
-  );
-}
+  if (!isOpen) return null;
 
-function UpcomingEventItem({ title, meta }) {
-  return (
-    <div className="flex items-start gap-2.5 group cursor-pointer">
-      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#f6c744]" />
-      <div>
-        <p className="text-xs font-bold text-neutral-800 group-hover:text-[#c49600] transition-colors leading-snug">
-          {title}
-        </p>
-        <p className="text-[10px] font-medium text-neutral-400 mt-0.5">
-          {meta}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function PreferenceTag({ label, active = false }) {
-  return (
-    <span
-      className={`rounded-sm px-3 py-1 text-xs font-semibold tracking-wide border transition-all cursor-pointer ${
-        active
-          ? "border-[#c49600]/40 bg-[#fffdf2] text-[#c49600]"
-          : "border-neutral-200 bg-neutral-50 text-neutral-500 hover:bg-neutral-100"
-      }`}
-    >
-      {label}
-    </span>
-  );
-}
-
-function SettingToggle({ title, description, checked = false, onChange }) {
-  const handleChange = async (event) => {
-    if (!onChange) return;
+  const handleSendReset = async () => {
+    setError("");
+    setMessage("");
+    setIsSubmitting(true);
 
     try {
-      await onChange(event.target.checked);
-    } catch (error) {
-      console.error("Failed to update setting:", error);
+      const result = await forgotPassword(email);
+      setMessage(result.message || "A password reset link has been sent.");
+    } catch (requestError) {
+      setError(requestError.message || "Password reset email could not be sent.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-between gap-4">
-      <div>
-        <p className="text-xs font-bold text-neutral-800">{title}</p>
-        <p className="text-[11px] text-neutral-400 mt-0.5 leading-normal">{description}</p>
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4 font-inter backdrop-blur-sm">
+      <div className="w-full max-w-md overflow-hidden rounded-lg bg-white shadow-2xl">
+        <div className="bg-[#0f0f0f] p-6 text-white">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#f6c744]">Password Reset</p>
+          <h2 className="mt-2 font-playfair text-2xl font-bold">Change password</h2>
+          <p className="mt-2 text-sm text-neutral-400">We will send a secure reset link to your UST email.</p>
+        </div>
+        <div className="space-y-5 p-6">
+          <ReadOnlyField label="UST Email Address" value={email || "N/A"} />
+
+          {(error || message) && (
+            <p className={`text-sm font-semibold ${error ? "text-red-600" : "text-emerald-700"}`}>
+              {error || message}
+            </p>
+          )}
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-10 rounded-md border border-neutral-300 px-4 text-sm font-bold text-neutral-700 transition-colors hover:bg-neutral-50"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              onClick={handleSendReset}
+              disabled={isSubmitting || Boolean(message)}
+              className="h-10 rounded-md bg-[#f6c744] px-4 text-sm font-black text-black transition-colors hover:bg-[#e3b832] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting ? "Sending..." : "Send Reset Link"}
+            </button>
+          </div>
+        </div>
       </div>
-      
-      {/* Premium Tailwind Switch Toggle Option */}
-      <label className="relative inline-flex cursor-pointer items-center">
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={handleChange}
-          readOnly={!onChange}
-          className="peer sr-only"
-        />
-        <div className="h-5 w-9 rounded-full bg-neutral-200 transition-colors after:absolute after:top-[2px] after:left-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all peer-checked:bg-[#f6c744] peer-checked:after:translate-x-full" />
-      </label>
+    </div>
+  );
+}
+
+function LogoutConfirmModal({ isOpen, onCancel, onConfirm }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4 font-inter backdrop-blur-sm">
+      <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow-2xl">
+        <div className="grid h-11 w-11 place-items-center rounded-full bg-red-50 text-red-600">
+          <FiLogOut size={20} />
+        </div>
+        <h2 className="mt-4 font-playfair text-2xl font-bold text-neutral-950">Log out?</h2>
+        <p className="mt-2 text-sm leading-relaxed text-neutral-500">
+          You will need to sign in again to access your saved account features.
+        </p>
+        <div className="mt-6 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="h-10 rounded-md border border-neutral-300 text-sm font-bold text-neutral-700 transition-colors hover:bg-neutral-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="h-10 rounded-md bg-red-600 text-sm font-bold text-white transition-colors hover:bg-red-700"
+          >
+            Log out
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

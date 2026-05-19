@@ -40,6 +40,7 @@ export default function AnnouncementFilters({
       <div className="flex h-10 w-full items-center rounded-xl bg-gray-50 px-3 transition-colors focus-within:bg-white focus-within:ring-1 focus-within:ring-yellow-500 sm:h-12 sm:px-4 lg:max-w-xl">
         <input
           type="text"
+          maxLength={80}
           placeholder="Search announcements, events, category"
           value={searchTerm}
           onChange={(event) => setSearchTerm(event.target.value)}

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  IoArrowForwardOutline,
   IoCalendarOutline,
-  IoCheckmarkCircleOutline,
   IoImagesOutline,
+  IoLocationOutline,
   IoMegaphoneOutline,
   IoTimeOutline,
 } from "react-icons/io5";
@@ -10,7 +11,6 @@ import { FaPlus } from "react-icons/fa6";
 import { LuText } from "react-icons/lu";
 import { Link } from "react-router-dom";
 import QuickActions from "../../components/adminComponents/QuickActions";
-import Badge from "../../components/adminComponents/Badge";
 import {
   getAnnouncements,
   getEvents,
@@ -74,29 +74,10 @@ export default function Dashboard() {
       .sort(
         (a, b) =>
           new Date(a.startDate || a.date) - new Date(b.startDate || b.date)
-      )
-      .slice(0, 5);
+      );
   }, [publishedEvents]);
 
-  const recentlyUpdated = useMemo(() => {
-    return [
-      ...publishedEvents.map((event) => ({
-        id: event._id || event.id,
-        type: "Event",
-        title: event.title,
-        date: event.updatedAt || event.createdAt || event.startDate,
-      })),
-      ...publishedAnnouncements.map((announcement) => ({
-        id: announcement._id || announcement.id,
-        type: "Announcement",
-        title: announcement.title,
-        date: announcement.updatedAt || announcement.createdAt,
-      })),
-    ]
-      .filter((item) => item.title)
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 4);
-  }, [publishedEvents, publishedAnnouncements]);
+  const upcomingPreview = useMemo(() => upcomingEvents.slice(0, 5), [upcomingEvents]);
 
   const stats = [
     {
@@ -162,68 +143,36 @@ export default function Dashboard() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_420px]">
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-          <div className="flex items-center justify-between gap-3">
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex flex-col gap-4 border-b border-gray-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
             <div>
               <h2 className="font-playfair text-xl font-bold text-gray-950">
-                Today&apos;s Focus
+                Upcoming Events
               </h2>
               <p className="mt-1 text-xs text-gray-500">
-                Prioritize the content that needs attention first.
+                Track the next published events on the calendar.
               </p>
             </div>
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-yellow-50 text-yellow-600">
-              <IoCheckmarkCircleOutline size={22} />
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
-            <FocusItem
-              label="Upcoming"
-              value={upcomingEvents.length}
-              caption="events scheduled ahead"
-            />
-            <FocusItem
-              label="Announcements"
-              value={publishedAnnouncements.length}
-              caption="currently published"
-            />
-            <FocusItem
-              label="Audit"
-              value={photosToAudit}
-              caption="photos waiting"
-            />
-          </div>
-
-          <div className="mt-5 border-t border-gray-100 pt-4">
-            <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-gray-400">
-              Recent Updates
-            </h3>
-            <div className="mt-3 grid gap-2">
-              {recentlyUpdated.length === 0 ? (
-                <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-500">
-                  No recent updates yet.
+            <div className="flex items-center gap-3 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3">
+              <div className="grid h-10 w-10 place-items-center rounded-lg bg-yellow-400 text-black">
+                <IoCalendarOutline size={21} />
+              </div>
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.16em] text-yellow-700">
+                  Total Upcoming
                 </p>
-              ) : (
-                recentlyUpdated.map((item) => (
-                  <div
-                    key={`${item.type}-${item.id}`}
-                    className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-gray-900">
-                        {item.title}
-                      </p>
-                      <p className="text-xs text-gray-500">{item.type}</p>
-                    </div>
-                    <span className="shrink-0 text-xs font-semibold text-gray-500">
-                      {formatDate(item.date)}
-                    </span>
-                  </div>
-                ))
-              )}
+                <p className="admin-number text-3xl font-black leading-none text-gray-950">
+                  {loading ? "..." : upcomingEvents.length}
+                </p>
+              </div>
             </div>
           </div>
+
+          <UpcomingEventsTable
+            events={upcomingPreview}
+            loading={loading}
+            totalEvents={upcomingEvents.length}
+          />
         </div>
 
         <aside className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
@@ -262,59 +211,6 @@ export default function Dashboard() {
         </aside>
       </section>
 
-      <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="font-playfair text-xl font-bold text-gray-950">
-              Upcoming Events
-            </h2>
-            <p className="mt-1 text-xs text-gray-500">
-              The next published events at a glance.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 grid gap-2">
-          {loading ? (
-            <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-500">
-              Loading events...
-            </p>
-          ) : upcomingEvents.length === 0 ? (
-            <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-500">
-              No upcoming events found.
-            </p>
-          ) : (
-            upcomingEvents.map((event) => (
-              <article
-                key={event._id || event.id}
-                className="grid gap-3 rounded-lg border border-gray-100 bg-white p-3 shadow-sm transition-colors hover:border-yellow-300 hover:bg-yellow-50/30 md:grid-cols-[minmax(0,1fr)_130px_130px_120px]"
-              >
-                <div className="min-w-0">
-                  <h3 className="truncate text-sm font-bold text-gray-950">
-                    {event.title}
-                  </h3>
-                  <p className="mt-1 truncate text-xs text-gray-500">
-                    {event.location || event.venue || "No venue provided"}
-                  </p>
-                </div>
-                <InfoPill
-                  icon={IoTimeOutline}
-                  label="Schedule"
-                  value={getScheduleLength(event)}
-                />
-                <InfoPill
-                  icon={IoCalendarOutline}
-                  label="Date"
-                  value={formatDate(event.startDate || event.date)}
-                />
-                <div className="flex items-center md:justify-end">
-                  <Badge type={event.category}>{event.category || "N/A"}</Badge>
-                </div>
-              </article>
-            ))
-          )}
-        </div>
-      </section>
     </div>
   );
 }
@@ -331,26 +227,93 @@ function StatLink({ to, className, children }) {
   return <article className={className}>{children}</article>;
 }
 
-function FocusItem({ label, value, caption }) {
+function UpcomingEventsTable({ events, loading, totalEvents }) {
   return (
-    <div className="rounded-xl bg-gray-50 p-4">
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-400">
-        {label}
-      </p>
-      <p className="admin-number mt-2 text-3xl font-black text-gray-950">
-        {value}
-      </p>
-      <p className="mt-1 text-xs font-semibold text-gray-500">{caption}</p>
+    <div className="p-4 sm:p-5">
+      <div className="mb-3 hidden grid-cols-[minmax(0,1fr)_130px_140px_120px_40px] gap-3 px-3 text-[10px] font-black uppercase tracking-[0.16em] text-gray-400 md:grid">
+        <span>Event</span>
+        <span>Date</span>
+        <span>Duration</span>
+        <span>Category</span>
+        <span />
+      </div>
+
+      <div className="grid gap-2">
+        {loading ? (
+          <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-500">
+            Loading upcoming events...
+          </p>
+        ) : events.length === 0 ? (
+          <p className="rounded-lg bg-gray-50 p-4 text-sm text-gray-500">
+            No upcoming events found.
+          </p>
+        ) : (
+          events.map((event, index) => (
+            <article
+              key={event._id || event.id || `${event.title}-${index}`}
+              className="grid gap-3 rounded-xl border border-gray-100 bg-gray-50/70 p-3 transition-colors hover:border-yellow-300 hover:bg-yellow-50/50 md:grid-cols-[minmax(0,1fr)_130px_140px_120px_40px] md:items-center"
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-[11px] font-black text-yellow-600 shadow-sm">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="truncate text-sm font-black text-gray-950">
+                      {event.title || "Untitled Event"}
+                    </h3>
+                    <p className="mt-0.5 flex min-w-0 items-center gap-1 truncate text-xs font-medium text-gray-500">
+                      <IoLocationOutline className="h-3.5 w-3.5 shrink-0 text-yellow-600" />
+                      {event.location || event.venue || "No venue provided"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <InfoPill
+                icon={IoCalendarOutline}
+                label="Date"
+                value={formatDate(event.startDate || event.date)}
+              />
+              <InfoPill
+                icon={IoTimeOutline}
+                label="Duration"
+                value={getScheduleLength(event)}
+              />
+              <p className="text-xs font-black uppercase text-gray-700">
+                {event.category || "N/A"}
+              </p>
+              <Link
+                to="/admin/events"
+                className="grid h-9 w-9 place-items-center rounded-lg bg-white text-gray-500 shadow-sm transition-colors hover:bg-black hover:text-yellow-400"
+                aria-label="Open events manager"
+              >
+                <IoArrowForwardOutline />
+              </Link>
+            </article>
+          ))
+        )}
+      </div>
+
+      {totalEvents > events.length && (
+        <Link
+          to="/admin/events"
+          className="mt-3 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-yellow-700 transition-colors hover:text-black"
+        >
+          View {totalEvents - events.length} more upcoming events
+          <IoArrowForwardOutline />
+        </Link>
+      )}
     </div>
   );
 }
 
 function InfoPill({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2">
+    <div className="flex items-center gap-2 px-1 py-2">
       <Icon className="h-4 w-4 shrink-0 text-yellow-600" />
       <div className="min-w-0">
-        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-gray-400">
+        <p className="text-[9px] font-black uppercase tracking-[0.14em] text-gray-400 md:hidden">
           {label}
         </p>
         <p className="truncate text-xs font-bold text-gray-800">{value}</p>

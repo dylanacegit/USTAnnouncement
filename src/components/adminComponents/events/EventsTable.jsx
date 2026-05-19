@@ -60,8 +60,16 @@ export default function EventsTable({
   const getId = (event) => event._id || event.id;
   const getCreatedBy = (event) => event.createdBy || "System";
   const getCreatedAt = (event) => event.createdAt || event.updatedAt;
-  const getUpdatedBy = (event) => event.updatedBy || event.createdBy || "System";
-  const getUpdatedAt = (event) => event.updatedAt || event.createdAt;
+  const hasMeaningfulUpdate = (event) => {
+    if (!event.updatedBy) return false;
+
+    const createdAt = new Date(event.createdAt).valueOf();
+    const updatedAt = new Date(event.updatedAt).valueOf();
+
+    return Number.isNaN(createdAt) || Number.isNaN(updatedAt) || updatedAt !== createdAt;
+  };
+  const getUpdatedBy = (event) => (hasMeaningfulUpdate(event) ? event.updatedBy : "");
+  const getUpdatedAt = (event) => (hasMeaningfulUpdate(event) ? event.updatedAt : null);
   const getScheduleLength = (event) => {
     const start = new Date(event.startDate || event.date);
     const end = new Date(event.endDate || event.startDate || event.date);
@@ -241,7 +249,8 @@ export default function EventsTable({
                   value={
                     <PersonCell
                       name={getUpdatedBy(event)}
-                      email={event.updatedByEmail || event.createdByEmail}
+                      email={event.updatedByEmail}
+                      fallback="N/A"
                     />
                   }
                 />
@@ -368,7 +377,8 @@ export default function EventsTable({
                   <td className="px-6 py-5">
                     <PersonCell
                       name={getUpdatedBy(event)}
-                      email={event.updatedByEmail || event.createdByEmail}
+                      email={event.updatedByEmail}
+                      fallback="N/A"
                     />
                   </td>
                   <td className="px-6 py-5 text-sm text-gray-600">

@@ -193,8 +193,6 @@ router.post("/", requireAuth, requireAdmin, async (req, res) => {
       ...payload,
       createdBy: admin.name,
       createdByEmail: admin.email,
-      updatedBy: admin.name,
-      updatedByEmail: admin.email,
     });
 
     res.status(201).json(event);

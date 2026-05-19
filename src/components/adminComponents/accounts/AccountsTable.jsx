@@ -1,8 +1,18 @@
 import { useState } from "react";
-import { FiArchive, FiEdit2, FiRotateCcw } from "react-icons/fi";
+import { FiArchive, FiEdit2, FiRotateCcw, FiTrash2 } from "react-icons/fi";
 import AdminTable from "../AdminTable";
 import Badge from "../Badge";
 import PersonCell from "../PersonCell";
+
+const LIMITS = {
+  firstName: 60,
+  lastName: 60,
+  email: 120,
+  password: 72,
+  department: 120,
+  studentOrEmployeeNumber: 40,
+  yearLevel: 40,
+};
 
 export default function AccountsTable({
   accounts,
@@ -17,6 +27,7 @@ export default function AccountsTable({
   onCreateAccount,
   onToggleArchive,
   onUpdateDepartment,
+  onDeleteAccount,
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -84,6 +95,12 @@ export default function AccountsTable({
   const handleCreateSubmit = async (event) => {
     event.preventDefault();
 
+    const validationError = validateCreateDraft(createDraft);
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
+
     try {
       setUpdatingId("create");
       setFormError("");
@@ -115,6 +132,10 @@ export default function AccountsTable({
     const nextDepartment = departmentDraft.trim();
 
     if (!selectedAccount || !nextDepartment) return;
+    if (nextDepartment.length > LIMITS.department) {
+      setFormError(`Department must be ${LIMITS.department} characters or fewer.`);
+      return;
+    }
 
     try {
       setUpdatingId(selectedAccount._id);
@@ -143,8 +164,36 @@ export default function AccountsTable({
   const endItem = Math.min(currentPage * pageSize, totalAccounts);
   const canGoPrevious = currentPage > 1;
   const canGoNext = currentPage < totalPages;
-  const getUpdatedBy = (account) => account.updatedBy || account.createdBy || "System";
-  const getUpdatedAt = (account) => account.updatedAt || account.createdAt;
+  const hasMeaningfulUpdate = (account) => {
+    if (!account.updatedBy) return false;
+
+    const createdAt = new Date(account.createdAt).valueOf();
+    const updatedAt = new Date(account.updatedAt).valueOf();
+
+    return Number.isNaN(createdAt) || Number.isNaN(updatedAt) || updatedAt !== createdAt;
+  };
+
+  const handleDeleteAccount = async (account) => {
+    const fullName = `${account.firstName || ""} ${account.lastName || ""}`.trim() || account.email || "this account";
+    const confirmed = window.confirm(
+      `Permanently delete ${fullName}? This cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setUpdatingId(account._id);
+      setFormError("");
+      await onDeleteAccount(account);
+      if (selectedAccount?._id === account._id) closeDepartmentForm();
+    } catch (error) {
+      setFormError(error.message || "Failed to delete account.");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+  const getUpdatedBy = (account) => (hasMeaningfulUpdate(account) ? account.updatedBy : "");
+  const getUpdatedAt = (account) => (hasMeaningfulUpdate(account) ? account.updatedAt : null);
 
   const PaginationControls = () => (
     <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
@@ -238,10 +287,10 @@ export default function AccountsTable({
           className="mb-3 rounded-xl border border-yellow-200 bg-yellow-50/60 p-3 sm:mb-4 sm:p-4"
         >
           <div className="grid gap-3 lg:grid-cols-4">
-            <input value={createDraft.firstName} onChange={(e) => updateCreateDraft("firstName", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="First name" />
-            <input value={createDraft.lastName} onChange={(e) => updateCreateDraft("lastName", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="Last name" />
-            <input type="email" value={createDraft.email} onChange={(e) => updateCreateDraft("email", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="UST email" />
-            <input type="password" value={createDraft.password} onChange={(e) => updateCreateDraft("password", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="Temporary password" />
+            <input required maxLength={LIMITS.firstName} value={createDraft.firstName} onChange={(e) => updateCreateDraft("firstName", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="First name" />
+            <input required maxLength={LIMITS.lastName} value={createDraft.lastName} onChange={(e) => updateCreateDraft("lastName", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="Last name" />
+            <input required type="email" maxLength={LIMITS.email} value={createDraft.email} onChange={(e) => updateCreateDraft("email", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="UST email" />
+            <input required type="password" minLength={8} maxLength={LIMITS.password} value={createDraft.password} onChange={(e) => updateCreateDraft("password", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="Temporary password" />
             <select value={createDraft.role} onChange={(e) => updateCreateDraft("role", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500">
               <option value="user">User</option>
               <option value="admin">Admin</option>
@@ -250,9 +299,9 @@ export default function AccountsTable({
               <option value="student">Student</option>
               <option value="teacher">Teacher</option>
             </select>
-            <input value={createDraft.department} onChange={(e) => updateCreateDraft("department", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="Department" />
-            <input value={createDraft.studentOrEmployeeNumber} onChange={(e) => updateCreateDraft("studentOrEmployeeNumber", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="ID number" />
-            <input value={createDraft.yearLevel} onChange={(e) => updateCreateDraft("yearLevel", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="Year level" />
+            <input required maxLength={LIMITS.department} value={createDraft.department} onChange={(e) => updateCreateDraft("department", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="Department" />
+            <input maxLength={LIMITS.studentOrEmployeeNumber} value={createDraft.studentOrEmployeeNumber} onChange={(e) => updateCreateDraft("studentOrEmployeeNumber", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="ID number" />
+            <input maxLength={LIMITS.yearLevel} value={createDraft.yearLevel} onChange={(e) => updateCreateDraft("yearLevel", e.target.value)} className="h-10 rounded-lg border border-yellow-300 bg-white px-3 text-sm outline-none focus:border-yellow-500" placeholder="Year level" />
           </div>
           {formError && <p className="mt-3 text-xs font-semibold text-red-600">{formError}</p>}
           <div className="mt-3 flex justify-end gap-2">
@@ -285,6 +334,7 @@ export default function AccountsTable({
             <div className="grid gap-2 sm:grid-cols-[minmax(220px,320px)_auto_auto] sm:items-center">
               <input
                 type="text"
+                maxLength={LIMITS.department}
                 value={departmentDraft}
                 onChange={(e) => setDepartmentDraft(e.target.value)}
                 placeholder="Enter department or college"
@@ -391,7 +441,8 @@ export default function AccountsTable({
                   <dd className="mt-0.5 min-w-0 text-gray-700">
                     <PersonCell
                       name={getUpdatedBy(account)}
-                      email={account.updatedByEmail || account.createdByEmail}
+                      email={account.updatedByEmail}
+                      fallback="N/A"
                     />
                   </dd>
                 </div>
@@ -408,7 +459,7 @@ export default function AccountsTable({
               {isEditing && (
                 <div className="mt-3">
                   {activeTab === "archived" ? (
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-2">
                       <IconButton
                         label="Unarchive account"
                         tone="green"
@@ -416,6 +467,14 @@ export default function AccountsTable({
                         disabled={updatingId === account._id}
                       >
                         <FiRotateCcw size={16} />
+                      </IconButton>
+                      <IconButton
+                        label="Permanently delete account"
+                        tone="red"
+                        onClick={() => handleDeleteAccount(account)}
+                        disabled={updatingId === account._id}
+                      >
+                        <FiTrash2 size={16} />
                       </IconButton>
                     </div>
                   ) : (
@@ -502,7 +561,8 @@ export default function AccountsTable({
                   <td className="px-6 py-5">
                     <PersonCell
                       name={getUpdatedBy(account)}
-                      email={account.updatedByEmail || account.createdByEmail}
+                      email={account.updatedByEmail}
+                      fallback="N/A"
                     />
                   </td>
                   <td className="px-6 py-5 text-sm text-gray-600">
@@ -512,14 +572,24 @@ export default function AccountsTable({
                   {isEditing && (
                     <td className="px-6 py-5">
                       {activeTab === "archived" ? (
-                        <IconButton
-                          label="Unarchive account"
-                          tone="green"
-                          onClick={() => handleToggleArchive(account)}
-                          disabled={updatingId === account._id}
-                        >
-                          <FiRotateCcw size={16} />
-                        </IconButton>
+                        <div className="flex gap-2">
+                          <IconButton
+                            label="Unarchive account"
+                            tone="green"
+                            onClick={() => handleToggleArchive(account)}
+                            disabled={updatingId === account._id}
+                          >
+                            <FiRotateCcw size={16} />
+                          </IconButton>
+                          <IconButton
+                            label="Permanently delete account"
+                            tone="red"
+                            onClick={() => handleDeleteAccount(account)}
+                            disabled={updatingId === account._id}
+                          >
+                            <FiTrash2 size={16} />
+                          </IconButton>
+                        </div>
                       ) : (
                         <div className="flex gap-2">
                           <IconButton
@@ -572,4 +642,40 @@ function IconButton({ label, tone, disabled = false, onClick, children }) {
       {children}
     </button>
   );
+}
+
+function validateCreateDraft(draft) {
+  const requiredFields = [
+    ["firstName", "First name"],
+    ["lastName", "Last name"],
+    ["email", "UST email"],
+    ["password", "Temporary password"],
+    ["department", "Department"],
+  ];
+
+  for (const [field, label] of requiredFields) {
+    if (!String(draft[field] || "").trim()) return `${label} is required.`;
+  }
+
+  if (!draft.email.trim().toLowerCase().endsWith("@ust.edu.ph")) {
+    return "A valid UST email is required.";
+  }
+
+  if (draft.password.length < 8) {
+    return "Password must be at least 8 characters long.";
+  }
+
+  for (const [field, maxLength] of Object.entries(LIMITS)) {
+    if (String(draft[field] || "").length > maxLength) {
+      return `${fieldToLabel(field)} must be ${maxLength} characters or fewer.`;
+    }
+  }
+
+  return "";
+}
+
+function fieldToLabel(field) {
+  return field
+    .replace(/([A-Z])/g, " $1")
+    .replace(/^./, (letter) => letter.toUpperCase());
 }

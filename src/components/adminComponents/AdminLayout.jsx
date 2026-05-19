@@ -1,11 +1,10 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { IoMdMenu, IoMdSearch, IoMdNotifications } from "react-icons/io";
+import { IoMdMenu, IoMdSearch } from "react-icons/io";
 import { CiCalendar, CiSettings } from "react-icons/ci";
 import { TfiAnnouncement } from "react-icons/tfi";
 import { AiOutlineAppstore } from "react-icons/ai";
 import {
   IoCheckmarkDoneOutline,
-  IoDocumentTextOutline,
   IoImagesOutline,
   IoPersonOutline,
   IoScanOutline,
@@ -333,7 +332,6 @@ export default function AdminLayout() {
           name: "Dashboard",
           path: "/admin",
           icon: <AiOutlineAppstore />,
-          badge: null,
         },
       ],
     },
@@ -344,43 +342,31 @@ export default function AdminLayout() {
           name: "Events",
           path: "/admin/events",
           icon: <CiCalendar />,
-          badge: 8,
         },
         {
           name: "Announcements",
           path: "/admin/announcements",
           icon: <TfiAnnouncement />,
-          badge: 4,
         },
         {
           name: "Accounts",
           path: "/admin/accounts",
           icon: <IoPersonOutline />,
-          badge: 10,
         },
         {
           name: "Event Gallery",
           path: "/admin/event-gallery",
           icon: <IoImagesOutline />,
-          badge: null,
         },
         {
           name: "Photo Approvals",
           path: "/admin/gallery-approvals",
           icon: <IoCheckmarkDoneOutline />,
-          badge: null,
         },
         {
           name: "Vision AI",
           path: "/admin/vision-ai",
           icon: <IoScanOutline />,
-          badge: null,
-        },
-        {
-          name: "Logs",
-          path: "/admin/logs",
-          icon: <IoDocumentTextOutline />,
-          badge: 4,
         },
       ],
     },
@@ -391,7 +377,6 @@ export default function AdminLayout() {
           name: "Settings",
           path: "/admin/settings",
           icon: <CiSettings />,
-          badge: null,
         },
       ],
     },
@@ -407,7 +392,6 @@ export default function AdminLayout() {
       "/admin/gallery-approvals": "Photo Approvals",
       "/admin/event-gallery": "Event Gallery",
       "/admin/vision-ai": "Vision AI",
-      "/admin/logs": "Logs",
       "/admin/accounts": "Accounts",
       "/admin/settings": "Settings",
     };
@@ -498,11 +482,6 @@ export default function AdminLayout() {
                           <span className="text-lg">{item.icon}</span>
                           {isSideBarOpen && <span>{item.name}</span>}
                         </div>
-                        {isSideBarOpen && item.badge && (
-                          <span className="bg-gray-800 text-gray-400 text-xs py-0.5 px-2 rounded-full">
-                            {item.badge}
-                          </span>
-                        )}
                       </Link>
                     </li>
                   );
@@ -571,6 +550,7 @@ export default function AdminLayout() {
               <IoMdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
+                maxLength={80}
                 placeholder="Search..."
                 value={searchQuery}
                 onFocus={() => {
@@ -599,11 +579,11 @@ export default function AdminLayout() {
                 />
               )}
             </form>
-            <button className="text-gray-400 hover:text-white relative">
-              <IoMdNotifications size={22} />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-yellow-500 rounded-full"></span>
-            </button>
-            <ProfileMenu user={user} onLogout={() => handleLogout()} />
+            <ProfileMenu
+              user={user}
+              onLogout={() => handleLogout()}
+              showProfileLink={false}
+            />
           </div>
         </header>
 
@@ -623,6 +603,7 @@ export default function AdminLayout() {
               <IoMdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
+                maxLength={80}
                 placeholder="Search..."
                 value={searchQuery}
                 onFocus={() => {

@@ -33,14 +33,19 @@ function getFeaturedEvent(events) {
   );
 }
 
+function normalizeTitle(value) {
+  return String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
+}
+
 const ITEMS_PER_PAGE = 12;
+const GALLERY_ITEMS_PER_PAGE = 6;
 
 export default function Events() {
   const location = useLocation();
   const navigate = useNavigate();
   const { eventId } = useParams();
   const primedBackStackRef = useRef(false);
-  const { bookmarkIds, isAuthenticated, isBookmarked } = useAuth();
+  const { isAuthenticated, isBookmarked } = useAuth();
   const [events, setEvents] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(location.state?.selectedEvent || null);
@@ -48,6 +53,7 @@ export default function Events() {
   const [galleryLoading, setGalleryLoading] = useState(false);
   const [galleryError, setGalleryError] = useState("");
   const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
+  const [previewViewer, setPreviewViewer] = useState(null);
   const [activeCategory, setActiveCategory] = useState("All");
   const [bookmarkFilter, setBookmarkFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date-asc");
@@ -204,10 +210,10 @@ export default function Events() {
   async function handleGallerySubmit(payload) {
     if (!selectedEvent?._id) return;
 
-    const createdItem = await createEventGalleryItem(selectedEvent._id, payload);
+    const result = await createEventGalleryItem(selectedEvent._id, payload);
 
     window.alert(
-      createdItem.message ||
+      result.message ||
         "Photo passed Vision AI and is pending admin approval."
     );
   }
@@ -223,6 +229,9 @@ export default function Events() {
 
   const featuredEvent = useMemo(() => getFeaturedEvent(events), [events]);
   const searchTerm = searchInput.trim();
+  const bookmarkedEventCount = useMemo(() => {
+    return events.filter((event) => isBookmarked(event._id)).length;
+  }, [events, isBookmarked]);
 
   const visibleEvents = useMemo(() => {
     let result = [...events];
@@ -310,8 +319,8 @@ export default function Events() {
       .slice(0, 3);
     const taggedAnnouncements = announcements
       .filter((announcement) => {
-        const announcementEventTitle = announcement.eventTitle?.trim().toLowerCase();
-        const selectedTitle = selectedEvent.title?.trim().toLowerCase();
+        const announcementEventTitle = normalizeTitle(announcement.eventTitle);
+        const selectedTitle = normalizeTitle(selectedEvent.title);
 
         return announcementEventTitle && selectedTitle && announcementEventTitle === selectedTitle;
       })
@@ -379,46 +388,38 @@ export default function Events() {
 
               {Array.isArray(selectedEvent.schedule) &&
                 selectedEvent.schedule.length > 0 && (
-                  <div className="grid gap-10 md:grid-cols-2">
-                    <div>
-                      <h2 className="mb-4 border-b border-neutral-100 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">
-                        Program Schedule
-                      </h2>
-                      <div className="divide-y divide-neutral-100">
-                        {selectedEvent.schedule.map((item, index) => (
-                          <div key={index} className="flex gap-6 py-3">
-                            <span className="w-12 shrink-0 text-[11px] font-bold text-[#c49600]">
-                              {item.day || `Day ${index + 1}`}
-                            </span>
-                            <div>
-                              <p className="text-[12px] font-bold text-neutral-800">
-                                {item.activity || item.title}
-                              </p>
-                              {item.description && (
-                                <p className="text-[10px] italic text-neutral-400">
-                                  {item.description}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <ProgramSchedule schedule={selectedEvent.schedule} />
                 )}
 
               <div className="mt-16">
                 <h2 className="mb-6 border-b border-[#f6c744] pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">
                   Event Preview
                 </h2>
-                <img
-                  src={getItemImage(selectedEvent)}
-                  alt={selectedEvent.title}
-                  className="aspect-video w-full max-w-3xl border border-neutral-200 object-cover"
-                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPreviewViewer({
+                      image: getItemImage(selectedEvent),
+                      title: selectedEvent.title,
+                      label: "Event Preview",
+                      description: selectedEvent.description,
+                    })
+                  }
+                  className="group block w-full max-w-3xl overflow-hidden border border-neutral-200 bg-neutral-100 text-left"
+                >
+                  <img
+                    src={getItemImage(selectedEvent)}
+                    alt={selectedEvent.title}
+                    className="aspect-video w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <span className="block bg-white px-4 py-3 text-[9px] font-black uppercase tracking-widest text-neutral-400 transition-colors group-hover:text-[#c49600]">
+                    Click to view full image
+                  </span>
+                </button>
               </div>
 
               <EventGallerySection
+                key={selectedEvent._id}
                 items={galleryItems}
                 loading={galleryLoading}
                 error={galleryError}
@@ -431,7 +432,7 @@ export default function Events() {
               {taggedAnnouncements.length > 0 && (
                 <div>
                   <h2 className="mb-4 border-b border-neutral-100 pb-2 text-[10px] font-black uppercase tracking-widest text-neutral-400">
-                    Tagged Announcements
+                    Related Announcements
                   </h2>
                   <div className="grid gap-3">
                     {taggedAnnouncements.map((announcement) => (
@@ -527,6 +528,12 @@ export default function Events() {
             onSubmit={handleGallerySubmit}
           />
         )}
+        {previewViewer && (
+          <ImageViewer
+            item={previewViewer}
+            onClose={() => setPreviewViewer(null)}
+          />
+        )}
       </div>
     );
   }
@@ -593,7 +600,7 @@ export default function Events() {
                   { label: "All events", value: "all" },
                   {
                     label: isAuthenticated
-                      ? `Bookmarked (${bookmarkIds.length})`
+                      ? `Bookmarked (${bookmarkedEventCount})`
                       : "Bookmarked",
                     value: "bookmarked",
                   },
@@ -732,6 +739,16 @@ function EventGallerySection({
   isAuthenticated,
   onCreate,
 }) {
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(items.length / GALLERY_ITEMS_PER_PAGE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedItems = useMemo(() => {
+    const startIndex = (safeCurrentPage - 1) * GALLERY_ITEMS_PER_PAGE;
+
+    return items.slice(startIndex, startIndex + GALLERY_ITEMS_PER_PAGE);
+  }, [safeCurrentPage, items]);
+
   return (
     <section className="mt-16">
       <div className="mb-6 flex flex-col gap-3 border-b border-[#f6c744] pb-3 sm:flex-row sm:items-end sm:justify-between">
@@ -789,40 +806,163 @@ function EventGallerySection({
       )}
 
       {!loading && items.length > 0 && (
-        <div className="columns-1 gap-4 sm:columns-2 xl:columns-3">
-          {items.map((item) => (
-            <article
-              key={item._id || `${item.title}-${item.createdAt}`}
-              className="group relative mb-4 break-inside-avoid overflow-hidden border border-neutral-100 bg-neutral-100 shadow-sm"
-            >
-              <img
-                src={item.image}
-                alt={item.title}
-                className="w-full transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-3 bg-gradient-to-t from-black/85 via-black/55 to-transparent p-4 pt-12 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-                <p className="text-[8px] font-black uppercase tracking-widest text-[#f6c744]">
-                  {item.submittedByName || "UST user"}
-                </p>
-                <h3 className="mt-1 text-sm font-bold leading-snug text-white">
-                  {item.title}
-                </h3>
-                {item.description && (
-                  <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-white/75">
-                    {item.description}
+        <>
+          <div className="columns-1 gap-4 sm:columns-2 xl:columns-3">
+            {paginatedItems.map((item) => (
+              <button
+                key={item._id || `${item.title}-${item.createdAt}`}
+                type="button"
+                onClick={() => setSelectedPhoto(item)}
+                className="group relative mb-4 block w-full break-inside-avoid overflow-hidden border border-neutral-100 bg-neutral-100 text-left shadow-sm"
+              >
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="w-full transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-3 bg-gradient-to-t from-black/85 via-black/55 to-transparent p-4 pt-12 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                  <p className="text-[8px] font-black uppercase tracking-widest text-[#f6c744]">
+                    {item.submittedByName || "UST user"}
                   </p>
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
+                  <h3 className="mt-1 text-sm font-bold leading-snug text-white">
+                    {item.title}
+                  </h3>
+                  {item.description && (
+                    <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-white/75">
+                      {item.description}
+                    </p>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {items.length > GALLERY_ITEMS_PER_PAGE && (
+            <div className="mt-6 border-t border-neutral-100 pt-5">
+              <Pagination
+                currentPage={safeCurrentPage}
+                totalPages={totalPages}
+                onPageChange={(page) =>
+                  setCurrentPage(Math.min(Math.max(page, 1), totalPages))
+                }
+              />
+            </div>
+          )}
+        </>
+      )}
+
+      {selectedPhoto && (
+        <ImageViewer
+          item={{
+            image: selectedPhoto.image,
+            title: selectedPhoto.title || "Gallery photo",
+            label: "Event Gallery",
+            description: selectedPhoto.description,
+            submittedByName: selectedPhoto.submittedByName,
+          }}
+          onClose={() => setSelectedPhoto(null)}
+        />
       )}
     </section>
   );
 }
 
+function ImageViewer({ item, onClose }) {
+  const [zoom, setZoom] = useState(1);
+
+  const zoomOut = () => setZoom((current) => Math.max(0.5, current - 0.2));
+  const zoomIn = () => setZoom((current) => Math.min(3, current + 0.2));
+  const resetZoom = () => setZoom(1);
+
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/90 px-3 py-4 sm:px-5">
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute inset-0 cursor-default"
+        aria-label="Close gallery viewer"
+      />
+
+      <div className="relative z-10 flex max-h-[94vh] w-full max-w-7xl flex-col overflow-hidden border border-white/10 bg-[#0f0f0f] shadow-2xl">
+        <div className="flex flex-col gap-3 border-b border-white/10 bg-[#111] px-4 py-4 text-white sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="min-w-0">
+            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-[#f6c744]">
+              {item.label || "Image Viewer"}
+            </p>
+            <h2 className="mt-1 truncate font-playfair text-xl font-bold">
+              {item.title || "Gallery photo"}
+            </h2>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={zoomOut}
+              className="grid h-10 w-10 place-items-center border border-white/15 text-lg font-black text-white transition-colors hover:border-[#f6c744] hover:text-[#f6c744]"
+              aria-label="Zoom out"
+            >
+              -
+            </button>
+            <button
+              type="button"
+              onClick={resetZoom}
+              className="h-10 min-w-20 border border-white/15 px-3 text-[10px] font-black uppercase tracking-widest text-white transition-colors hover:border-[#f6c744] hover:text-[#f6c744]"
+              aria-label="Reset zoom"
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+            <button
+              type="button"
+              onClick={zoomIn}
+              className="grid h-10 w-10 place-items-center border border-white/15 text-lg font-black text-white transition-colors hover:border-[#f6c744] hover:text-[#f6c744]"
+              aria-label="Zoom in"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-10 bg-[#f6c744] px-5 text-[10px] font-black uppercase tracking-widest text-black transition-colors hover:bg-[#e3b832]"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-auto bg-black">
+          <div
+            className="grid min-h-[62vh] place-items-center p-4 sm:p-6"
+            style={{ minWidth: zoom > 1 ? `${zoom * 100}%` : "100%" }}
+          >
+            <img
+              src={item.image}
+              alt={item.title || "Gallery photo"}
+              className="max-h-[74vh] max-w-full select-none object-contain transition-transform duration-200"
+              style={{ transform: `scale(${zoom})` }}
+              draggable="false"
+            />
+          </div>
+        </div>
+
+        {(item.description || item.submittedByName) && (
+          <div className="border-t border-white/10 bg-[#111] px-5 py-4 text-white">
+            <p className="text-[9px] font-black uppercase tracking-widest text-[#f6c744]">
+              {item.submittedByName || item.label || "Details"}
+            </p>
+            {item.description && (
+              <p className="mt-2 line-clamp-3 text-sm leading-6 text-white/75">
+                {item.description}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function GalleryCreateModal({ eventTitle, onClose, onSubmit }) {
-  const [form, setForm] = useState({ title: "", description: "", image: "" });
+  const [form, setForm] = useState({ title: "", description: "", images: [] });
   const [error, setError] = useState("");
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -832,11 +972,18 @@ function GalleryCreateModal({ eventTitle, onClose, onSubmit }) {
     setError("");
   }
 
-  async function handleImageChange(file) {
-    if (!file) return;
+  async function handleImageChange(fileList) {
+    const files = Array.from(fileList || []);
 
-    if (!file.type.startsWith("image/")) {
-      setError("Please choose an image file.");
+    if (files.length === 0) return;
+
+    if (form.images.length + files.length > 5) {
+      setError("You can submit up to 5 photos at a time.");
+      return;
+    }
+
+    if (files.some((file) => !file.type.startsWith("image/"))) {
+      setError("Please choose image files only.");
       return;
     }
 
@@ -844,16 +991,33 @@ function GalleryCreateModal({ eventTitle, onClose, onSubmit }) {
     setError("");
 
     try {
-      const image = await compressGalleryImage(file, {
-        maxBytes: 2 * 1024 * 1024,
-        maxWidth: 1280,
-      });
-      updateField("image", image);
+      const images = [];
+
+      for (const file of files) {
+        const image = await compressGalleryImage(file, {
+          maxBytes: 2 * 1024 * 1024,
+          maxWidth: 1280,
+        });
+        images.push(image);
+      }
+
+      setForm((currentForm) => ({
+        ...currentForm,
+        images: [...currentForm.images, ...images].slice(0, 5),
+      }));
     } catch (imageError) {
-      setError(imageError.message || "Image could not be processed.");
+      setError(imageError.message || "One of the images could not be processed.");
     } finally {
       setIsProcessingImage(false);
     }
+  }
+
+  function removeImage(index) {
+    setForm((currentForm) => ({
+      ...currentForm,
+      images: currentForm.images.filter((_, imageIndex) => imageIndex !== index),
+    }));
+    setError("");
   }
 
   async function handleSubmit(event) {
@@ -864,8 +1028,8 @@ function GalleryCreateModal({ eventTitle, onClose, onSubmit }) {
       return;
     }
 
-    if (!form.image) {
-      setError("Please upload a gallery image.");
+    if (form.images.length === 0) {
+      setError("Please upload at least one gallery image.");
       return;
     }
 
@@ -876,7 +1040,7 @@ function GalleryCreateModal({ eventTitle, onClose, onSubmit }) {
       await onSubmit({
         title: form.title.trim(),
         description: form.description.trim(),
-        image: form.image,
+        images: form.images,
       });
       onClose();
     } catch (submitError) {
@@ -910,7 +1074,7 @@ function GalleryCreateModal({ eventTitle, onClose, onSubmit }) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid gap-6 p-6 md:grid-cols-[1fr_280px]">
+        <form onSubmit={handleSubmit} className="grid gap-6 p-6 lg:grid-cols-[1fr_340px]">
           <div className="space-y-4">
             <GalleryField
               label="Title"
@@ -936,44 +1100,77 @@ function GalleryCreateModal({ eventTitle, onClose, onSubmit }) {
           </div>
 
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
-              Image
-            </p>
-            <div className="mt-2 overflow-hidden border border-neutral-200 bg-neutral-100">
-              {form.image ? (
-                <img
-                  src={form.image}
-                  alt=""
-                  className="aspect-[4/5] h-full w-full object-cover"
-                />
-              ) : (
-                <div className="grid aspect-[4/5] place-items-center px-6 text-center text-xs font-semibold text-neutral-400">
-                  Gallery photo preview
-                </div>
-              )}
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+                Images
+              </p>
+              <span className="text-[10px] font-bold text-neutral-400">
+                {form.images.length}/5
+              </span>
             </div>
-            <label className="mt-3 block cursor-pointer bg-black px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest text-white transition-colors hover:bg-[#f6c744] hover:text-black">
-              {isProcessingImage ? "Processing..." : "Choose image"}
-              <input
-                type="file"
-                accept="image/*"
-                disabled={isProcessingImage || isSubmitting}
-                onChange={(event) => handleImageChange(event.target.files?.[0])}
-                className="hidden"
-              />
-            </label>
-            {form.image && (
+
+            {form.images.length > 0 ? (
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {form.images.map((image, index) => (
+                  <div
+                    key={`${image.slice(0, 32)}-${index}`}
+                    className="relative overflow-hidden border border-neutral-200 bg-neutral-100"
+                  >
+                    <img
+                      src={image}
+                      alt={`Gallery preview ${index + 1}`}
+                      className="aspect-square h-full w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute right-1.5 top-1.5 bg-black/80 px-2 py-1 text-[8px] font-black uppercase tracking-wider text-white transition-colors hover:bg-red-600"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-2 grid aspect-[4/3] place-items-center border border-dashed border-neutral-200 bg-neutral-50 px-6 text-center text-xs font-semibold text-neutral-400">
+                Choose up to 5 event photos.
+              </div>
+            )}
+
+            {form.images.length < 5 && (
+              <label className="mt-3 block cursor-pointer bg-black px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest text-white transition-colors hover:bg-[#f6c744] hover:text-black">
+                {isProcessingImage ? "Processing..." : "Choose images"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  disabled={isProcessingImage || isSubmitting}
+                  onChange={(event) => {
+                    handleImageChange(event.target.files);
+                    event.target.value = "";
+                  }}
+                  className="hidden"
+                />
+              </label>
+            )}
+
+            {form.images.length > 0 && (
               <button
                 type="button"
-                onClick={() => updateField("image", "")}
+                onClick={() => updateField("images", [])}
                 className="mt-2 w-full border border-neutral-200 px-4 py-2 text-[9px] font-black uppercase tracking-widest text-neutral-500 transition-colors hover:border-red-200 hover:text-red-600"
               >
-                Remove image
+                Remove all images
               </button>
             )}
+
+            <p className="mt-3 text-[10px] leading-5 text-neutral-400">
+              Each photo will pass Vision AI first, then appear in admin photo
+              approvals as a separate review item.
+            </p>
           </div>
 
-          <div className="md:col-span-2 flex flex-col-reverse gap-2 border-t border-neutral-100 pt-5 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-2 border-t border-neutral-100 pt-5 sm:flex-row sm:justify-end lg:col-span-2">
             <button
               type="button"
               onClick={onClose}
@@ -986,7 +1183,9 @@ function GalleryCreateModal({ eventTitle, onClose, onSubmit }) {
               disabled={isSubmitting || isProcessingImage}
               className="bg-[#f6c744] px-6 py-3 text-[10px] font-black uppercase tracking-widest text-black transition-colors hover:bg-[#e3b832] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSubmitting ? "Submitting..." : "Submit photo"}
+              {isSubmitting
+                ? "Submitting..."
+                : `Submit ${form.images.length || ""} photo${form.images.length === 1 ? "" : "s"}`}
             </button>
           </div>
         </form>
@@ -1077,6 +1276,134 @@ function FeaturedHero({ event, onView }) {
       </div>
     </section>
   );
+}
+
+function ProgramSchedule({ schedule }) {
+  const [openDay, setOpenDay] = useState(0);
+
+  return (
+    <section className="mt-12">
+      <div className="mb-5 border-b border-neutral-100 pb-3">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">
+          Program Schedule
+        </p>
+        <h2 className="mt-2 font-playfair text-2xl font-bold text-neutral-950">
+          Day-by-day activities
+        </h2>
+      </div>
+
+      <div className="space-y-3">
+        {schedule.map((item, index) => {
+          const isOpen = openDay === index;
+          const title = item.activity || item.title || "Activity details";
+          const day = item.day || `Day ${index + 1}`;
+          const date = formatScheduleDate(item.date);
+          const time = formatScheduleTime(item);
+
+          return (
+            <article
+              key={`${day}-${index}`}
+              className="overflow-hidden border border-neutral-100 bg-white shadow-sm"
+            >
+              <button
+                type="button"
+                onClick={() => setOpenDay(isOpen ? -1 : index)}
+                className="flex w-full items-center justify-between gap-5 bg-[#fffdf5] px-5 py-4 text-left transition-colors hover:bg-[#fff8df]"
+              >
+                <span className="grid min-w-0 gap-1 sm:grid-cols-[90px_1fr] sm:items-center sm:gap-5">
+                  <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#c49600]">
+                    {day}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-bold text-neutral-950">
+                      {title}
+                    </span>
+                    <span className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-400">
+                      {date && <span>{date}</span>}
+                      {time && <span>{time}</span>}
+                      {item.image && <span>Image included</span>}
+                    </span>
+                  </span>
+                </span>
+                <span
+                  className={`shrink-0 text-lg font-bold text-[#c49600] transition-transform ${
+                    isOpen ? "rotate-45" : ""
+                  }`}
+                  aria-hidden="true"
+                >
+                  +
+                </span>
+              </button>
+
+              {isOpen && (
+                <div className="grid gap-5 border-t border-neutral-100 p-5 lg:grid-cols-[280px_1fr]">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={`${day} ${title}`}
+                      className="aspect-video w-full border border-neutral-100 bg-neutral-100 object-cover lg:aspect-[4/3]"
+                    />
+                  ) : (
+                    <div className="grid aspect-video place-items-center border border-dashed border-neutral-200 bg-neutral-50 px-6 text-center text-[10px] font-bold uppercase tracking-widest text-neutral-300 lg:aspect-[4/3]">
+                      No image added
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <ScheduleMeta label="Day" value={day} />
+                      <ScheduleMeta label="Date" value={date || "Date TBA"} />
+                      <ScheduleMeta label="Time" value={time || "Time TBA"} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-neutral-400">
+                        Activity
+                      </p>
+                      <h3 className="mt-1 font-playfair text-xl font-bold text-neutral-950">
+                        {title}
+                      </h3>
+                      <p className="mt-3 text-sm leading-7 text-neutral-600">
+                        {item.description || "No additional details were provided."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function ScheduleMeta({ label, value }) {
+  return (
+    <div className="border border-neutral-100 bg-neutral-50 px-4 py-3">
+      <p className="text-[9px] font-black uppercase tracking-[0.18em] text-neutral-400">
+        {label}
+      </p>
+      <p className="mt-1 text-xs font-bold text-neutral-900">{value}</p>
+    </div>
+  );
+}
+
+function formatScheduleDate(value) {
+  if (!value) return "";
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.valueOf())) return value;
+
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatScheduleTime(item) {
+  if (item.startTime && item.endTime) return `${item.startTime} - ${item.endTime}`;
+  return item.startTime || item.endTime || "";
 }
 
 function compressGalleryImage(file, { maxBytes, maxWidth }) {

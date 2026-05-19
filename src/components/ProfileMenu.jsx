@@ -18,7 +18,13 @@ function getInitials(user) {
   return initials.toUpperCase() || "U";
 }
 
-export default function ProfileMenu({ user, onLogout, align = "right", variant = "dark" }) {
+export default function ProfileMenu({
+  user,
+  onLogout,
+  align = "right",
+  variant = "dark",
+  showProfileLink = true,
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const fullName = getFullName(user);
   const username = getUsername(user);
@@ -68,13 +74,15 @@ export default function ProfileMenu({ user, onLogout, align = "right", variant =
               <p className="truncate text-sm font-semibold capitalize text-gray-950">{fullName}</p>
               <p className="mt-1 truncate text-xs font-medium text-gray-500">@{username}</p>
             </div>
-            <Link
-              to="/profile"
-              onClick={() => setIsOpen(false)}
-              className="block w-full border-b border-gray-100 px-4 py-3 text-left text-xs font-semibold tracking-[0.08em] text-gray-700 transition-colors hover:bg-gray-50 hover:text-black"
-            >
-              View profile
-            </Link>
+            {showProfileLink && (
+              <Link
+                to="/profile"
+                onClick={() => setIsOpen(false)}
+                className="block w-full border-b border-gray-100 px-4 py-3 text-left text-xs font-semibold tracking-[0.08em] text-gray-700 transition-colors hover:bg-gray-50 hover:text-black"
+              >
+                View profile
+              </Link>
+            )}
             <button
               type="button"
               onClick={handleLogout}

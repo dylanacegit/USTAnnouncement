@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-dom";
 import Header from "./components/Header";
 import Home from "./pages/Home";
 import Events from "./pages/Events";
@@ -24,6 +24,9 @@ import { AuthProvider } from "./context/AuthContext";
 
 // Layout for the User side (includes Header, Footer, and the AI widget)
 function UserLayout() {
+  const location = useLocation();
+  const showChatWidget = location.pathname !== "/profile";
+
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f5f3]">
       <Header />
@@ -31,7 +34,7 @@ function UserLayout() {
       <main className="flex-grow">
         <Outlet />
       </main>
-      <AIChatWidget />
+      {showChatWidget && <AIChatWidget />}
       <Footer />
     </div>
   );

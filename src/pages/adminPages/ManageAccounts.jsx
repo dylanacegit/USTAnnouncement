@@ -5,6 +5,7 @@ import AccountFilters from "../../components/adminComponents/accounts/AccountFil
 import AccountsTable from "../../components/adminComponents/accounts/AccountsTable";
 import {
   createAccount,
+  deleteAccount,
   getAccounts,
   updateAccountDepartment,
   updateAccountStatus,
@@ -147,6 +148,11 @@ export default function ManageAccounts() {
     setAccounts((current) => [createdAccount, ...current]);
   };
 
+  const handleDeleteAccount = async (account) => {
+    await deleteAccount(account._id);
+    setAccounts((current) => current.filter((item) => item._id !== account._id));
+  };
+
   const filteredAccounts = useMemo(() => {
     let result = [...accountsForActiveTab];
 
@@ -257,6 +263,7 @@ export default function ManageAccounts() {
         onToggleArchive={handleToggleArchive}
         onUpdateDepartment={handleUpdateDepartment}
         onCreateAccount={handleCreateAccount}
+        onDeleteAccount={handleDeleteAccount}
       />
     </div>
   );

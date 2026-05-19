@@ -18,6 +18,7 @@ const { isValidObjectId } = require("../utils/validators");
 
 const router = express.Router();
 const MAX_IMAGE_LENGTH = 2.75 * 1024 * 1024;
+const MAX_GALLERY_UPLOADS = 5;
 const LIMITS = {
   title: 100,
   description: 100,
@@ -47,10 +48,12 @@ function getSubmitterName(user) {
   return fullName || user?.email || "UST user";
 }
 
-function buildGalleryPayload(body, user) {
+function buildGalleryPayloads(body, user) {
   const title = cleanText(body.title);
   const description = cleanText(body.description);
-  const image = cleanText(body.image);
+  const images = Array.isArray(body.images)
+    ? body.images.map(cleanText).filter(Boolean)
+    : [cleanText(body.image)].filter(Boolean);
 
   if (!title) return { error: "Photo title is required." };
   if (title.length > LIMITS.title) {
@@ -59,23 +62,38 @@ function buildGalleryPayload(body, user) {
   if (description.length > LIMITS.description) {
     return { error: "Description must be 100 characters or fewer." };
   }
-  if (!image) return { error: "Photo image is required." };
-  if (!image.startsWith("data:image/")) {
-    return { error: "Photo image must be a valid image file." };
-  }
-  if (image.length > MAX_IMAGE_LENGTH) {
-    return { error: "Gallery photo must be smaller than 2 MB." };
+
+  if (images.length === 0) return { error: "At least one photo image is required." };
+  if (images.length > MAX_GALLERY_UPLOADS) {
+    return { error: `You can submit up to ${MAX_GALLERY_UPLOADS} photos at a time.` };
   }
 
+  const invalidImage = images.find((image) => !image.startsWith("data:image/"));
+
+  if (invalidImage) {
+    return { error: "Every gallery photo must be a valid image file." };
+  }
+
+  const tooLargeImage = images.find((image) => image.length > MAX_IMAGE_LENGTH);
+
+  if (tooLargeImage) {
+    return { error: "Each gallery photo must be smaller than 2 MB." };
+  }
+
+  const batchId = images.length > 1 ? new ObjectId().toString() : "";
+
   return {
-    payload: {
+    payloads: images.map((image, index) => ({
       title,
       description,
       image,
       submittedBy: user?.id || "",
       submittedByName: getSubmitterName(user),
       submittedByEmail: user?.email || "",
-    },
+      batchId,
+      batchIndex: images.length > 1 ? index + 1 : null,
+      batchTotal: images.length > 1 ? images.length : null,
+    })),
   };
 }
 
@@ -263,53 +281,74 @@ router.post("/:eventId", requireAuth, async (req, res) => {
       return res.status(404).json({ message: "Event not found." });
     }
 
-    const { payload, error } = buildGalleryPayload(req.body, req.user);
+    const { payloads, error } = buildGalleryPayloads(req.body, req.user);
 
     if (error) return res.status(400).json({ message: error });
 
-    const moderation = await moderateGalleryImage(payload.image);
+    const submittedItems = [];
+    const rejectedItems = [];
 
-    if (!moderation.approved) {
-      await createNotification({
-        userId: req.user?.id,
-        type: "gallery_ai_rejected",
-        title: "Gallery photo rejected",
-        message: `"${payload.title}" did not pass automated safety moderation.`,
-        metadata: {
-          eventId: getStoredEventId(event),
-          eventTitle: event.title || "",
-          reason: moderation.reason,
-        },
+    for (const [index, payload] of payloads.entries()) {
+      const moderation = await moderateGalleryImage(payload.image);
+      const photoLabel =
+        payloads.length > 1 ? `${payload.title} (${index + 1}/${payloads.length})` : payload.title;
+
+      if (!moderation.approved) {
+        rejectedItems.push({ index: index + 1, title: payload.title, moderation });
+
+        await createNotification({
+          userId: req.user?.id,
+          type: "gallery_ai_rejected",
+          title: "Gallery photo rejected",
+          message: `"${photoLabel}" did not pass automated safety moderation.`,
+          metadata: {
+            eventId: getStoredEventId(event),
+            eventTitle: event.title || "",
+            reason: moderation.reason,
+          },
+        });
+
+        continue;
+      }
+
+      const item = await createEventGalleryItem({
+        ...payload,
+        eventId: getStoredEventId(event),
+        eventTitle: event.title || "",
+        moderation,
       });
 
-      return res.status(422).json({
-        message: moderation.reason,
-        moderation,
+      submittedItems.push(item);
+
+      await createNotification({
+        userId: req.user?.id,
+        type: "gallery_pending",
+        title: "Gallery photo pending review",
+        message: `"${photoLabel}" passed Vision AI and is waiting for admin approval.`,
+        metadata: {
+          galleryId: item._id?.toString(),
+          eventId: item.eventId,
+          eventTitle: item.eventTitle,
+        },
       });
     }
 
-    const item = await createEventGalleryItem({
-      ...payload,
-      eventId: getStoredEventId(event),
-      eventTitle: event.title || "",
-      moderation,
-    });
-
-    await createNotification({
-      userId: req.user?.id,
-      type: "gallery_pending",
-      title: "Gallery photo pending review",
-      message: `"${payload.title}" passed Vision AI and is waiting for admin approval.`,
-      metadata: {
-        galleryId: item._id?.toString(),
-        eventId: item.eventId,
-        eventTitle: item.eventTitle,
-      },
-    });
+    if (submittedItems.length === 0) {
+      return res.status(422).json({
+        message: rejectedItems[0]?.moderation?.reason || "No photos passed Vision AI moderation.",
+        rejected: rejectedItems,
+      });
+    }
 
     res.status(202).json({
-      ...item,
-      message: "Photo passed Vision AI and is pending admin approval.",
+      items: submittedItems,
+      rejected: rejectedItems,
+      submittedCount: submittedItems.length,
+      rejectedCount: rejectedItems.length,
+      message:
+        rejectedItems.length > 0
+          ? `${submittedItems.length} photo${submittedItems.length === 1 ? "" : "s"} passed Vision AI and ${rejectedItems.length} photo${rejectedItems.length === 1 ? "" : "s"} were rejected.`
+          : `${submittedItems.length} photo${submittedItems.length === 1 ? "" : "s"} passed Vision AI and are pending admin approval.`,
     });
   } catch (error) {
     console.error("POST /api/event-gallery/:eventId error:", error);

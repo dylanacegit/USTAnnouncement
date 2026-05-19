@@ -3,6 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { loginUser, resendVerification } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
+const LIMITS = {
+  email: 120,
+  password: 72,
+};
+
 export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onForgotPassword }) {
   const navigate = useNavigate();
   const { signIn } = useAuth();
@@ -14,14 +19,47 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onForg
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const validateLogin = () => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail || !password) {
+      return "UST email address and password are required.";
+    }
+
+    if (normalizedEmail.length > LIMITS.email) {
+      return `UST email address must be ${LIMITS.email} characters or fewer.`;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return "Enter a valid UST email address.";
+    }
+
+    if (!normalizedEmail.endsWith("@ust.edu.ph")) {
+      return "Only @ust.edu.ph email addresses are allowed.";
+    }
+
+    if (password.length > LIMITS.password) {
+      return `Password must be ${LIMITS.password} characters or fewer.`;
+    }
+
+    return "";
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
     setSuccess("");
+
+    const validationError = validateLogin();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const result = await loginUser({ email, password });
+      const result = await loginUser({ email: email.trim().toLowerCase(), password });
       signIn(result.token, result.user);
       onClose();
       navigate(result.redirectTo || (result.user?.role === "admin" ? "/admin" : "/"));
@@ -88,9 +126,12 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onForg
         <form onSubmit={handleSubmit} className="bg-white p-7 space-y-4">
           {/* Email Field */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.15em]">UST Email Address</label>
+            <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.15em]">
+              UST Email Address <RequiredMark />
+            </label>
             <input 
               required
+              maxLength={LIMITS.email}
               type="email" 
               value={email}
               onChange={(event) => {
@@ -106,7 +147,9 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onForg
           {/* Password Field */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.15em]">Password</label>
+              <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.15em]">
+                Password <RequiredMark />
+              </label>
               {/* TRIGGER FORGOT PASSWORD MODAL */}
               <button 
                 type="button" 
@@ -120,11 +163,16 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onForg
             <div className="relative group">
               <input 
                 required
+                maxLength={LIMITS.password}
                 type={showPassword ? "text" : "password"} 
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setError("");
+                  setSuccess("");
+                }}
                 className="w-full bg-neutral-50 border border-neutral-200 px-4 py-4 pr-12 text-sm text-black outline-none focus:border-[#f6c744] focus:bg-white transition-all placeholder:text-neutral-300" 
-                placeholder="••••••••" 
+                placeholder="Password" 
               />
               
               {/* Show/Hide Toggle */}
@@ -191,4 +239,8 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister, onForg
       </div>
     </div>
   );
+}
+
+function RequiredMark() {
+  return <span className="text-red-600">*</span>;
 }

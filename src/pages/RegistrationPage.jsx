@@ -14,13 +14,21 @@ const colleges = [
   "Pharmacy",
 ];
 
+const LIMITS = {
+  firstName: 60,
+  lastName: 60,
+  email: 120,
+  password: 72,
+  idNumber: 40,
+};
+
 const initialForm = {
   occupation: "",
   firstName: "",
   lastName: "",
   email: "",
   password: "",
-  confirmPassword: "", // TRACK CONfIRM PASSWORD
+  confirmPassword: "",
   idNumber: "",
   yearLevel: "Select year",
   college: "",
@@ -46,6 +54,15 @@ export default function RegistrationPage({ isOpen, onClose, onSwitchToLogin }) {
     setFormData((prev) => ({ ...prev, ...fields }));
   };
 
+  const normalizedForm = {
+    ...formData,
+    firstName: formData.firstName.trim(),
+    lastName: formData.lastName.trim(),
+    email: formData.email.trim().toLowerCase(),
+    idNumber: formData.idNumber.trim(),
+    college: formData.college.trim(),
+  };
+
   const resetForm = () => {
     setStep(1);
     setShowPassword(false);
@@ -66,17 +83,27 @@ export default function RegistrationPage({ isOpen, onClose, onSwitchToLogin }) {
   const validateCurrentStep = () => {
     if (step === 1) {
       if (
-        !formData.occupation ||
-        !formData.firstName ||
-        !formData.lastName ||
-        !formData.email ||
+        !normalizedForm.occupation ||
+        !normalizedForm.firstName ||
+        !normalizedForm.lastName ||
+        !normalizedForm.email ||
         !formData.password ||
         !formData.confirmPassword
       ) {
         return "Please complete all fields before continuing.";
       }
 
-      if (!formData.email.trim().toLowerCase().endsWith("@ust.edu.ph")) {
+      for (const [field, maxLength] of Object.entries(LIMITS)) {
+        if (String(normalizedForm[field] || formData[field] || "").length > maxLength) {
+          return `${fieldToLabel(field)} must be ${maxLength} characters or fewer.`;
+        }
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedForm.email)) {
+        return "Enter a valid UST email address.";
+      }
+
+      if (!normalizedForm.email.endsWith("@ust.edu.ph")) {
         return "Only @ust.edu.ph email addresses are allowed.";
       }
 
@@ -92,11 +119,15 @@ export default function RegistrationPage({ isOpen, onClose, onSwitchToLogin }) {
 
     if (
       step === 2 &&
-      (!formData.idNumber ||
+      (!normalizedForm.idNumber ||
         formData.yearLevel === "Select year" ||
-        !formData.college)
+        !normalizedForm.college)
     ) {
       return "Please complete your Thomasian identity details.";
+    }
+
+    if (step === 2 && normalizedForm.idNumber.length > LIMITS.idNumber) {
+      return `ID number must be ${LIMITS.idNumber} characters or fewer.`;
     }
 
     if (step === 3 && !certified) {
@@ -127,14 +158,14 @@ export default function RegistrationPage({ isOpen, onClose, onSwitchToLogin }) {
 
     try {
       const result = await registerUser({
-        occupation: formData.occupation,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
+        occupation: normalizedForm.occupation,
+        firstName: normalizedForm.firstName,
+        lastName: normalizedForm.lastName,
+        email: normalizedForm.email,
         password: formData.password,
-        studentOrEmployeeNumber: formData.idNumber,
+        studentOrEmployeeNumber: normalizedForm.idNumber,
         yearLevel: formData.yearLevel,
-        faculty: formData.college,
+        faculty: normalizedForm.college,
       });
 
       setSuccess(
@@ -221,51 +252,61 @@ export default function RegistrationPage({ isOpen, onClose, onSwitchToLogin }) {
         <div className="max-h-[420px] overflow-y-auto bg-white p-8">
           {step === 1 && (
             <div className="space-y-5">
-              <div className="flex gap-3">
-                {["student", "teacher"].map((occupation) => (
-                  <button
-                    key={occupation}
-                    type="button"
-                    onClick={() => updateFields({ occupation })}
-                    className={`flex-1 rounded-sm border-2 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${
-                      formData.occupation === occupation
-                        ? "border-[#f6c744] bg-[#f6c744]/5 text-black"
-                        : "border-neutral-100 text-neutral-400 hover:border-neutral-200"
-                    }`}
-                  >
-                    {occupation}
-                  </button>
-                ))}
-              </div>
+              <RegistrationLabel label="Account Type" required>
+                <div className="flex gap-3">
+                  {["student", "teacher"].map((occupation) => (
+                    <button
+                      key={occupation}
+                      type="button"
+                      onClick={() => updateFields({ occupation })}
+                      className={`flex-1 rounded-sm border-2 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${
+                        formData.occupation === occupation
+                          ? "border-[#f6c744] bg-[#f6c744]/5 text-black"
+                          : "border-neutral-100 text-neutral-400 hover:border-neutral-200"
+                      }`}
+                    >
+                      {occupation}
+                    </button>
+                  ))}
+                </div>
+              </RegistrationLabel>
 
               {formData.occupation && (
                 <div className="space-y-4 pt-2">
                   <div className="grid grid-cols-2 gap-3">
-                    <input value={formData.firstName} onChange={(event) => updateFields({ firstName: event.target.value })} className="w-full border border-neutral-200 bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-[#f6c744]" placeholder="First Name" />
-                    <input value={formData.lastName} onChange={(event) => updateFields({ lastName: event.target.value })} className="w-full border border-neutral-200 bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-[#f6c744]" placeholder="Last Name" />
+                    <RegistrationLabel label="First Name" required>
+                      <input required maxLength={LIMITS.firstName} value={formData.firstName} onChange={(event) => updateFields({ firstName: event.target.value })} className="w-full border border-neutral-200 bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-[#f6c744]" placeholder="First Name" />
+                    </RegistrationLabel>
+                    <RegistrationLabel label="Last Name" required>
+                      <input required maxLength={LIMITS.lastName} value={formData.lastName} onChange={(event) => updateFields({ lastName: event.target.value })} className="w-full border border-neutral-200 bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-[#f6c744]" placeholder="Last Name" />
+                    </RegistrationLabel>
                   </div>
-                  <input type="email" value={formData.email} onChange={(event) => updateFields({ email: event.target.value })} className="w-full border border-neutral-200 bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-[#f6c744]" placeholder="UST Email Address" />
+                  <RegistrationLabel label="UST Email Address" required>
+                    <input required type="email" maxLength={LIMITS.email} value={formData.email} onChange={(event) => updateFields({ email: event.target.value })} className="w-full border border-neutral-200 bg-neutral-50 px-4 py-3 text-xs outline-none focus:border-[#f6c744]" placeholder="UST Email Address" />
+                  </RegistrationLabel>
                   
                   {/* MAIN PASSWORD FIELD */}
-                  <div className="relative">
-                    <input type={showPassword ? "text" : "password"} value={formData.password} onChange={(event) => updateFields({ password: event.target.value })} className="w-full border border-neutral-200 bg-neutral-50 px-4 py-3 pr-12 text-xs outline-none focus:border-[#f6c744]" placeholder="Password" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#c49600]" aria-label={showPassword ? "Hide password" : "Show password"}>
-                      {showPassword ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M9.88 9.88L12 12l2.12 2.12M14.2 14.2l3.4 3.4M10.4 4.4L12 4c7 0 10 8 10 8a20.2 20.2 0 01-2.9 4.6M8.6 19.4L3 24M4 12c0-8 10-8 10-8M1 1l22 22"/><circle cx="12" cy="12" r="3"/>
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
-                        </svg>
-                      )}
-                    </button>
-                  </div>
+                  <RegistrationLabel label="Password" required>
+                    <div className="relative">
+                      <input required minLength={8} maxLength={LIMITS.password} type={showPassword ? "text" : "password"} value={formData.password} onChange={(event) => updateFields({ password: event.target.value })} className="w-full border border-neutral-200 bg-neutral-50 px-4 py-3 pr-12 text-xs outline-none focus:border-[#f6c744]" placeholder="Password" />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#c49600]" aria-label={showPassword ? "Hide password" : "Show password"}>
+                        {showPassword ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9.88 9.88L12 12l2.12 2.12M14.2 14.2l3.4 3.4M10.4 4.4L12 4c7 0 10 8 10 8a20.2 20.2 0 01-2.9 4.6M8.6 19.4L3 24M4 12c0-8 10-8 10-8M1 1l22 22"/><circle cx="12" cy="12" r="3"/>
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </RegistrationLabel>
 
                   {/* SECURE CONFIRM PASSWORD FIELD */}
-                  <div className="relative">
-                    <input type={showPassword ? "text" : "password"} value={formData.confirmPassword} onChange={(event) => updateFields({ confirmPassword: event.target.value })} className="w-full border border-neutral-200 bg-neutral-50 px-4 py-3 pr-12 text-xs outline-none focus:border-[#f6c744]" placeholder="Confirm Password" />
-                  </div>
+                  <RegistrationLabel label="Confirm Password" required>
+                    <input required minLength={8} maxLength={LIMITS.password} type={showPassword ? "text" : "password"} value={formData.confirmPassword} onChange={(event) => updateFields({ confirmPassword: event.target.value })} className="w-full border border-neutral-200 bg-neutral-50 px-4 py-3 pr-12 text-xs outline-none focus:border-[#f6c744]" placeholder="Confirm Password" />
+                  </RegistrationLabel>
                 </div>
               )}
             </div>
@@ -273,12 +314,12 @@ export default function RegistrationPage({ isOpen, onClose, onSwitchToLogin }) {
 
           {step === 2 && (
             <div className="space-y-5">
-              <RegistrationLabel label="Student Information">
-                <input value={formData.idNumber} onChange={(event) => updateFields({ idNumber: event.target.value })} className="w-full rounded-sm border border-neutral-200 bg-neutral-50 px-4 py-3 text-xs text-black outline-none transition-all placeholder:text-neutral-300 focus:border-[#f6c744] focus:bg-white" placeholder="ID Number" />
+              <RegistrationLabel label="Student Information" required>
+                <input required maxLength={LIMITS.idNumber} value={formData.idNumber} onChange={(event) => updateFields({ idNumber: event.target.value })} className="w-full rounded-sm border border-neutral-200 bg-neutral-50 px-4 py-3 text-xs text-black outline-none transition-all placeholder:text-neutral-300 focus:border-[#f6c744] focus:bg-white" placeholder="ID Number" />
               </RegistrationLabel>
 
-              <RegistrationLabel label="Year Level">
-                <select value={formData.yearLevel} onChange={(event) => updateFields({ yearLevel: event.target.value })} className="w-full cursor-pointer appearance-none rounded-sm border border-neutral-200 bg-neutral-50 px-4 py-3 pr-10 text-xs text-black outline-none transition-all focus:border-[#f6c744] focus:bg-white">
+              <RegistrationLabel label="Year Level" required>
+                <select required value={formData.yearLevel} onChange={(event) => updateFields({ yearLevel: event.target.value })} className="w-full cursor-pointer appearance-none rounded-sm border border-neutral-200 bg-neutral-50 px-4 py-3 pr-10 text-xs text-black outline-none transition-all focus:border-[#f6c744] focus:bg-white">
                   <option disabled value="Select year">Select Year Level</option>
                   <option>1st Year</option>
                   <option>2nd Year</option>
@@ -288,7 +329,7 @@ export default function RegistrationPage({ isOpen, onClose, onSwitchToLogin }) {
                 </select>
               </RegistrationLabel>
 
-              <RegistrationLabel label="College / Faculty">
+              <RegistrationLabel label="College / Faculty" required>
                 <div className="grid grid-cols-2 gap-2">
                   {colleges.map((college) => (
                     <button
@@ -374,15 +415,31 @@ export default function RegistrationPage({ isOpen, onClose, onSwitchToLogin }) {
   );
 }
 
-function RegistrationLabel({ label, children }) {
+function RegistrationLabel({ label, required = false, children }) {
   return (
     <div className="space-y-1.5">
       <label className="text-[9px] font-black uppercase tracking-[0.15em] text-neutral-400">
-        {label}
+        {label} {required && <RequiredMark />}
       </label>
       {children}
     </div>
   );
+}
+
+function RequiredMark() {
+  return <span className="text-red-600">*</span>;
+}
+
+function fieldToLabel(field) {
+  const labels = {
+    firstName: "First name",
+    lastName: "Last name",
+    email: "UST email address",
+    password: "Password",
+    idNumber: "ID number",
+  };
+
+  return labels[field] || field;
 }
 
 function SummaryRow({ label, value, breakAll = false }) {
