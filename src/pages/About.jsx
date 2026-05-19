@@ -19,7 +19,7 @@ const teamMembers = [
       "Established Git repository and MongoDB connection",
       "Helped design the website using Figma",
     ],
-    tags: ["Leadership", "AI", "Full-Stack"],
+    tags: ["Leadership", "Tiggy AI Chat", "Google Vision AI"],
   },
   {
     id: "02",
@@ -48,8 +48,9 @@ const teamMembers = [
     photo: "/images/seanphoto.jpg",
     photoPosition: "center 27%",
     description:
-      "Built the back-end flow for the user side of Golden Gatherings, making pages dynamic by connecting them to the database and fetching live data. He also coded the hero page search and redirection behavior, added the notification function for users, and contributed to the documentation. A challenge was making the user pages reliably update from database records while keeping search, redirects, and notifications connected smoothly.",
+      "Built the back-end flow for the user side of Golden Gatherings, making pages dynamic by connecting them to the database and fetching live data. He also coded the registration and login flow, hero page search and redirection behavior, added the notification function for users, and contributed to the documentation. A challenge was making the user pages reliably update from database records while keeping search, redirects, authentication, and notifications connected smoothly.",
     contributions: [
+      "Coded user registration and login functionality",
       "Connected user-side pages to the database",
       "Fetched live event and announcement data dynamically",
       "Coded hero page search functionality",
@@ -82,17 +83,19 @@ const teamMembers = [
     id: "05",
     initials: "RT",
     name: "Rogel Matthew Tabinas",
-    role: "CONTENT STRATEGIST & DOCUMENTATION LEAD",
+    role: "ADMIN BACK-END DEVELOPER & DOCUMENTATION CONTRIBUTOR",
+    photo: "/images/rogel%20photo.png",
+    photoPosition: "center 35%",
     description:
-      "Ensured Golden Gatherings speaks clearly to every Thomasian by managing content, user flows, documentation, and the overall messaging that ties the portal together.",
+      "Worked on the Admin side back end of Golden Gatherings, connecting data tables with search and filter functionality while also helping complete the project documentation. One difficulty was making the admin tables, search, and filters work smoothly together while keeping the data accurate and easy to manage.",
     contributions: [
-      "Content strategy and copywriting",
-      "User flow and information architecture",
-      "Technical documentation",
-      "Announcements module content",
-      "About page and branding narrative",
+      "Coded the backend of the Admin side",
+      "Connected tables to live data",
+      "Implemented search functionality",
+      "Implemented filter functionality",
+      "Helped create project documentation",
     ],
-    tags: ["Content", "Docs", "Strategy"],
+    tags: ["Admin Back-End", "Tables", "Documentation"],
   },
 ];
 
