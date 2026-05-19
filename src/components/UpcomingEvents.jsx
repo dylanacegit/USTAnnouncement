@@ -146,9 +146,13 @@ export default function UpcomingEvents() {
                   </p>
                   <p className="mt-0.5 truncate">{formatDateRange(event)}</p>
                 </div>
-                <button className="mt-auto w-full bg-[#f6c744] py-2 text-[8px] font-black uppercase tracking-widest text-black transition-colors hover:bg-[#e3b832]">
+                <NavLink
+                  to={`/events/${event._id}`}
+                  state={{ selectedEvent: event }}
+                  className="mt-auto block w-full bg-[#f6c744] py-2 text-center text-[8px] font-black uppercase tracking-widest text-black transition-colors hover:bg-[#e3b832]"
+                >
                   View
-                </button>
+                </NavLink>
               </div>
             </div>
           ))}
