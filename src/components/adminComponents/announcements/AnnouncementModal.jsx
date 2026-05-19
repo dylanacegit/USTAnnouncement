@@ -34,11 +34,13 @@ export default function AnnouncementModal({ isOpen, onClose, announcement }) {
         <div className="grid lg:grid-cols-[1fr_1.05fr]">
           <div className="bg-black p-4 sm:p-5">
             {image ? (
-              <img
-                src={image}
-                alt={announcement.title}
-                className="h-64 w-full rounded-xl object-cover lg:h-full"
-              />
+              <div className="flex h-64 w-full items-center justify-center rounded-xl bg-neutral-950 lg:h-full">
+                <img
+                  src={image}
+                  alt={announcement.title}
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
             ) : (
               <div className="grid h-64 w-full place-items-center rounded-xl bg-gradient-to-br from-neutral-900 to-neutral-700 lg:h-full">
                 <div className="text-center">
